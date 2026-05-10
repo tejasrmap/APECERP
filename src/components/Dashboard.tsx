@@ -55,9 +55,7 @@ export default function Dashboard() {
       )}
 
       {/* Sidebar */}
-      <motion.aside
-        initial={false}
-        animate={{ x: isSidebarOpen ? 0 : '-100%' }}
+      <aside
         className={`fixed lg:relative z-50 w-64 h-full bg-slate-900/80 backdrop-blur-xl border-r border-slate-800 flex flex-col transition-transform duration-300 lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
         <div className="p-6 flex items-center justify-between">
@@ -116,7 +114,7 @@ export default function Dashboard() {
             Sign Out
           </button>
         </div>
-      </motion.aside>
+      </aside>
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 z-10 relative">
@@ -187,9 +185,9 @@ export default function Dashboard() {
                 </div>
                 
                 {/* Mock Chart Area */}
-                <div className="flex-1 flex items-end gap-2 pb-4 pt-10 px-2">
+                <div className="flex-1 flex items-end gap-2 pb-4 pt-10 px-2 h-full">
                   {[40, 70, 45, 90, 65, 85, 100, 50, 75, 60, 30, 80].map((h, i) => (
-                    <div key={i} className="flex-1 flex flex-col justify-end group">
+                    <div key={i} className="flex-1 flex flex-col justify-end group h-full">
                       <div 
                         className="w-full bg-red-500/20 group-hover:bg-red-500/40 rounded-t-sm transition-all relative"
                         style={{ height: `${h}%` }}
