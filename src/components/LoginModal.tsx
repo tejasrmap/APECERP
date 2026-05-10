@@ -67,6 +67,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
         
         // Wait 2 seconds for the success animation, then navigate
         setTimeout(() => {
+          localStorage.setItem('isAuthenticated', 'true');
           onClose();
           navigate('/dashboard');
         }, 2500);
