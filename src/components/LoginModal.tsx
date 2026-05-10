@@ -156,7 +156,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                 <button
                   onClick={!isLoading ? onClose : undefined}
                   disabled={isLoading}
-                  className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-slate-800 disabled:opacity-50"
+                  className="absolute top-4 right-4 z-10 text-slate-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-slate-800 disabled:opacity-50"
                 >
                   <X className="w-5 h-5" />
                 </button>
