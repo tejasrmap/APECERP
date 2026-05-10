@@ -1,14 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, User, Lock, LogIn, ArrowRight, ShieldCheck, CheckCircle2, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onLoginSuccess: () => void;
 }
 
-export default function LoginModal({ isOpen, onClose, onLoginSuccess }: LoginModalProps) {
+export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
+  const navigate = useNavigate();
   const [step, setStep] = useState<'credentials' | 'otp' | 'success'>('credentials');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -64,10 +65,10 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }: LoginMod
       if (otpCode === '123456') {
         setStep('success');
         
-        // Wait 2 seconds for the success animation, then trigger login
+        // Wait 2 seconds for the success animation, then navigate
         setTimeout(() => {
           onClose();
-          onLoginSuccess();
+          navigate('/dashboard');
         }, 2500);
         
       } else {

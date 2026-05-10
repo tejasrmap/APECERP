@@ -15,12 +15,10 @@ import {
   TrendingUp,
   X
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-interface DashboardProps {
-  onLogout: () => void;
-}
-
-export default function Dashboard({ onLogout }: DashboardProps) {
+export default function Dashboard() {
+  const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('Overview');
 
@@ -111,7 +109,7 @@ export default function Dashboard({ onLogout }: DashboardProps) {
             </div>
           </div>
           <button
-            onClick={onLogout}
+            onClick={() => navigate('/')}
             className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors border border-transparent hover:border-red-500/20"
           >
             <LogOut className="w-4 h-4" />
