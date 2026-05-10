@@ -2,9 +2,15 @@ import React, { useState } from 'react';
 import { Zap, Construction, HardHat, Wrench, Settings, ArrowRight, ShieldCheck, Activity } from 'lucide-react';
 import { motion } from 'motion/react';
 import LoginModal from './components/LoginModal';
+import Dashboard from './components/Dashboard';
 
 export default function App() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  if (isAuthenticated) {
+    return <Dashboard onLogout={() => setIsAuthenticated(false)} />;
+  }
 
   return (
     <div className="min-h-screen w-full bg-slate-950 flex flex-col relative overflow-hidden font-sans text-slate-200">
@@ -203,7 +209,11 @@ export default function App() {
       </footer>
 
       {/* Login Modal Overlay */}
-      <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
+      <LoginModal 
+        isOpen={isLoginOpen} 
+        onClose={() => setIsLoginOpen(false)} 
+        onLoginSuccess={() => setIsAuthenticated(true)}
+      />
 
     </div>
   );

@@ -1,14 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, User, Lock, LogIn, ArrowRight, ShieldCheck } from 'lucide-react';
+import { X, User, Lock, LogIn, ArrowRight, ShieldCheck, CheckCircle2, Loader2 } from 'lucide-react';
 
 interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onLoginSuccess: () => void;
 }
 
-export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
-  const [step, setStep] = useState<'credentials' | 'otp'>('credentials');
+export default function LoginModal({ isOpen, onClose, onLoginSuccess }: LoginModalProps) {
+  const [step, setStep] = useState<'credentials' | 'otp' | 'success'>('credentials');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -18,17 +19,15 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // Reset state when modal opens/closes
+  // Reset state when modal opens
   useEffect(() => {
-    if (!isOpen) {
-      setTimeout(() => {
-        setStep('credentials');
-        setEmail('');
-        setPassword('');
-        setOtp(['', '', '', '', '', '']);
-        setIsLoading(false);
-        setErrorMsg('');
-      }, 300);
+    if (isOpen) {
+      setStep('credentials');
+      setEmail('');
+      setPassword('');
+      setOtp(['', '', '', '', '', '']);
+      setIsLoading(false);
+      setErrorMsg('');
     }
   }, [isOpen]);
 
@@ -63,7 +62,14 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
       setIsLoading(false);
       // HARDCODED MOCK VALIDATION
       if (otpCode === '123456') {
-        onClose(); // Successfully verified and closed
+        setStep('success');
+        
+        // Wait 2 seconds for the success animation, then trigger login
+        setTimeout(() => {
+          onClose();
+          onLoginSuccess();
+        }, 2500);
+        
       } else {
         setErrorMsg('Invalid verification code.');
       }
@@ -128,7 +134,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={!isLoading ? onClose : undefined}
+            onClick={step !== 'success' && !isLoading ? onClose : undefined}
             className="fixed inset-0 z-40 bg-slate-950/70 backdrop-blur-md"
           />
 
@@ -144,13 +150,15 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
               {/* Decorative top gradient line */}
               <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-600 via-red-500 to-blue-600" />
 
-              <button
-                onClick={!isLoading ? onClose : undefined}
-                disabled={isLoading}
-                className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-slate-800 disabled:opacity-50"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              {step !== 'success' && (
+                <button
+                  onClick={!isLoading ? onClose : undefined}
+                  disabled={isLoading}
+                  className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-slate-800 disabled:opacity-50"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              )}
 
               <div className="p-8 relative min-h-[460px] flex flex-col">
                 <AnimatePresence mode="wait" custom={step === 'credentials' ? -1 : 1}>
@@ -235,7 +243,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                         </button>
                       </form>
                     </motion.div>
-                  ) : (
+                  ) : step === 'otp' ? (
                     <motion.div
                       key="step-otp"
                       custom={1}
@@ -313,15 +321,49 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                         </div>
                       </form>
                     </motion.div>
+                  ) : (
+                    <motion.div
+                      key="step-success"
+                      custom={1}
+                      variants={slideVariants}
+                      initial="enter"
+                      animate="center"
+                      exit="exit"
+                      transition={{ duration: 0.5 }}
+                      className="flex-1 flex flex-col items-center justify-center text-center"
+                    >
+                      <motion.div 
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: "spring", damping: 15, delay: 0.2 }}
+                        className="w-24 h-24 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center mb-6 relative"
+                      >
+                         <motion.div 
+                           animate={{ rotate: 360 }}
+                           transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                           className="absolute inset-0 rounded-full border border-green-500/30 border-t-transparent border-l-transparent"
+                         />
+                         <CheckCircle2 className="w-12 h-12 text-green-500" />
+                      </motion.div>
+                      
+                      <h2 className="text-2xl font-bold text-white tracking-tight mb-2">Authentication Successful</h2>
+                      
+                      <div className="flex items-center gap-2 text-slate-400 text-sm mt-4">
+                        <Loader2 className="w-4 h-4 animate-spin text-red-500" />
+                        Initializing secure session...
+                      </div>
+                    </motion.div>
                   )}
                   
                 </AnimatePresence>
 
-                <div className="mt-6 text-center border-t border-slate-800 pt-4">
-                   <p className="text-xs text-slate-500 flex items-center justify-center gap-1.5">
-                     <Lock className="w-3 h-3" /> Secure 2FA Authentication
-                   </p>
-                </div>
+                {step !== 'success' && (
+                  <div className="mt-6 text-center border-t border-slate-800 pt-4">
+                     <p className="text-xs text-slate-500 flex items-center justify-center gap-1.5">
+                       <Lock className="w-3 h-3" /> Secure 2FA Authentication
+                     </p>
+                  </div>
+                )}
               </div>
             </motion.div>
           </div>
