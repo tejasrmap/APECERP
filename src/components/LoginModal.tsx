@@ -8,10 +8,13 @@ interface LoginModalProps {
 }
 
 export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
-  const [step, setStep] = useState<'identifier' | 'otp'>('identifier');
-  const [identifier, setIdentifier] = useState('');
+  const [step, setStep] = useState<'credentials' | 'otp'>('credentials');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
   
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -19,22 +22,31 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   useEffect(() => {
     if (!isOpen) {
       setTimeout(() => {
-        setStep('identifier');
-        setIdentifier('');
+        setStep('credentials');
+        setEmail('');
+        setPassword('');
         setOtp(['', '', '', '', '', '']);
         setIsLoading(false);
+        setErrorMsg('');
       }, 300);
     }
   }, [isOpen]);
 
-  const handleSendOtp = (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!identifier) return;
+    if (!email || !password) return;
     setIsLoading(true);
-    // Simulate sending OTP
+    setErrorMsg('');
+
+    // Simulate API call for checking credentials
     setTimeout(() => {
       setIsLoading(false);
-      setStep('otp');
+      // HARDCODED MOCK VALIDATION
+      if (email === 'admin@apec.com' && password === 'password123') {
+        setStep('otp');
+      } else {
+        setErrorMsg('Invalid email or password.');
+      }
     }, 1200);
   };
 
@@ -44,14 +56,22 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
     if (otpCode.length !== 6) return;
     
     setIsLoading(true);
+    setErrorMsg('');
+
     // Simulate verifying OTP
     setTimeout(() => {
       setIsLoading(false);
-      onClose(); // Successfully verified and closed
+      // HARDCODED MOCK VALIDATION
+      if (otpCode === '123456') {
+        onClose(); // Successfully verified and closed
+      } else {
+        setErrorMsg('Invalid verification code.');
+      }
     }, 1500);
   };
 
   const handleOtpChange = (index: number, value: string) => {
+    setErrorMsg('');
     if (value.length > 1) {
       // Handle paste
       const pastedData = value.slice(0, 6).split('');
@@ -132,12 +152,12 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                 <X className="w-5 h-5" />
               </button>
 
-              <div className="p-8 relative min-h-[420px] flex flex-col">
-                <AnimatePresence mode="wait" custom={step === 'identifier' ? -1 : 1}>
+              <div className="p-8 relative min-h-[460px] flex flex-col">
+                <AnimatePresence mode="wait" custom={step === 'credentials' ? -1 : 1}>
                   
-                  {step === 'identifier' ? (
+                  {step === 'credentials' ? (
                     <motion.div
-                      key="step-identifier"
+                      key="step-credentials"
                       custom={-1}
                       variants={slideVariants}
                       initial="enter"
@@ -146,24 +166,27 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                       transition={{ duration: 0.3 }}
                       className="flex-1 flex flex-col"
                     >
-                      <div className="text-center mb-8">
+                      <div className="text-center mb-6">
                         <div className="w-16 h-16 rounded-full bg-slate-950 border border-slate-800 flex items-center justify-center mx-auto mb-4 shadow-[0_0_20px_rgba(220,38,38,0.15)]">
                           <LogIn className="w-8 h-8 text-red-500" />
                         </div>
                         <h2 className="text-2xl font-bold text-white tracking-tight">Admin Portal</h2>
-                        <p className="text-sm text-slate-400 mt-2">Sign in with Email or Phone</p>
+                        <p className="text-sm text-slate-400 mt-2">Sign in to access the ERP</p>
                       </div>
 
-                      <form onSubmit={handleSendOtp} className="space-y-6 flex-1 flex flex-col">
-                        <div className="space-y-1.5 flex-1">
-                          <label className="text-xs font-medium text-slate-300 uppercase tracking-wider ml-1">Email or Phone Number</label>
+                      <form onSubmit={handleLogin} className="space-y-4 flex-1 flex flex-col justify-center">
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-medium text-slate-300 uppercase tracking-wider ml-1">Email</label>
                           <div className="relative">
                             <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                             <input
                               type="text"
-                              value={identifier}
-                              onChange={(e) => setIdentifier(e.target.value)}
-                              placeholder="admin@apec.com or +123456789"
+                              value={email}
+                              onChange={(e) => {
+                                setEmail(e.target.value);
+                                setErrorMsg('');
+                              }}
+                              placeholder="admin@apec.com"
                               required
                               disabled={isLoading}
                               className="w-full bg-slate-950/50 border border-slate-700 text-white rounded-xl py-3 pl-11 pr-4 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500/50 transition-all placeholder:text-slate-600 disabled:opacity-50"
@@ -171,16 +194,41 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                           </div>
                         </div>
 
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-medium text-slate-300 uppercase tracking-wider ml-1">Password</label>
+                          <div className="relative">
+                            <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                            <input
+                              type="password"
+                              value={password}
+                              onChange={(e) => {
+                                setPassword(e.target.value);
+                                setErrorMsg('');
+                              }}
+                              placeholder="••••••••"
+                              required
+                              disabled={isLoading}
+                              className="w-full bg-slate-950/50 border border-slate-700 text-white rounded-xl py-3 pl-11 pr-4 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500/50 transition-all placeholder:text-slate-600 disabled:opacity-50"
+                            />
+                          </div>
+                        </div>
+
+                        {errorMsg && (
+                           <div className="text-red-500 text-xs font-medium text-center bg-red-500/10 py-2 rounded border border-red-500/20">
+                             {errorMsg}
+                           </div>
+                        )}
+
                         <button
                           type="submit"
-                          disabled={isLoading || !identifier}
-                          className="w-full bg-red-600 hover:bg-red-500 text-white font-medium py-3.5 rounded-xl transition-colors relative overflow-hidden group flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                          disabled={isLoading || !email || !password}
+                          className="w-full bg-red-600 hover:bg-red-500 text-white font-medium py-3.5 rounded-xl transition-colors relative overflow-hidden group flex items-center justify-center gap-2 mt-2 disabled:opacity-70 disabled:cursor-not-allowed"
                         >
                           {isLoading ? (
                             <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                           ) : (
                             <>
-                              Send OTP
+                              Login
                               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                             </>
                           )}
@@ -196,21 +244,20 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                       animate="center"
                       exit="exit"
                       transition={{ duration: 0.3 }}
-                      className="flex-1 flex flex-col"
+                      className="flex-1 flex flex-col justify-center"
                     >
                       <div className="text-center mb-8">
                         <div className="w-16 h-16 rounded-full bg-slate-950 border border-slate-800 flex items-center justify-center mx-auto mb-4 shadow-[0_0_20px_rgba(59,130,246,0.15)]">
                           <ShieldCheck className="w-8 h-8 text-blue-500" />
                         </div>
-                        <h2 className="text-2xl font-bold text-white tracking-tight">Verification</h2>
+                        <h2 className="text-2xl font-bold text-white tracking-tight">Two-Factor Auth</h2>
                         <p className="text-sm text-slate-400 mt-2 px-4">
-                          We sent a 6-digit code to <br/>
-                          <span className="text-white font-medium">{identifier}</span>
+                          Enter the 6-digit code sent to your device to secure your login.
                         </p>
                       </div>
 
-                      <form onSubmit={handleVerifyOtp} className="space-y-8 flex-1 flex flex-col">
-                        <div className="flex justify-center gap-2 sm:gap-3 flex-1 items-center">
+                      <form onSubmit={handleVerifyOtp} className="space-y-8 flex-1 flex flex-col justify-center">
+                        <div className="flex justify-center gap-2 sm:gap-3 items-center">
                           {otp.map((digit, idx) => (
                             <input
                               key={idx}
@@ -225,6 +272,12 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                             />
                           ))}
                         </div>
+
+                        {errorMsg && (
+                           <div className="text-red-500 text-xs font-medium text-center bg-red-500/10 py-2 rounded border border-red-500/20">
+                             {errorMsg}
+                           </div>
+                        )}
 
                         <div className="space-y-4">
                           <button
@@ -251,6 +304,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                                   // Mock resend
                                   setOtp(['', '', '', '', '', '']);
                                   otpRefs.current[0]?.focus();
+                                  setErrorMsg('');
                                }}
                              >
                                Didn't receive a code? Resend
@@ -263,9 +317,9 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                   
                 </AnimatePresence>
 
-                <div className="mt-8 text-center border-t border-slate-800 pt-4">
+                <div className="mt-6 text-center border-t border-slate-800 pt-4">
                    <p className="text-xs text-slate-500 flex items-center justify-center gap-1.5">
-                     <Lock className="w-3 h-3" /> Secure OTP Authentication
+                     <Lock className="w-3 h-3" /> Secure 2FA Authentication
                    </p>
                 </div>
               </div>
