@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Zap, Construction, HardHat, Wrench, Settings, ArrowRight, ShieldCheck, Activity } from 'lucide-react';
 import { motion } from 'motion/react';
+import LoginModal from './components/LoginModal';
 
 export default function App() {
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+
   return (
     <div className="min-h-screen w-full bg-slate-950 flex flex-col relative overflow-hidden font-sans text-slate-200">
       
@@ -101,11 +104,11 @@ export default function App() {
             
             <div className="pt-6 sm:pt-8 flex flex-col items-center gap-4">
               <button 
-                disabled
-                className="px-6 py-3 sm:px-8 sm:py-3.5 rounded-lg bg-slate-800 text-slate-500 font-medium text-xs sm:text-sm cursor-not-allowed border border-slate-700 w-fit flex items-center justify-center gap-2 sm:gap-3 shadow-lg"
+                onClick={() => setIsLoginOpen(true)}
+                className="px-6 py-3 sm:px-8 sm:py-3.5 rounded-lg bg-red-600/10 hover:bg-red-600/20 text-red-500 hover:text-red-400 font-medium text-xs sm:text-sm border border-red-500/20 hover:border-red-500/40 w-fit flex items-center justify-center gap-2 sm:gap-3 shadow-lg transition-all"
               >
-                 <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" style={{ animationDuration: '3s' }} /> 
-                 Admin Portal (Locked)
+                 <Settings className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> 
+                 Admin Portal Login
               </button>
 
               <div className="flex items-center justify-center gap-2 bg-slate-900/80 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border border-slate-800 shadow-sm mt-2 sm:mt-4 max-w-[90vw]">
@@ -198,6 +201,9 @@ export default function App() {
           SYSTEM_STATE: DEV_ACTIVE
         </p>
       </footer>
+
+      {/* Login Modal Overlay */}
+      <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
 
     </div>
   );
