@@ -1,7 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, User, Lock, LogIn, ArrowRight, ShieldCheck, CheckCircle2, Loader2 } from 'lucide-react';
+import { X, User, Lock, LogIn, ArrowRight, CheckCircle2, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { auth } from '../firebase';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -10,15 +12,12 @@ interface LoginModalProps {
 
 export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const navigate = useNavigate();
-  const [step, setStep] = useState<'credentials' | 'otp' | 'success'>('credentials');
+  const [step, setStep] = useState<'credentials' | 'success'>('credentials');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
   
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  
-  const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // Reset state when modal opens
   useEffect(() => {
@@ -26,88 +25,77 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
       setStep('credentials');
       setEmail('');
       setPassword('');
-      setOtp(['', '', '', '', '', '']);
       setIsLoading(false);
       setErrorMsg('');
     }
   }, [isOpen]);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) return;
     setIsLoading(true);
     setErrorMsg('');
 
-    // Simulate API call for checking credentials
-    setTimeout(() => {
-      setIsLoading(false);
-      // HARDCODED MOCK VALIDATION
-      if (email === 'admin@apec.com' && password === 'password123') {
-        setStep('otp');
-      } else {
+    try {
+      // Sign in with Email and Password using Firebase Auth
+      await signInWithEmailAndPassword(auth, email, password);
+      
+      // Verification succeeded, transition to success step
+      setStep('success');
+      
+      // Wait 2 seconds for success animation, then navigate to dashboard
+      setTimeout(() => {
+        localStorage.setItem('isAuthenticated', 'true');
+        onClose();
+        navigate('/dashboard');
+      }, 2000);
+    } catch (err: any) {
+      console.error(err);
+      if (
+        err.code === 'auth/invalid-credential' || 
+        err.code === 'auth/user-not-found' || 
+        err.code === 'auth/wrong-password'
+      ) {
         setErrorMsg('Invalid email or password.');
+      } else if (err.code === 'auth/missing-password') {
+        setErrorMsg('Password is required.');
+      } else if (err.code === 'auth/too-many-requests') {
+        setErrorMsg('Too many unsuccessful login attempts. Please try again later.');
+      } else {
+        setErrorMsg(err.message || 'Authentication failed.');
       }
-    }, 1200);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleVerifyOtp = (e: React.FormEvent) => {
-    e.preventDefault();
-    const otpCode = otp.join('');
-    if (otpCode.length !== 6) return;
-    
+  const handleGoogleLogin = async () => {
     setIsLoading(true);
     setErrorMsg('');
-
-    // Simulate verifying OTP
-    setTimeout(() => {
-      setIsLoading(false);
-      // HARDCODED MOCK VALIDATION
-      if (otpCode === '123456') {
-        setStep('success');
-        
-        // Wait 2 seconds for the success animation, then navigate
-        setTimeout(() => {
-          localStorage.setItem('isAuthenticated', 'true');
-          onClose();
-          navigate('/dashboard');
-        }, 2500);
-        
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+      
+      // Verification succeeded, transition to success step
+      setStep('success');
+      
+      // Wait 2 seconds for success animation, then navigate to dashboard
+      setTimeout(() => {
+        localStorage.setItem('isAuthenticated', 'true');
+        onClose();
+        navigate('/dashboard');
+      }, 2000);
+    } catch (err: any) {
+      console.error(err);
+      if (err.code === 'auth/popup-closed-by-user') {
+        setErrorMsg('Login popup closed before completion.');
+      } else if (err.code === 'auth/cancelled-popup-request') {
+        // Ignored, user double clicked or opened multiple popups
       } else {
-        setErrorMsg('Invalid verification code.');
+        setErrorMsg(err.message || 'Google sign-in failed.');
       }
-    }, 1500);
-  };
-
-  const handleOtpChange = (index: number, value: string) => {
-    setErrorMsg('');
-    if (value.length > 1) {
-      // Handle paste
-      const pastedData = value.slice(0, 6).split('');
-      const newOtp = [...otp];
-      for (let i = 0; i < pastedData.length; i++) {
-        if (index + i < 6) newOtp[index + i] = pastedData[i];
-      }
-      setOtp(newOtp);
-      // Focus the next empty input or the last one
-      const nextIndex = Math.min(index + pastedData.length, 5);
-      otpRefs.current[nextIndex]?.focus();
-      return;
-    }
-
-    const newOtp = [...otp];
-    newOtp[index] = value;
-    setOtp(newOtp);
-
-    // Auto-focus next input
-    if (value && index < 5) {
-      otpRefs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Backspace' && !otp[index] && index > 0) {
-      // Focus previous input on backspace if current is empty
-      otpRefs.current[index - 1]?.focus();
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -162,7 +150,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                 </button>
               )}
 
-              <div className="p-8 relative min-h-[460px] flex flex-col">
+              <div className="p-8 relative min-h-[460px] flex flex-col justify-center">
                 <AnimatePresence mode="wait" custom={step === 'credentials' ? -1 : 1}>
                   
                   {step === 'credentials' ? (
@@ -174,7 +162,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                       animate="center"
                       exit="exit"
                       transition={{ duration: 0.3 }}
-                      className="flex-1 flex flex-col"
+                      className="flex-1 flex flex-col justify-center"
                     >
                       <div className="text-center mb-6">
                         <div className="w-16 h-16 rounded-full bg-slate-950 border border-slate-800 flex items-center justify-center mx-auto mb-4 shadow-[0_0_20px_rgba(220,38,38,0.15)]">
@@ -229,97 +217,57 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                            </div>
                         )}
 
-                        <button
-                          type="submit"
-                          disabled={isLoading || !email || !password}
-                          className="w-full bg-red-600 hover:bg-red-500 text-white font-medium py-3.5 rounded-xl transition-colors relative overflow-hidden group flex items-center justify-center gap-2 mt-2 disabled:opacity-70 disabled:cursor-not-allowed"
-                        >
-                          {isLoading ? (
-                            <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                          ) : (
-                            <>
-                              Login
-                              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                            </>
-                          )}
-                        </button>
-                      </form>
-                    </motion.div>
-                  ) : step === 'otp' ? (
-                    <motion.div
-                      key="step-otp"
-                      custom={1}
-                      variants={slideVariants}
-                      initial="enter"
-                      animate="center"
-                      exit="exit"
-                      transition={{ duration: 0.3 }}
-                      className="flex-1 flex flex-col justify-center"
-                    >
-                      <div className="text-center mb-8">
-                        <div className="w-16 h-16 rounded-full bg-slate-950 border border-slate-800 flex items-center justify-center mx-auto mb-4 shadow-[0_0_20px_rgba(59,130,246,0.15)]">
-                          <ShieldCheck className="w-8 h-8 text-blue-500" />
-                        </div>
-                        <h2 className="text-2xl font-bold text-white tracking-tight">Two-Factor Auth</h2>
-                        <p className="text-sm text-slate-400 mt-2 px-4">
-                          Enter the 6-digit code sent to your device to secure your login.
-                        </p>
-                      </div>
-
-                      <form onSubmit={handleVerifyOtp} className="space-y-8 flex-1 flex flex-col justify-center">
-                        <div className="flex justify-center gap-2 sm:gap-3 items-center">
-                          {otp.map((digit, idx) => (
-                            <input
-                              key={idx}
-                              ref={(el) => otpRefs.current[idx] = el}
-                              type="text"
-                              maxLength={6} // allow pasting full code
-                              value={digit}
-                              onChange={(e) => handleOtpChange(idx, e.target.value)}
-                              onKeyDown={(e) => handleOtpKeyDown(idx, e)}
-                              disabled={isLoading}
-                              className="w-10 h-12 sm:w-12 sm:h-14 bg-slate-950/50 border border-slate-700 rounded-xl text-center text-xl font-bold text-white focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500/50 transition-all disabled:opacity-50"
-                            />
-                          ))}
-                        </div>
-
-                        {errorMsg && (
-                           <div className="text-red-500 text-xs font-medium text-center bg-red-500/10 py-2 rounded border border-red-500/20">
-                             {errorMsg}
-                           </div>
-                        )}
-
-                        <div className="space-y-4">
+                        <div className="space-y-4 pt-2">
                           <button
                             type="submit"
-                            disabled={isLoading || otp.join('').length !== 6}
+                            disabled={isLoading || !email || !password}
                             className="w-full bg-red-600 hover:bg-red-500 text-white font-medium py-3.5 rounded-xl transition-colors relative overflow-hidden group flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
                           >
                             {isLoading ? (
                               <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                             ) : (
                               <>
-                                Verify & Login
-                                <LogIn className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                Login
+                                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                               </>
                             )}
                           </button>
-                          
-                          <div className="text-center">
-                             <button 
-                               type="button" 
-                               disabled={isLoading}
-                               className="text-xs text-slate-400 hover:text-red-400 transition-colors"
-                               onClick={() => {
-                                  // Mock resend
-                                  setOtp(['', '', '', '', '', '']);
-                                  otpRefs.current[0]?.focus();
-                                  setErrorMsg('');
-                               }}
-                             >
-                               Didn't receive a code? Resend
-                             </button>
+
+                          <div className="relative my-4">
+                            <div className="absolute inset-0 flex items-center">
+                              <span className="w-full border-t border-slate-800" />
+                            </div>
+                            <div className="relative flex justify-center text-xs uppercase">
+                              <span className="bg-slate-900 px-2 text-slate-500">Or continue with</span>
+                            </div>
                           </div>
+
+                          <button
+                            type="button"
+                            onClick={handleGoogleLogin}
+                            disabled={isLoading}
+                            className="w-full bg-slate-950 hover:bg-slate-800 border border-slate-700 text-white font-medium py-3.5 rounded-xl transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                          >
+                            <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
+                              <path
+                                fill="#EA4335"
+                                d="M5.266 9.765A7.077 7.077 0 0 1 12 4.909c1.69 0 3.218.6 4.418 1.582L19.91 3C17.782 1.145 15.055 0 12 0 7.27 0 3.16 2.682 1.077 6.618l4.189 3.147z"
+                              />
+                              <path
+                                fill="#4285F4"
+                                d="M24 12.273c0-.818-.082-1.609-.218-2.386H12v4.527h6.75A5.764 5.764 0 0 1 16.27 18.25l3.86 3.003c2.259-2.091 3.87-5.164 3.87-8.98z"
+                              />
+                              <path
+                                fill="#FBBC05"
+                                d="M5.266 14.235L1.077 17.38c2.083 3.937 6.192 6.62 10.923 6.62 3.055 0 5.864-1.009 7.945-2.747l-3.86-3.003c-1.1.736-2.5 1.182-4.085 1.182-4.227 0-7.8-2.855-9.082-6.764z"
+                              />
+                              <path
+                                fill="#34A853"
+                                d="M12 19.432c-1.585 0-2.985-.446-4.085-1.182l-3.86 3.003C6.136 22.991 8.945 24 12 24c4.73 0 8.84-2.683 10.923-6.62l-4.189-3.145c-1.282 3.909-4.855 6.764-9.082 6.764z"
+                              />
+                            </svg>
+                            Sign in with Google
+                          </button>
                         </div>
                       </form>
                     </motion.div>
@@ -332,7 +280,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                       animate="center"
                       exit="exit"
                       transition={{ duration: 0.5 }}
-                      className="flex-1 flex flex-col items-center justify-center text-center"
+                      className="flex-1 flex flex-col items-center justify-center text-center py-6"
                     >
                       <motion.div 
                         initial={{ scale: 0 }}
@@ -348,11 +296,11 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                          <CheckCircle2 className="w-12 h-12 text-green-500" />
                       </motion.div>
                       
-                      <h2 className="text-2xl font-bold text-white tracking-tight mb-2">Authentication Successful</h2>
+                      <h2 className="text-2xl font-bold text-white tracking-tight mb-2">Login Successful</h2>
                       
                       <div className="flex items-center gap-2 text-slate-400 text-sm mt-4">
                         <Loader2 className="w-4 h-4 animate-spin text-red-500" />
-                        Initializing secure session...
+                        Accessing administrative portal...
                       </div>
                     </motion.div>
                   )}
@@ -362,7 +310,7 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
                 {step !== 'success' && (
                   <div className="mt-6 text-center border-t border-slate-800 pt-4">
                      <p className="text-xs text-slate-500 flex items-center justify-center gap-1.5">
-                       <Lock className="w-3 h-3" /> Secure 2FA Authentication
+                       <Lock className="w-3.5 h-3.5 text-slate-400" /> Secure Admin Authentication
                      </p>
                   </div>
                 )}
