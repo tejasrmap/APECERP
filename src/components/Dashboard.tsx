@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { 
   LayoutDashboard, 
@@ -15,7 +15,9 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
-import { auth } from '../firebase';
+import { onAuthStateChanged } from 'firebase/auth';
+import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
+import { auth, db } from '../firebase';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -24,6 +26,30 @@ export default function Dashboard() {
   
   const [isDbActionLoading, setIsDbActionLoading] = useState(false);
   const [firestoreError, setFirestoreError] = useState<string | null>(null);
+
+  // Auto-register logged-in users to the 'team' collection if not already present
+  useEffect(() => {
+    if (!auth || !db) return;
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user && user.email) {
+        try {
+          const q = query(collection(db, 'team'), where('email', '==', user.email));
+          const snap = await getDocs(q);
+          if (snap.empty) {
+            await addDoc(collection(db, 'team'), {
+              name: user.displayName || user.email.split('@')[0] || 'Unknown User',
+              role: 'Team Member',
+              email: user.email,
+              status: 'Active'
+            });
+          }
+        } catch (err) {
+          console.error('Error auto-registering user in team:', err);
+        }
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   const navItems = [
     { name: 'Overview', icon: LayoutDashboard },
