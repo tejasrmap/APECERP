@@ -37,6 +37,9 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
     setErrorMsg('');
 
     try {
+      if (!auth) {
+        throw new Error('Firebase authentication is not configured in this environment.');
+      }
       // Sign in with Email and Password using Firebase Auth
       await signInWithEmailAndPassword(auth, email, password);
       
@@ -72,8 +75,11 @@ export default function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     setErrorMsg('');
-    const provider = new GoogleAuthProvider();
     try {
+      if (!auth) {
+        throw new Error('Firebase authentication is not configured in this environment.');
+      }
+      const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
       
       // Verification succeeded, transition to success step

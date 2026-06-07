@@ -1,4 +1,4 @@
-import { initializeApp } from 'firebase/app';
+import { initializeApp, getApp, getApps } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 
 const firebaseConfig = {
@@ -10,15 +10,27 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
-// Check if any required variables are missing
-const isConfigured = !!firebaseConfig.apiKey && firebaseConfig.apiKey !== 'your-api-key';
+const isConfigured = 
+  !!firebaseConfig.apiKey && 
+  firebaseConfig.apiKey !== 'YOUR_ACTUAL_API_KEY_HERE' &&
+  firebaseConfig.apiKey !== 'your-api-key';
 
-if (!isConfigured) {
+let app;
+let auth: any = null;
+
+if (isConfigured) {
+  try {
+    app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+    auth = getAuth(app);
+  } catch (error) {
+    console.error('Failed to initialize Firebase:', error);
+  }
+} else {
   console.warn(
-    'Firebase environment variables are not yet fully configured in your .env / .env.local file. ' +
-    'Please make sure to set VITE_FIREBASE_API_KEY, VITE_FIREBASE_PROJECT_ID, etc. for authentications to work.'
+    'Firebase environment variables are missing or default placeholders are still in place. ' +
+    'Authentication features will not work until variables are configured.'
   );
 }
 
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+export { auth };
+export default app;
