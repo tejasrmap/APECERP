@@ -7,11 +7,15 @@ import {
   Search, 
   Users, 
   ArrowLeft,
-  User
+  Paperclip,
+  FileText,
+  Download,
+  X
 } from 'lucide-react';
-import { collection, onSnapshot, query, where, orderBy, addDoc, Timestamp } from 'firebase/firestore';
+import { collection, onSnapshot, query, addDoc, Timestamp } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useOutletContext } from 'react-router-dom';
-import { db, auth } from '../firebase';
+import { db, auth, storage } from '../firebase';
 
 export default function Chat() {
   const { setFirestoreError } = useOutletContext<any>();
@@ -25,6 +29,11 @@ export default function Chat() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedChat, setSelectedChat] = useState<any>('group'); // 'group' or a contact object
   const [mobileView, setMobileView] = useState<'list' | 'chat'>('list'); // Mobile responsiveness
+
+  // File Upload states
+  const [attachedFile, setAttachedFile] = useState<File | null>(null);
+  const [fileUploading, setFileUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   
@@ -97,7 +106,10 @@ export default function Chat() {
             senderName: data.senderName || data.senderEmail?.split('@')[0] || 'Unknown',
             text: data.text,
             time: timeStr,
-            timestampValue: data.timestamp?.toDate().getTime() || 0
+            timestampValue: data.timestamp?.toDate().getTime() || 0,
+            fileUrl: data.fileUrl || '',
+            fileName: data.fileName || '',
+            fileType: data.fileType || ''
           };
         })
         .filter(m => m.roomId === activeRoomId)
@@ -114,21 +126,53 @@ export default function Chat() {
     return () => unsubscribe();
   }, [activeRoomId, setFirestoreError]);
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setAttachedFile(e.target.files[0]);
+    }
+  };
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMessageText.trim() || !db) return;
+    if (!newMessageText.trim() && !attachedFile) return;
+    if (!db) return;
+
     const text = newMessageText;
+    const file = attachedFile;
+
     setNewMessageText('');
+    setAttachedFile(null);
+    setFileUploading(true);
+
     try {
+      let fileUrl = '';
+      let fileName = '';
+      let fileType = '';
+
+      if (file && storage) {
+        // Create storage reference path
+        const fileRef = ref(storage, `chat_files/${activeRoomId}/${Date.now()}_${file.name}`);
+        // Upload bytes
+        const snapshot = await uploadBytes(fileRef, file);
+        // Get download URL
+        fileUrl = await getDownloadURL(snapshot.ref);
+        fileName = file.name;
+        fileType = file.type;
+      }
+
       await addDoc(collection(db, 'messages'), {
         roomId: activeRoomId,
-        text,
+        text: text || '',
         senderEmail: currentUserEmail,
         senderName: currentUserName,
-        timestamp: Timestamp.now()
+        timestamp: Timestamp.now(),
+        ...(fileUrl ? { fileUrl, fileName, fileType } : {})
       });
-    } catch (err) {
-      console.error('Error sending message:', err);
+    } catch (err: any) {
+      console.error('Error sending message with attachment:', err);
+      setFirestoreError(err.code || 'storage-upload-failed');
+    } finally {
+      setFileUploading(false);
     }
   };
 
@@ -227,7 +271,7 @@ export default function Chat() {
               >
                 {/* Avatar Initials with online status indicator */}
                 <div className="relative shrink-0">
-                  <div className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-semibold text-slate-350 shadow">
+                  <div className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-semibold text-slate-355 shadow">
                     {getInitials(contact.name)}
                   </div>
                   <span className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-slate-950 ${getStatusColor(contact.status)}`}></span>
@@ -249,7 +293,7 @@ export default function Chat() {
 
       {/* Conversation Panel (Right) */}
       <div 
-        className={`flex-1 flex flex-col min-w-0 relative ${
+        className={`flex-1 flex flex-col min-w-0 relative bg-slate-950/10 ${
           mobileView === 'list' ? 'hidden md:flex' : 'flex'
         }`}
       >
@@ -315,6 +359,8 @@ export default function Chat() {
           ) : (
             messages.map((m) => {
               const isCurrentUser = m.senderEmail === currentUserEmail;
+              const isImage = m.fileType?.startsWith('image/');
+              
               return (
                 <div 
                   key={m.id} 
@@ -323,11 +369,49 @@ export default function Chat() {
                   <span className="text-[10px] text-slate-500 mb-1 px-1 font-semibold truncate max-w-[200px]">
                     {isCurrentUser ? 'You' : m.senderName}
                   </span>
+                  
                   <div className={`p-3 rounded-2xl text-sm ${
                     isCurrentUser 
-                      ? 'bg-red-650 text-white rounded-tr-none' 
+                      ? 'bg-red-655 text-white rounded-tr-none' 
                       : 'bg-slate-850 text-slate-200 rounded-tl-none border border-slate-800/80 shadow-md'
                   }`}>
+                    
+                    {/* Render Image Attachments Inline */}
+                    {m.fileUrl && isImage && (
+                      <div className="mb-2.5 rounded-xl overflow-hidden border border-slate-800 max-w-xs aspect-video bg-slate-950 flex items-center justify-center group relative shadow-inner">
+                        <img src={m.fileUrl} alt={m.fileName} className="w-full h-full object-cover p-0.5" />
+                        <a 
+                          href={m.fileUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="absolute inset-0 bg-slate-950/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity duration-200 text-xs font-semibold gap-1.5"
+                        >
+                          <Download className="w-4 h-4" /> Open Full Image
+                        </a>
+                      </div>
+                    )}
+
+                    {/* Render Other Document Attachments as download cards */}
+                    {m.fileUrl && !isImage && (
+                      <a 
+                        href={m.fileUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="mb-2.5 p-2.5 rounded-xl bg-slate-950/60 hover:bg-slate-950 border border-slate-800/80 flex items-center gap-3 hover:border-slate-700 transition-all max-w-xs group"
+                      >
+                        <div className="w-9 h-9 rounded-lg bg-red-600/10 border border-red-500/20 flex items-center justify-center text-red-500 shrink-0">
+                          <FileText className="w-4.5 h-4.5" />
+                        </div>
+                        <div className="flex-1 min-w-0 text-left">
+                          <p className="text-xs font-semibold text-white truncate">{m.fileName}</p>
+                          <p className="text-[9px] text-slate-500 font-mono mt-0.5 uppercase tracking-wider">{m.fileType?.split('/')[1] || 'document'}</p>
+                        </div>
+                        <div className="w-7 h-7 rounded-full hover:bg-slate-800 flex items-center justify-center text-slate-400 group-hover:text-white shrink-0 transition-colors">
+                          <Download className="w-3.5 h-3.5" />
+                        </div>
+                      </a>
+                    )}
+
                     <p className="leading-normal break-words">{m.text}</p>
                     <span className={`block text-[8px] text-right mt-1.5 ${isCurrentUser ? 'text-white/60' : 'text-slate-500'}`}>
                       {m.time}
@@ -340,22 +424,69 @@ export default function Chat() {
           <div ref={messagesEndRef} />
         </div>
 
+        {/* Selected File Preview Box */}
+        <AnimatePresence>
+          {attachedFile && (
+            <motion.div 
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 15 }}
+              className="p-3 bg-slate-900 border-t border-slate-800 flex items-center justify-between gap-3 shrink-0"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-9 h-9 rounded-lg bg-red-600/15 border border-red-500/20 flex items-center justify-center text-red-500 shrink-0 shadow-inner">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <div className="min-w-0 text-left">
+                  <p className="text-xs font-semibold text-white truncate">{attachedFile.name}</p>
+                  <p className="text-[9px] text-slate-500 font-mono mt-0.5">
+                    {(attachedFile.size / 1024 / 1024).toFixed(2)} MB • {attachedFile.type || 'unknown type'}
+                  </p>
+                </div>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setAttachedFile(null)}
+                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* Chat input panel */}
-        <form onSubmit={handleSendMessage} className="p-4 border-t border-slate-800/80 bg-slate-950/20 flex items-center gap-3">
+        <form onSubmit={handleSendMessage} className="p-4 border-t border-slate-800/80 bg-slate-950/40 flex items-center gap-3">
+          <input 
+            type="file" 
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            className="hidden"
+          />
+          <button 
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={fileUploading}
+            className="p-3 bg-slate-950 border border-slate-850 hover:border-slate-700 text-slate-400 hover:text-white rounded-xl transition-all shadow-md shrink-0 flex items-center justify-center disabled:opacity-50"
+          >
+            {fileUploading ? <Loader2 className="w-4 h-4 animate-spin text-red-500" /> : <Paperclip className="w-4 h-4" />}
+          </button>
+          
           <input 
             type="text" 
             value={newMessageText}
             onChange={(e) => setNewMessageText(e.target.value)}
+            disabled={fileUploading}
             placeholder={
               selectedChat === 'group' 
                 ? "Broadcast an operations update..." 
                 : `Send a direct message to ${selectedChat.name}...`
             }
-            className="flex-1 bg-slate-950 border border-slate-800 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500/20 text-sm placeholder:text-slate-650 text-white"
+            className="flex-1 bg-slate-950 border border-slate-800 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500/20 text-sm placeholder:text-slate-650 text-white disabled:opacity-50"
           />
           <button 
             type="submit"
-            disabled={!newMessageText.trim()}
+            disabled={fileUploading || (!newMessageText.trim() && !attachedFile)}
             className="p-3 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white rounded-xl shadow-md transition-colors flex items-center justify-center shrink-0"
           >
             <Send className="w-4 h-4" />

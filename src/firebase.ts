@@ -1,6 +1,7 @@
 import { initializeApp, getApp, getApps } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -19,12 +20,14 @@ const isConfigured =
 let app;
 let auth: any = null;
 let db: any = null;
+let storage: any = null;
 
 if (isConfigured) {
   try {
     app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
     auth = getAuth(app);
     db = getFirestore(app);
+    storage = getStorage(app);
   } catch (error) {
     console.error('Failed to initialize Firebase:', error);
   }
@@ -35,5 +38,5 @@ if (isConfigured) {
   );
 }
 
-export { auth, db };
+export { auth, db, storage };
 export default app;
