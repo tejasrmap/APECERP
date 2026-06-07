@@ -84,8 +84,10 @@ export default function Settings() {
 
       // Seed greeting message
       await addDoc(collection(db, 'messages'), {
+        roomId: 'group',
         text: 'Welcome to the APEC ERP Chat Room! Real-time database synchronizations are now fully configured.',
         senderEmail: 'system@apec.com',
+        senderName: 'System',
         timestamp: Timestamp.now()
       });
 
