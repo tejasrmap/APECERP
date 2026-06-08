@@ -17,12 +17,14 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useOutletContext } from 'react-router-dom';
 import { db, auth, storage } from '../firebase';
 import { supabase } from '../supabase';
+import PDFViewerModal from './PDFViewerModal';
 
 export default function Chat() {
   const { setFirestoreError } = useOutletContext<any>();
 
   // States
   const [messages, setMessages] = useState<any[]>([]);
+  const [viewingPdf, setViewingPdf] = useState<{ url: string; name: string } | null>(null);
   const [teamList, setTeamList] = useState<any[]>([]);
   const [isChatLoading, setIsChatLoading] = useState(true);
   const [newMessageText, setNewMessageText] = useState('');
@@ -421,7 +423,14 @@ export default function Chat() {
                         href={m.fileUrl} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="mb-2.5 p-2.5 rounded-xl bg-slate-950/60 hover:bg-slate-950 border border-slate-800/80 flex items-center gap-3 hover:border-slate-700 transition-all max-w-xs group"
+                        onClick={(e) => {
+                          const isPdf = m.fileName?.toLowerCase().endsWith('.pdf') || m.fileType === 'application/pdf';
+                          if (isPdf) {
+                            e.preventDefault();
+                            setViewingPdf({ url: m.fileUrl, name: m.fileName });
+                          }
+                        }}
+                        className="mb-2.5 p-2.5 rounded-xl bg-slate-950/60 hover:bg-slate-950 border border-slate-800/80 flex items-center gap-3 hover:border-slate-700 transition-all max-w-xs group cursor-pointer"
                       >
                         <div className="w-9 h-9 rounded-lg bg-red-600/10 border border-red-500/20 flex items-center justify-center text-red-500 shrink-0">
                           <FileText className="w-4.5 h-4.5" />
@@ -517,6 +526,14 @@ export default function Chat() {
           </button>
         </form>
       </div>
+
+      {/* PDF Viewer Modal */}
+      <PDFViewerModal
+        isOpen={!!viewingPdf}
+        onClose={() => setViewingPdf(null)}
+        fileUrl={viewingPdf?.url || ''}
+        fileName={viewingPdf?.name || ''}
+      />
 
     </motion.div>
   );
