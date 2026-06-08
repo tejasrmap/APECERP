@@ -16,6 +16,7 @@ import { collection, onSnapshot, query, addDoc, Timestamp } from 'firebase/fires
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useOutletContext } from 'react-router-dom';
 import { db, auth, storage } from '../firebase';
+import { supabase } from '../supabase';
 
 export default function Chat() {
   const { setFirestoreError } = useOutletContext<any>();
@@ -149,13 +150,36 @@ export default function Chat() {
       let fileName = '';
       let fileType = '';
 
-      if (file && storage) {
-        // Create storage reference path
-        const fileRef = ref(storage, `chat_files/${activeRoomId}/${Date.now()}_${file.name}`);
-        // Upload bytes
-        const snapshot = await uploadBytes(fileRef, file);
-        // Get download URL
-        fileUrl = await getDownloadURL(snapshot.ref);
+      if (file) {
+        if (supabase) {
+          const path = `chat_files/${activeRoomId}/${Date.now()}_${file.name}`;
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('chat-files')
+            .upload(path, file, {
+              cacheControl: '3600',
+              upsert: false
+            });
+
+          if (uploadError) {
+            throw uploadError;
+          }
+
+          const { data: urlData } = supabase.storage
+            .from('chat-files')
+            .getPublicUrl(path);
+
+          fileUrl = urlData.publicUrl;
+        } else if (storage) {
+          // Create storage reference path
+          const fileRef = ref(storage, `chat_files/${activeRoomId}/${Date.now()}_${file.name}`);
+          // Upload bytes
+          const snapshot = await uploadBytes(fileRef, file);
+          // Get download URL
+          fileUrl = await getDownloadURL(snapshot.ref);
+        } else {
+          throw new Error('No storage provider (Supabase or Firebase) is configured.');
+        }
+
         fileName = file.name;
         fileType = file.type;
       }
