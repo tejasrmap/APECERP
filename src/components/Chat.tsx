@@ -527,6 +527,81 @@ export default function Chat() {
         </form>
       </div>
 
+      {/* Contextual Assets Panel (Right) */}
+      <div className="hidden xl:flex w-80 border-l border-slate-200 flex-col bg-slate-50 p-4 space-y-6 overflow-y-auto shrink-0 select-none">
+        <div>
+          <h3 className="text-xs font-bold text-slate-400 tracking-wide uppercase">Contextual Assets</h3>
+        </div>
+
+        {/* Substation 4 Location */}
+        <div className="space-y-2">
+          <h4 className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">Substation 4 Location</h4>
+          <div className="rounded-xl overflow-hidden border border-slate-200 bg-white aspect-video relative shadow-sm">
+            <img src="/substation_map.png" alt="Substation Map" className="w-full h-full object-cover" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-red-600 rounded-full border-2 border-white shadow-[0_0_10px_rgba(220,38,38,0.8)] animate-pulse" />
+          </div>
+        </div>
+
+        {/* Real-time Telemetry */}
+        <div className="space-y-3">
+          <h4 className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">Real-time Telemetry</h4>
+          
+          <div className="p-3 bg-white border border-slate-200 rounded-xl space-y-3 shadow-sm">
+            {/* Core Temp */}
+            <div>
+              <div className="flex justify-between items-baseline mb-1">
+                <span className="text-[10px] font-bold text-slate-500 uppercase font-mono">Core Temp</span>
+                <span className="text-xs font-bold text-red-650">84°C</span>
+              </div>
+              <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div className="h-full bg-red-500 rounded-full" style={{ width: '84%' }} />
+              </div>
+            </div>
+
+            {/* Grid Load */}
+            <div>
+              <div className="flex justify-between items-baseline mb-1">
+                <span className="text-[10px] font-bold text-slate-500 uppercase font-mono">Grid Load</span>
+                <span className="text-xs font-bold text-slate-900">14.2 MW</span>
+              </div>
+              <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div className="h-full bg-slate-950 rounded-full" style={{ width: '57%' }} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Shared Documentation */}
+        <div className="space-y-2">
+          <h4 className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">Shared Documentation</h4>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="p-4 bg-white border border-slate-200 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-slate-355 transition-colors cursor-pointer shadow-sm">
+              <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center text-red-500">
+                <FileText className="w-4.5 h-4.5" />
+              </div>
+              <span className="text-[10px] font-semibold text-slate-700">Wiring_Diag.pdf</span>
+            </div>
+            
+            <div className="p-4 bg-white border border-slate-200 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-slate-355 transition-colors cursor-pointer shadow-sm">
+              <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500">
+                <FileText className="w-4.5 h-4.5" />
+              </div>
+              <span className="text-[10px] font-semibold text-slate-700">Load_Profile.xlsx</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="pt-2">
+          <button 
+            type="button"
+            className="w-full py-3 bg-[#0e2a47] hover:bg-[#0a2540] text-white rounded-xl text-xs font-semibold shadow-sm transition-colors uppercase tracking-wider"
+          >
+            Create Work Order
+          </button>
+        </div>
+      </div>
+
+
       {/* PDF Viewer Modal */}
       <PDFViewerModal
         isOpen={!!viewingPdf}

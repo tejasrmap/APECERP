@@ -51,7 +51,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="h-screen w-full bg-slate-950 flex font-sans text-slate-200 overflow-hidden relative selection:bg-red-500/30">
+    <div className="h-screen w-full bg-slate-50 flex font-sans text-slate-800 overflow-hidden relative selection:bg-[#0e2a47]/15">
       
       {/* Background Ambience */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
