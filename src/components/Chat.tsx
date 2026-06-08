@@ -18,6 +18,7 @@ import { useOutletContext } from 'react-router-dom';
 import { db, auth, storage } from '../firebase';
 import { supabase } from '../supabase';
 import PDFViewerModal from './PDFViewerModal';
+import ImageViewerModal from './ImageViewerModal';
 
 export default function Chat() {
   const { setFirestoreError } = useOutletContext<any>();
@@ -25,6 +26,7 @@ export default function Chat() {
   // States
   const [messages, setMessages] = useState<any[]>([]);
   const [viewingPdf, setViewingPdf] = useState<{ url: string; name: string } | null>(null);
+  const [viewingImage, setViewingImage] = useState<{ url: string; name: string } | null>(null);
   const [teamList, setTeamList] = useState<any[]>([]);
   const [isChatLoading, setIsChatLoading] = useState(true);
   const [newMessageText, setNewMessageText] = useState('');
@@ -406,14 +408,12 @@ export default function Chat() {
                     {m.fileUrl && isImage && (
                       <div className="mb-2.5 rounded-xl overflow-hidden border border-slate-800 max-w-xs aspect-video bg-slate-950 flex items-center justify-center group relative shadow-inner">
                         <img src={m.fileUrl} alt={m.fileName} className="w-full h-full object-cover p-0.5" />
-                        <a 
-                          href={m.fileUrl} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="absolute inset-0 bg-slate-950/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity duration-200 text-xs font-semibold gap-1.5"
+                        <button 
+                          onClick={() => setViewingImage({ url: m.fileUrl, name: m.fileName })}
+                          className="absolute inset-0 bg-slate-950/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity duration-200 text-xs font-semibold gap-1.5 cursor-pointer w-full h-full border-none"
                         >
-                          <Download className="w-4 h-4" /> Open Full Image
-                        </a>
+                          <Download className="w-4 h-4" /> View Image
+                        </button>
                       </div>
                     )}
 
@@ -533,6 +533,14 @@ export default function Chat() {
         onClose={() => setViewingPdf(null)}
         fileUrl={viewingPdf?.url || ''}
         fileName={viewingPdf?.name || ''}
+      />
+
+      {/* Photo Viewer Modal */}
+      <ImageViewerModal
+        isOpen={!!viewingImage}
+        onClose={() => setViewingImage(null)}
+        imageUrl={viewingImage?.url || ''}
+        imageName={viewingImage?.name || ''}
       />
 
     </motion.div>
