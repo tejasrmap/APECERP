@@ -150,23 +150,23 @@ export default function Overview() {
   }, [setFirestoreError]);
 
   const stats = [
-    { title: 'Active Projects', value: !loadedCollections.projects ? '...' : activeProjectsCount.toString(), icon: Activity, color: 'text-blue-400', bg: 'bg-blue-500/20' },
-    { title: 'Pending Alerts', value: !loadedCollections.alerts ? '...' : pendingAlertsCount.toString(), icon: AlertTriangle, color: 'text-amber-400', bg: 'bg-amber-500/20' },
-    { title: 'Completed Tasks', value: !loadedCollections.tasks ? '...' : completedTasksCount.toString(), icon: CheckCircle2, color: 'text-green-400', bg: 'bg-green-500/20' },
-    { title: 'Efficiency Rate', value: '94%', icon: TrendingUp, color: 'text-red-400', bg: 'bg-red-500/20' },
+    { title: 'Active Projects', value: !loadedCollections.projects ? '...' : activeProjectsCount.toString(), icon: Activity, color: 'text-blue-600', bg: 'bg-blue-500/10', border: 'border-blue-200/40' },
+    { title: 'Pending Alerts', value: !loadedCollections.alerts ? '...' : pendingAlertsCount.toString(), icon: AlertTriangle, color: 'text-amber-600', bg: 'bg-amber-500/10', border: 'border-amber-200/40' },
+    { title: 'Completed Tasks', value: !loadedCollections.tasks ? '...' : completedTasksCount.toString(), icon: CheckCircle2, color: 'text-green-600', bg: 'bg-green-500/10', border: 'border-green-200/40' },
+    { title: 'Efficiency Rate', value: '94%', icon: TrendingUp, color: 'text-[#0e2a47]', bg: 'bg-[#0e2a47]/10', border: 'border-[#0e2a47]/20' },
   ];
 
   const getActivityIcon = (type: string) => {
     switch (type) {
       case 'package':
-        return { icon: Package, color: 'text-blue-400', bg: 'bg-blue-500/20', border: 'border-blue-500/30' };
+        return { icon: Package, color: 'text-blue-600', bg: 'bg-blue-500/10', border: 'border-blue-500/20' };
       case 'task':
-        return { icon: CheckCircle2, color: 'text-green-400', bg: 'bg-green-500/20', border: 'border-green-500/30' };
+        return { icon: CheckCircle2, color: 'text-green-600', bg: 'bg-green-500/10', border: 'border-green-500/20' };
       case 'alert':
-        return { icon: AlertTriangle, color: 'text-amber-400', bg: 'bg-amber-500/20', border: 'border-amber-500/30' };
+        return { icon: AlertTriangle, color: 'text-amber-600', bg: 'bg-amber-500/10', border: 'border-amber-500/20' };
       case 'settings':
       default:
-        return { icon: Settings, color: 'text-slate-400', bg: 'bg-slate-500/20', border: 'border-slate-500/30' };
+        return { icon: Settings, color: 'text-slate-500', bg: 'bg-slate-500/10', border: 'border-slate-500/20' };
     }
   };
 
@@ -187,12 +187,12 @@ export default function Overview() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
         {stats.map((stat, idx) => (
-          <div key={idx} className="p-5 lg:p-6 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-between group hover:shadow-md transition-all">
+          <div key={idx} className="p-5 lg:p-6 rounded-2xl glass-card border border-white/60 shadow-[0_8px_30px_rgba(15,23,42,0.03)] flex items-center justify-between group hover:shadow-[0_12px_40px_rgba(15,23,42,0.06)] hover:border-white/95 hover:-translate-y-0.5 transition-all duration-300">
             <div>
-              <p className="text-xs lg:text-sm font-medium text-slate-500 mb-1">{stat.title}</p>
+              <p className="text-xs lg:text-sm font-medium text-slate-550 mb-1">{stat.title}</p>
               <h3 className="text-2xl lg:text-3xl font-bold text-slate-900 tracking-tight">{stat.value}</h3>
             </div>
-            <div className={`w-12 h-12 rounded-xl ${stat.bg} flex items-center justify-center transition-transform group-hover:scale-110 shadow-sm border border-slate-100`}>
+            <div className={`w-12 h-12 rounded-xl ${stat.bg} ${stat.border} border flex items-center justify-center transition-transform group-hover:scale-110 shadow-sm`}>
               <stat.icon className={`w-6 h-6 ${stat.color}`} />
             </div>
           </div>
@@ -202,11 +202,11 @@ export default function Overview() {
       {/* Split layouts */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* Chart */}
-        <div className="xl:col-span-2 p-5 lg:p-6 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col min-h-[350px] lg:min-h-[400px]">
+        <div className="xl:col-span-2 p-5 lg:p-6 rounded-2xl glass-card border border-white/60 shadow-[0_8px_30px_rgba(15,23,42,0.03)] flex flex-col min-h-[350px] lg:min-h-[400px]">
           <div className="flex items-center justify-between mb-8">
             <div>
               <h3 className="text-lg font-semibold text-slate-900">Project Analytics</h3>
-              <p className="text-xs text-slate-500 mt-0.5">Monthly workflow distribution</p>
+              <p className="text-xs text-slate-505 mt-0.5">Monthly workflow distribution</p>
             </div>
           </div>
           {projectsList.length === 0 ? (
@@ -219,13 +219,13 @@ export default function Overview() {
             <div className="flex-1 flex items-end gap-1.5 sm:gap-2 pb-6 pt-4 px-1 lg:px-4 h-full border-b border-slate-150 relative">
               <div className="absolute inset-0 flex flex-col justify-between pointer-events-none pb-6">
                 {[100, 75, 50, 25, 0].map(val => (
-                   <div key={val} className="w-full border-t border-slate-100 flex items-center" />
+                   <div key={val} className="w-full border-t border-slate-100/80 flex items-center" />
                 ))}
               </div>
               {[40, 70, 45, 90, 65, 85, 100, 50, 75, 60, 30, 80].map((h, i) => (
                 <div key={i} className="flex-1 flex flex-col justify-end group h-full relative z-10">
                   <div 
-                    className="w-full bg-gradient-to-t from-red-100 to-red-500 group-hover:from-red-200 group-hover:to-red-650 rounded-t-md transition-all relative border-x border-t border-red-200"
+                    className="w-full bg-gradient-to-t from-blue-500/40 to-[#0e2a47] group-hover:from-blue-500/60 group-hover:to-[#13385d] rounded-t-lg transition-all duration-300 shadow-[0_4px_12px_rgba(14,42,71,0.08)] relative border border-white/10"
                     style={{ height: `${h}%` }}
                   >
                   </div>
@@ -237,7 +237,7 @@ export default function Overview() {
         </div>
 
         {/* Recent Activity */}
-        <div className="p-5 lg:p-6 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col min-h-[350px]">
+        <div className="p-5 lg:p-6 rounded-2xl glass-card border border-white/60 shadow-[0_8px_30px_rgba(15,23,42,0.03)] flex flex-col min-h-[350px]">
           <h3 className="text-lg font-semibold text-slate-900 mb-6">Recent Activity</h3>
           {activitiesList.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center">
@@ -252,13 +252,13 @@ export default function Overview() {
                 const Icon = iconData.icon;
                 return (
                   <div key={item.id || i} className="flex items-start gap-4 group">
-                    <div className={`w-10 h-10 rounded-full ${iconData.bg} border ${iconData.border} flex items-center justify-center shrink-0`}>
+                    <div className={`w-10 h-10 rounded-full ${iconData.bg} border ${iconData.border} flex items-center justify-center shrink-0 shadow-sm`}>
                       <Icon className={`w-4 h-4 ${iconData.color}`} />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-slate-800 group-hover:text-slate-950 truncate">{item.title}</p>
+                      <p className="text-sm font-semibold text-slate-800 group-hover:text-slate-950 truncate transition-colors">{item.title}</p>
                       <p className="text-xs text-slate-500 truncate mt-0.5">{item.desc}</p>
-                      <p className="text-[10px] text-slate-400 mt-1">{item.time}</p>
+                      <p className="text-[10px] text-slate-400 mt-1 font-medium">{item.time}</p>
                     </div>
                   </div>
                 );

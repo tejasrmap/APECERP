@@ -158,19 +158,19 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-slate-50 flex flex-col justify-center items-center p-4 relative overflow-hidden font-sans selection:bg-[#0e2a47]/10 selection:text-[#0e2a47]">
+    <div className="min-h-screen w-full bg-[#f8fafc] flex flex-col justify-center items-center p-4 relative overflow-hidden font-sans selection:bg-[#0e2a47]/10 selection:text-[#0e2a47]">
       {/* Background Ambience */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-100 rounded-full blur-[100px] opacity-70" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-red-50 rounded-full blur-[120px] opacity-70" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f080_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f080_1px,transparent_1px)] bg-[size:32px_32px] opacity-40"></div>
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-100/60 rounded-full blur-[120px] opacity-70" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-red-50/50 rounded-full blur-[140px] opacity-70" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f060_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f060_1px,transparent_1px)] bg-[size:32px_32px] opacity-50"></div>
       </div>
 
       <motion.div
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-md bg-white border border-slate-200 rounded-2xl shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] overflow-hidden relative z-10"
+        className="w-full max-w-md glass-card border border-white/60 rounded-2xl shadow-[0_12px_40px_rgba(15,23,42,0.05)] overflow-hidden relative z-10"
       >
         {/* Top brand indicator */}
         <div className="h-1.5 bg-gradient-to-r from-red-600 via-red-500 to-[#0e2a47]" />
@@ -188,11 +188,11 @@ export default function Login() {
               >
                 <div className="text-center mb-6">
                   {/* Brand Logo */}
-                  <div className="w-16 h-16 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center mx-auto mb-4 shadow-sm overflow-hidden">
+                  <div className="w-16 h-16 rounded-full bg-white border border-slate-200/80 flex items-center justify-center mx-auto mb-4 shadow-sm overflow-hidden p-0.5">
                     <img 
                       src="/logo.jpeg" 
                       alt="APEC Logo" 
-                      className="w-full h-full object-contain p-1" 
+                      className="w-full h-full object-contain" 
                       onError={(e) => {
                         e.currentTarget.src = '/logo.png';
                       }}
@@ -204,7 +204,7 @@ export default function Login() {
 
                 <form onSubmit={handleLogin} className="space-y-4 flex-1 flex flex-col justify-center">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider ml-1">Email Address</label>
+                    <label className="text-xs font-semibold text-slate-705 uppercase tracking-wider ml-1">Email Address</label>
                     <div className="relative">
                       <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                       <input
@@ -217,13 +217,13 @@ export default function Login() {
                         placeholder="yourname@apec.com"
                         required
                         disabled={isLoading}
-                        className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl py-3 pl-11 pr-4 focus:outline-none focus:border-[#0e2a47] focus:ring-1 focus:ring-[#0e2a47]/30 transition-all placeholder:text-slate-400 disabled:opacity-50 text-sm"
+                        className="w-full bg-white/80 border border-slate-200/85 text-slate-900 rounded-xl py-3.5 pl-11 pr-4 focus:outline-none focus:border-[#0e2a47] focus:ring-1 focus:ring-[#0e2a47]/20 transition-all placeholder:text-slate-400 disabled:opacity-50 text-sm shadow-[0_2px_8px_rgba(0,0,0,0.01)]"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider ml-1">Password</label>
+                    <label className="text-xs font-semibold text-slate-705 uppercase tracking-wider ml-1">Password</label>
                     <div className="relative">
                       <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                       <input
@@ -236,13 +236,13 @@ export default function Login() {
                         placeholder="••••••••"
                         required
                         disabled={isLoading}
-                        className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl py-3 pl-11 pr-4 focus:outline-none focus:border-[#0e2a47] focus:ring-1 focus:ring-[#0e2a47]/30 transition-all placeholder:text-slate-400 disabled:opacity-50 text-sm"
+                        className="w-full bg-white/80 border border-slate-200/85 text-slate-900 rounded-xl py-3.5 pl-11 pr-4 focus:outline-none focus:border-[#0e2a47] focus:ring-1 focus:ring-[#0e2a47]/20 transition-all placeholder:text-slate-400 disabled:opacity-50 text-sm shadow-[0_2px_8px_rgba(0,0,0,0.01)]"
                       />
                     </div>
                   </div>
 
                   {errorMsg && (
-                    <div className="text-red-600 text-xs font-semibold text-center bg-red-50 py-2 px-3 rounded-xl border border-red-200/50">
+                    <div className="text-red-600 text-xs font-semibold text-center bg-red-50 py-2.5 px-3 rounded-xl border border-red-200/50">
                       {errorMsg}
                     </div>
                   )}
@@ -251,7 +251,7 @@ export default function Login() {
                     <button
                       type="submit"
                       disabled={isLoading || !email || !password}
-                      className="w-full bg-[#0e2a47] hover:bg-[#0a2540] text-white font-medium py-3.5 rounded-xl transition-all relative overflow-hidden group flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed shadow-sm"
+                      className="w-full bg-gradient-to-r from-[#0e2a47] to-[#1e4670] hover:from-[#0a2540] hover:to-[#173d63] text-white font-bold py-3.5 rounded-xl transition-all relative overflow-hidden group flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed shadow-[0_4px_14px_rgba(14,42,71,0.15)] hover:shadow-lg"
                     >
                       {isLoading ? (
                         <Loader2 className="w-5 h-5 animate-spin" />
@@ -267,14 +267,14 @@ export default function Login() {
                       <div className="absolute inset-0 flex items-center">
                         <span className="w-full border-t border-slate-200" />
                       </div>
-                      <span className="relative bg-white px-3 text-xs uppercase text-slate-400 font-semibold tracking-wider">Or</span>
+                      <span className="relative bg-[#fafbfe] px-3 text-xs uppercase text-slate-400 font-bold tracking-wider">Or</span>
                     </div>
 
                     <button
                       type="button"
                       onClick={handleGoogleLogin}
                       disabled={isLoading}
-                      className="w-full bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 font-medium py-3.5 rounded-xl transition-all flex items-center justify-center gap-3 disabled:opacity-50 text-sm shadow-sm"
+                      className="w-full bg-white/90 hover:bg-white border border-slate-200/80 hover:border-slate-300 text-slate-705 font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-3 disabled:opacity-50 text-sm shadow-[0_2px_8px_rgba(0,0,0,0.015)]"
                     >
                       <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
                         <path

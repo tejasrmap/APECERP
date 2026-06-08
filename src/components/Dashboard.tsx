@@ -55,9 +55,9 @@ export default function Dashboard() {
       
       {/* Background Ambience */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-blue-100/50 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-red-50/40 rounded-full blur-[150px]" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f080_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f080_1px,transparent_1px)] bg-[size:24px_24px] opacity-40"></div>
+        <div className="absolute top-[-25%] left-[-15%] w-[60%] h-[60%] bg-blue-100/45 rounded-full blur-[140px]" />
+        <div className="absolute bottom-[-25%] right-[-15%] w-[70%] h-[70%] bg-red-50/35 rounded-full blur-[160px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f060_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f060_1px,transparent_1px)] bg-[size:24px_24px] opacity-50"></div>
       </div>
 
       {/* Mobile Sidebar Overlay */}
@@ -66,28 +66,28 @@ export default function Dashboard() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-slate-950/40 z-40 lg:hidden backdrop-blur-sm"
+          className="fixed inset-0 bg-slate-950/20 z-40 lg:hidden backdrop-blur-sm"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <aside
-        className={`fixed lg:relative z-50 w-72 h-full bg-white border-r border-slate-200 flex flex-col transition-transform duration-300 ease-out shadow-xl lg:shadow-none lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`fixed lg:relative z-50 w-72 h-full glass-sidebar flex flex-col transition-transform duration-300 ease-out shadow-2xl lg:shadow-none lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
-        <div className="p-6 flex items-center justify-between border-b border-slate-200">
+        <div className="p-6 flex items-center justify-between border-b border-slate-200/80">
           <div className="flex items-center gap-3">
-             <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center overflow-hidden border border-slate-200 shadow-sm shrink-0">
+             <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center overflow-hidden border border-slate-200/80 shadow-sm shrink-0">
                <img src="/logo.jpeg" alt="APEC Logo" className="w-full h-full object-contain p-0.5" onError={(e) => {
                  (e.currentTarget as HTMLImageElement).src = '/logo.png';
                }} />
              </div>
              <div>
                 <h1 className="font-bold text-lg text-slate-900 leading-tight">APEC</h1>
-                <p className="text-[9px] text-red-550 font-bold uppercase tracking-widest">ERP System</p>
+                <p className="text-[9px] text-red-650 font-bold uppercase tracking-widest">ERP System</p>
              </div>
           </div>
-          <button className="lg:hidden p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors" onClick={() => setIsSidebarOpen(false)}>
+          <button className="lg:hidden p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100/80 rounded-lg transition-colors" onClick={() => setIsSidebarOpen(false)}>
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -100,10 +100,10 @@ export default function Dashboard() {
               <button
                 key={item.name}
                 onClick={() => { navigate(getPathForTab(item.name)); setIsSidebarOpen(false); }}
-                className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all ${
+                className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 ${
                   isActive 
-                    ? 'bg-[#0e2a47] text-white font-medium shadow-sm' 
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
+                    ? 'bg-[#0e2a47] text-white font-medium shadow-md glowing-active' 
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/60 border border-transparent'
                 }`}
               >
                 <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-slate-500'}`} />
@@ -113,9 +113,9 @@ export default function Dashboard() {
           })}
         </nav>
 
-        <div className="p-4 border-t border-slate-200">
-          <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 mb-4 shadow-sm">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center text-xs font-bold text-white border border-slate-500 shadow-sm">
+        <div className="p-4 border-t border-slate-200/80">
+          <div className="flex items-center gap-3 px-4 py-3 bg-slate-50/65 rounded-xl border border-slate-200/50 mb-4 shadow-[inset_0_2px_4px_rgba(0,0,0,0.015)]">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center text-xs font-bold text-white border border-slate-500 shadow-sm shrink-0">
               {auth?.currentUser?.email ? auth.currentUser.email.slice(0, 2).toUpperCase() : 'AD'}
             </div>
             <div className="flex-1 min-w-0">
@@ -146,7 +146,7 @@ export default function Dashboard() {
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 z-10 relative overflow-hidden h-full">
         {/* Header */}
-        <header className="h-16 lg:h-20 border-b border-slate-200 bg-white/80 backdrop-blur-md flex items-center justify-between px-4 lg:px-8 shrink-0 relative z-20">
+        <header className="h-16 lg:h-20 border-b border-slate-200/80 bg-white/70 backdrop-blur-md flex items-center justify-between px-4 lg:px-8 shrink-0 relative z-20">
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setIsSidebarOpen(true)}
@@ -165,7 +165,7 @@ export default function Dashboard() {
               <input 
                 type="text" 
                 placeholder={activeTab === 'Workforce' ? "Search across all channels..." : "Search resources..."}
-                className="bg-slate-100 border border-slate-200 rounded-full py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-[#0e2a47] focus:ring-1 focus:ring-[#0e2a47]/30 w-48 lg:w-64 placeholder:text-slate-450 transition-all text-slate-900"
+                className="bg-slate-100/80 border border-slate-200/80 rounded-full py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-[#0e2a47] focus:ring-1 focus:ring-[#0e2a47]/20 w-48 lg:w-64 placeholder:text-slate-450 transition-all text-slate-900 shadow-[inset_0_2px_4px_rgba(0,0,0,0.01)]"
               />
             </div>
             <button className="relative p-2 rounded-full hover:bg-slate-100 transition-colors border border-transparent hover:border-slate-200">

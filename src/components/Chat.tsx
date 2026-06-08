@@ -230,17 +230,17 @@ export default function Chat() {
     <motion.div 
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex-1 flex bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm h-[calc(100vh-160px)] min-h-[500px]"
+      className="flex-1 flex glass-card rounded-2xl overflow-hidden h-[calc(100vh-160px)] min-h-[500px] shadow-[0_12px_40px_rgba(15,23,42,0.04)] border border-white/60"
     >
       {/* Contact List Panel (Left) */}
       <div 
-        className={`w-full md:w-80 border-r border-slate-200 flex flex-col shrink-0 bg-slate-50 ${
+        className={`w-full md:w-80 border-r border-slate-200/60 flex flex-col shrink-0 bg-white/30 backdrop-blur-md ${
           mobileView === 'chat' ? 'hidden md:flex' : 'flex'
         }`}
       >
         {/* Contact List Header */}
-        <div className="p-4 border-b border-slate-200 bg-slate-50/50">
-          <h3 className="text-sm font-bold text-slate-700 mb-3 tracking-wide uppercase">Operational Chats</h3>
+        <div className="p-4 border-b border-slate-200/50 bg-white/40 backdrop-blur-sm">
+          <h3 className="text-xs font-bold text-slate-500 mb-3 tracking-wider uppercase">Operational Chats</h3>
           <div className="relative group">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-[#0e2a47] transition-colors" />
             <input 
@@ -248,36 +248,36 @@ export default function Chat() {
               placeholder="Search team members..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white border border-slate-200 rounded-xl py-2 pl-10 pr-4 text-xs focus:outline-none focus:border-[#0e2a47] focus:ring-1 focus:ring-[#0e2a47]/30 transition-all text-slate-900 placeholder:text-slate-400"
+              className="w-full bg-white/85 border border-slate-200/80 rounded-xl py-2 pl-10 pr-4 text-xs focus:outline-none focus:border-[#0e2a47] focus:ring-1 focus:ring-[#0e2a47]/20 transition-all text-slate-900 placeholder:text-slate-400 shadow-[0_2px_8px_rgba(0,0,0,0.01)]"
             />
           </div>
         </div>
 
         {/* Channels/Contacts Scroller */}
-        <div className="flex-1 overflow-y-auto p-2 space-y-1 scrollbar-thin">
+        <div className="flex-1 overflow-y-auto p-3 space-y-1 scrollbar-thin">
           
           {/* Central Channel Chat Card */}
           <button
             onClick={() => { setSelectedChat('group'); setMobileView('chat'); }}
-            className={`w-full text-left p-3 rounded-xl flex items-center gap-3 transition-all ${
+            className={`w-full text-left p-3 rounded-xl flex items-center gap-3 transition-all duration-300 border ${
               selectedChat === 'group' 
-                ? 'bg-slate-150 border border-slate-200 text-[#0e2a47] font-semibold' 
-                : 'hover:bg-slate-100/50 text-slate-600 hover:text-slate-900 border border-transparent'
+                ? 'bg-white/80 border-white/80 text-[#0e2a47] font-semibold shadow-[0_4px_16px_rgba(15,23,42,0.03)] glowing-active' 
+                : 'hover:bg-white/40 border-transparent hover:border-white/30 text-slate-600 hover:text-slate-900'
             }`}
           >
-            <div className="w-10 h-10 rounded-full bg-red-50 border border-red-200 flex items-center justify-center text-red-600 shrink-0 shadow-sm">
+            <div className="w-10 h-10 rounded-full bg-red-50 border border-red-100 flex items-center justify-center text-red-600 shrink-0 shadow-sm">
               <Users className="w-5 h-5" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex justify-between items-baseline">
-                <span className="text-xs font-semibold truncate text-slate-900">Central Channel</span>
-                <span className="text-[9px] text-slate-400">Public</span>
+                <span className="text-xs font-bold truncate text-slate-900">Central Channel</span>
+                <span className="text-[9px] text-slate-400 font-medium">Public</span>
               </div>
               <p className="text-[10px] text-slate-500 truncate mt-0.5">APEC Operations Chatroom</p>
             </div>
           </button>
 
-          <div className="pt-2 pb-1 px-3">
+          <div className="pt-3 pb-1 px-3">
             <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Direct Messages</span>
           </div>
 
@@ -291,15 +291,15 @@ export default function Chat() {
               <button
                 key={contact.id}
                 onClick={() => { setSelectedChat(contact); setMobileView('chat'); }}
-                className={`w-full text-left p-3 rounded-xl flex items-center gap-3 transition-all ${
+                className={`w-full text-left p-3 rounded-xl flex items-center gap-3 transition-all duration-300 border ${
                   selectedChat !== 'group' && selectedChat.email === contact.email
-                    ? 'bg-slate-150 border border-slate-200 text-[#0e2a47] font-semibold' 
-                    : 'hover:bg-slate-100/50 text-slate-600 hover:text-slate-900 border border-transparent'
+                    ? 'bg-white/80 border-white/80 text-[#0e2a47] font-semibold shadow-[0_4px_16px_rgba(15,23,42,0.03)] glowing-active' 
+                    : 'hover:bg-white/40 border-transparent hover:border-white/30 text-slate-600 hover:text-slate-900'
                 }`}
               >
                 {/* Avatar Initials with online status indicator */}
                 <div className="relative shrink-0">
-                  <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-xs font-semibold text-slate-700 shadow-sm">
+                  <div className="w-10 h-10 rounded-full bg-white border border-slate-200/80 flex items-center justify-center text-xs font-semibold text-slate-700 shadow-sm">
                     {getInitials(contact.name)}
                   </div>
                   <span className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white ${getStatusColor(contact.status)}`}></span>
@@ -321,12 +321,12 @@ export default function Chat() {
 
       {/* Conversation Panel (Right) */}
       <div 
-        className={`flex-1 flex flex-col min-w-0 relative bg-white ${
+        className={`flex-1 flex flex-col min-w-0 relative bg-white/20 backdrop-blur-md ${
           mobileView === 'list' ? 'hidden md:flex' : 'flex'
         }`}
       >
         {/* Chat Header */}
-        <div className="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+        <div className="p-4 border-b border-slate-200/60 bg-white/40 backdrop-blur-sm flex items-center justify-between">
           <div className="flex items-center gap-3">
             {/* Mobile Back Button */}
             <button 
@@ -338,7 +338,7 @@ export default function Chat() {
 
             {selectedChat === 'group' ? (
               <>
-                <div className="w-10 h-10 rounded-full bg-red-50 border border-red-200 flex items-center justify-center text-red-600 shrink-0">
+                <div className="w-10 h-10 rounded-full bg-red-50 border border-red-200/60 flex items-center justify-center text-red-600 shrink-0">
                   <Users className="w-5 h-5" />
                 </div>
                 <div>
@@ -362,14 +362,14 @@ export default function Chat() {
             )}
           </div>
 
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-50 border border-green-200">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-50 border border-green-200/50 shadow-sm">
             <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-ping"></span>
             <span className="text-[10px] text-green-600 font-semibold uppercase tracking-wider">Live Sync</span>
           </div>
         </div>
 
         {/* Message stream */}
-        <div className="flex-1 p-4 overflow-y-auto space-y-4 max-h-[calc(100vh-320px)] scrollbar-thin bg-slate-50/20">
+        <div className="flex-1 p-4 overflow-y-auto space-y-4 max-h-[calc(100vh-320px)] scrollbar-thin bg-slate-50/10">
           {isChatLoading ? (
             <div className="h-full flex items-center justify-center">
               <Loader2 className="w-8 h-8 animate-spin text-[#0e2a47]" />
@@ -394,14 +394,14 @@ export default function Chat() {
                   key={m.id} 
                   className={`flex flex-col max-w-[80%] ${isCurrentUser ? 'ml-auto items-end' : 'mr-auto items-start'}`}
                 >
-                  <span className="text-[10px] text-slate-400 mb-1 px-1 font-semibold truncate max-w-[200px]">
+                  <span className="text-[10px] text-slate-450 mb-1 px-1 font-semibold truncate max-w-[200px]">
                     {isCurrentUser ? 'You' : m.senderName}
                   </span>
                   
-                  <div className={`p-3 rounded-2xl text-sm ${
+                  <div className={`p-3.5 rounded-2xl text-sm ${
                     isCurrentUser 
-                      ? 'bg-[#0e2a47] text-white rounded-tr-none shadow-sm' 
-                      : 'bg-slate-100 text-slate-800 rounded-tl-none border border-slate-200/60 shadow-sm'
+                      ? 'bg-gradient-to-br from-[#0e2a47] to-[#1a3d64] text-white rounded-tr-none shadow-[0_4px_14px_rgba(14,42,71,0.15)] border border-[#0e2a47]/40' 
+                      : 'bg-white/90 text-slate-800 rounded-tl-none border border-white shadow-[0_4px_14px_rgba(15,23,42,0.03)]'
                   }`}>
                     
                     {/* Render Image Attachments Inline */}
@@ -456,7 +456,6 @@ export default function Chat() {
           )}
           <div ref={messagesEndRef} />
         </div>
-
         {/* Selected File Preview Box */}
         <AnimatePresence>
           {attachedFile && (
@@ -464,10 +463,10 @@ export default function Chat() {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 15 }}
-              className="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3 shrink-0"
+              className="p-3 bg-white/60 backdrop-blur-sm border-t border-slate-200/50 flex items-center justify-between gap-3 shrink-0"
             >
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-9 h-9 rounded-lg bg-red-50 border border-red-250 flex items-center justify-center text-red-600 shrink-0 shadow-sm">
+                <div className="w-9 h-9 rounded-lg bg-red-50 border border-red-200 flex items-center justify-center text-red-600 shrink-0 shadow-sm">
                   <FileText className="w-5 h-5" />
                 </div>
                 <div className="min-w-0 text-left">
@@ -480,7 +479,7 @@ export default function Chat() {
               <button 
                 type="button"
                 onClick={() => setAttachedFile(null)}
-                className="p-1.5 text-slate-500 hover:text-slate-800 rounded-lg hover:bg-slate-200 transition-colors"
+                className="p-1.5 text-slate-500 hover:text-slate-800 rounded-lg hover:bg-slate-100 transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -489,7 +488,7 @@ export default function Chat() {
         </AnimatePresence>
 
         {/* Chat input panel */}
-        <form onSubmit={handleSendMessage} className="p-4 border-t border-slate-200 bg-slate-50/80 flex items-center gap-3">
+        <form onSubmit={handleSendMessage} className="p-4 border-t border-slate-200/50 bg-white/40 backdrop-blur-sm flex items-center gap-3">
           <input 
             type="file" 
             ref={fileInputRef}
@@ -500,7 +499,7 @@ export default function Chat() {
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={fileUploading}
-            className="p-3 bg-white border border-slate-200 hover:border-slate-300 text-slate-500 hover:text-slate-800 rounded-xl transition-all shadow-sm shrink-0 flex items-center justify-center disabled:opacity-50"
+            className="p-3 bg-white border border-slate-200/80 hover:border-slate-350 text-slate-500 hover:text-slate-850 rounded-xl transition-all shadow-sm shrink-0 flex items-center justify-center disabled:opacity-50"
           >
             {fileUploading ? <Loader2 className="w-4 h-4 animate-spin text-[#0e2a47]" /> : <Paperclip className="w-4 h-4" />}
           </button>
@@ -515,30 +514,29 @@ export default function Chat() {
                 ? "Broadcast an operations update..." 
                 : `Send a direct message to ${selectedChat.name}...`
             }
-            className="flex-1 bg-white border border-slate-200 rounded-xl py-3 px-4 focus:outline-none focus:border-[#0e2a47] focus:ring-1 focus:ring-[#0e2a47]/30 text-sm placeholder:text-slate-400 text-slate-900 disabled:opacity-50"
+            className="flex-1 bg-white border border-slate-200/80 rounded-xl py-3 px-4 focus:outline-none focus:border-[#0e2a47] focus:ring-1 focus:ring-[#0e2a47]/20 text-sm placeholder:text-slate-400 text-slate-900 disabled:opacity-50 shadow-[0_2px_8px_rgba(0,0,0,0.01)]"
           />
           <button 
             type="submit"
             disabled={fileUploading || (!newMessageText.trim() && !attachedFile)}
-            className="p-3 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white rounded-xl shadow-md transition-colors flex items-center justify-center shrink-0"
+            className="p-3 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white rounded-xl shadow-[0_4px_12px_rgba(220,38,38,0.2)] transition-colors flex items-center justify-center shrink-0"
           >
             <Send className="w-4 h-4" />
           </button>
         </form>
       </div>
-
       {/* Contextual Assets Panel (Right) */}
-      <div className="hidden xl:flex w-80 border-l border-slate-200 flex-col bg-slate-50 p-4 space-y-6 overflow-y-auto shrink-0 select-none">
+      <div className="hidden xl:flex w-80 border-l border-slate-200/60 flex-col bg-white/30 backdrop-blur-md p-4 space-y-6 overflow-y-auto shrink-0 select-none">
         <div>
-          <h3 className="text-xs font-bold text-slate-400 tracking-wide uppercase">Contextual Assets</h3>
+          <h3 className="text-xs font-bold text-slate-450 tracking-wider uppercase">Contextual Assets</h3>
         </div>
 
         {/* Substation 4 Location */}
         <div className="space-y-2">
           <h4 className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">Substation 4 Location</h4>
-          <div className="rounded-xl overflow-hidden border border-slate-200 bg-white aspect-video relative shadow-sm">
+          <div className="rounded-xl overflow-hidden border border-white bg-white/60 aspect-video relative shadow-sm hover:shadow-md transition-shadow">
             <img src="/substation_map.png" alt="Substation Map" className="w-full h-full object-cover" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-red-600 rounded-full border-2 border-white shadow-[0_0_10px_rgba(220,38,38,0.8)] animate-pulse" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 bg-red-650 rounded-full border-2 border-white shadow-[0_0_12px_rgba(220,38,38,0.95)] animate-pulse" />
           </div>
         </div>
 
@@ -546,14 +544,14 @@ export default function Chat() {
         <div className="space-y-3">
           <h4 className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">Real-time Telemetry</h4>
           
-          <div className="p-3 bg-white border border-slate-200 rounded-xl space-y-3 shadow-sm">
+          <div className="p-4 bg-white/70 border border-white shadow-[0_4px_16px_rgba(15,23,42,0.02)] rounded-xl space-y-3">
             {/* Core Temp */}
             <div>
               <div className="flex justify-between items-baseline mb-1">
                 <span className="text-[10px] font-bold text-slate-500 uppercase font-mono">Core Temp</span>
                 <span className="text-xs font-bold text-red-650">84°C</span>
               </div>
-              <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+              <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
                 <div className="h-full bg-red-500 rounded-full" style={{ width: '84%' }} />
               </div>
             </div>
@@ -564,7 +562,7 @@ export default function Chat() {
                 <span className="text-[10px] font-bold text-slate-500 uppercase font-mono">Grid Load</span>
                 <span className="text-xs font-bold text-slate-900">14.2 MW</span>
               </div>
-              <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+              <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
                 <div className="h-full bg-slate-950 rounded-full" style={{ width: '57%' }} />
               </div>
             </div>
@@ -575,18 +573,18 @@ export default function Chat() {
         <div className="space-y-2">
           <h4 className="text-[10px] font-bold text-slate-400 tracking-wider uppercase">Shared Documentation</h4>
           <div className="grid grid-cols-2 gap-3">
-            <div className="p-4 bg-white border border-slate-200 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-slate-355 transition-colors cursor-pointer shadow-sm">
+            <div className="p-3 bg-white/70 border border-white rounded-xl flex flex-col items-center justify-center gap-2 hover:bg-white hover:border-slate-300 shadow-[0_4px_12px_rgba(15,23,42,0.015)] transition-all cursor-pointer">
               <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center text-red-500">
                 <FileText className="w-4.5 h-4.5" />
               </div>
-              <span className="text-[10px] font-semibold text-slate-700">Wiring_Diag.pdf</span>
+              <span className="text-[10px] font-semibold text-slate-705 text-center truncate w-full">Wiring_Diag.pdf</span>
             </div>
             
-            <div className="p-4 bg-white border border-slate-200 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-slate-355 transition-colors cursor-pointer shadow-sm">
+            <div className="p-3 bg-white/70 border border-white rounded-xl flex flex-col items-center justify-center gap-2 hover:bg-white hover:border-slate-300 shadow-[0_4px_12px_rgba(15,23,42,0.015)] transition-all cursor-pointer">
               <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500">
                 <FileText className="w-4.5 h-4.5" />
               </div>
-              <span className="text-[10px] font-semibold text-slate-700">Load_Profile.xlsx</span>
+              <span className="text-[10px] font-semibold text-slate-705 text-center truncate w-full">Load_Profile.xlsx</span>
             </div>
           </div>
         </div>
@@ -594,7 +592,7 @@ export default function Chat() {
         <div className="pt-2">
           <button 
             type="button"
-            className="w-full py-3 bg-[#0e2a47] hover:bg-[#0a2540] text-white rounded-xl text-xs font-semibold shadow-sm transition-colors uppercase tracking-wider"
+            className="w-full py-3 bg-gradient-to-r from-[#0e2a47] to-[#1e4670] hover:from-[#0a2540] hover:to-[#173d63] text-white rounded-xl text-xs font-semibold shadow-[0_4px_14px_rgba(14,42,71,0.15)] hover:shadow-lg transition-all uppercase tracking-wider"
           >
             Create Work Order
           </button>
