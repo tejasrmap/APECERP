@@ -90,7 +90,7 @@ export default function Team() {
           <p className="text-xs text-slate-400 mt-1">Populate profiles using Seeding settings.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {teamList.map((m) => (
             <div key={m.id} className="p-6 rounded-2xl glass-card border border-white/60 flex flex-col relative group hover:border-white/90 shadow-[0_8px_30px_rgba(15,23,42,0.03)] hover:shadow-[0_12px_40px_rgba(15,23,42,0.06)] hover:-translate-y-0.5 transition-all duration-300">
               <button

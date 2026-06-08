@@ -215,8 +215,8 @@ export default function Projects() {
                   <thead>
                     <tr className="border-b border-slate-200/60 bg-white/40 text-xs uppercase tracking-wider text-slate-500 font-semibold">
                       <th className="p-4">Project Name</th>
-                      <th className="p-4">Site Location</th>
-                      <th className="p-4">Project Manager</th>
+                      <th className="p-4 hidden sm:table-cell">Site Location</th>
+                      <th className="p-4 hidden md:table-cell">Project Manager</th>
                       <th className="p-4">Status</th>
                       <th className="p-4 text-center">Actions</th>
                     </tr>
@@ -225,8 +225,8 @@ export default function Projects() {
                     {projectsList.map((p) => (
                       <tr key={p.id} className="hover:bg-white/40 transition-colors">
                         <td className="p-4 font-bold text-slate-900">{p.name}</td>
-                        <td className="p-4 font-medium">{p.site}</td>
-                        <td className="p-4 font-medium">{p.manager}</td>
+                        <td className="p-4 hidden sm:table-cell font-medium">{p.site}</td>
+                        <td className="p-4 hidden md:table-cell font-medium">{p.manager}</td>
                         <td className="p-4">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                             p.status === 'Active' ? 'bg-green-50 text-green-700 border border-green-200/50' :

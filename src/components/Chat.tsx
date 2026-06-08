@@ -230,7 +230,7 @@ export default function Chat() {
     <motion.div 
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex-1 flex glass-card rounded-2xl overflow-hidden h-[calc(100vh-160px)] min-h-[500px] shadow-[0_12px_40px_rgba(15,23,42,0.04)] border border-white/60"
+      className="flex-1 flex glass-card rounded-2xl overflow-hidden h-[calc(100vh-115px)] md:h-[calc(100vh-160px)] min-h-[450px] md:min-h-[500px] shadow-[0_12px_40px_rgba(15,23,42,0.04)] border border-white/60"
     >
       {/* Contact List Panel (Left) */}
       <div 
@@ -369,7 +369,7 @@ export default function Chat() {
         </div>
 
         {/* Message stream */}
-        <div className="flex-1 p-4 overflow-y-auto space-y-4 max-h-[calc(100vh-320px)] scrollbar-thin bg-slate-50/10">
+        <div className="flex-1 p-3 sm:p-4 overflow-y-auto space-y-4 scrollbar-thin bg-slate-50/10">
           {isChatLoading ? (
             <div className="h-full flex items-center justify-center">
               <Loader2 className="w-8 h-8 animate-spin text-[#0e2a47]" />

@@ -216,22 +216,24 @@ export default function Overview() {
               <p className="text-xs text-slate-400 mt-1">Please populate database in Settings or Projects tab.</p>
             </div>
           ) : (
-            <div className="flex-1 flex items-end gap-1.5 sm:gap-2 pb-6 pt-4 px-1 lg:px-4 h-full border-b border-slate-150 relative">
-              <div className="absolute inset-0 flex flex-col justify-between pointer-events-none pb-6">
-                {[100, 75, 50, 25, 0].map(val => (
-                   <div key={val} className="w-full border-t border-slate-100/80 flex items-center" />
+            <div className="flex-1 overflow-x-auto pb-2">
+              <div className="flex items-end gap-1.5 sm:gap-2 pb-6 pt-4 px-1 lg:px-4 h-full min-w-[480px] sm:min-w-0 border-b border-slate-150 relative">
+                <div className="absolute inset-0 flex flex-col justify-between pointer-events-none pb-6">
+                  {[100, 75, 50, 25, 0].map(val => (
+                     <div key={val} className="w-full border-t border-slate-100/80 flex items-center" />
+                  ))}
+                </div>
+                {[40, 70, 45, 90, 65, 85, 100, 50, 75, 60, 30, 80].map((h, i) => (
+                  <div key={i} className="flex-1 flex flex-col justify-end group h-full relative z-10">
+                    <div 
+                      className="w-full bg-gradient-to-t from-blue-500/40 to-[#0e2a47] group-hover:from-blue-500/60 group-hover:to-[#13385d] rounded-t-lg transition-all duration-300 shadow-[0_4px_12px_rgba(14,42,71,0.08)] relative border border-white/10"
+                      style={{ height: `${h}%` }}
+                    >
+                    </div>
+                    <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[9px] text-slate-450 uppercase font-mono">{['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][i]}</span>
+                  </div>
                 ))}
               </div>
-              {[40, 70, 45, 90, 65, 85, 100, 50, 75, 60, 30, 80].map((h, i) => (
-                <div key={i} className="flex-1 flex flex-col justify-end group h-full relative z-10">
-                  <div 
-                    className="w-full bg-gradient-to-t from-blue-500/40 to-[#0e2a47] group-hover:from-blue-500/60 group-hover:to-[#13385d] rounded-t-lg transition-all duration-300 shadow-[0_4px_12px_rgba(14,42,71,0.08)] relative border border-white/10"
-                    style={{ height: `${h}%` }}
-                  >
-                  </div>
-                  <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[9px] text-slate-450 uppercase font-mono">{['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][i]}</span>
-                </div>
-              ))}
             </div>
           )}
         </div>
