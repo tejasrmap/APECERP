@@ -3,7 +3,8 @@ import { motion } from 'motion/react';
 import { Loader2 } from 'lucide-react';
 import { collection, addDoc, getDocs, deleteDoc, doc, Timestamp } from 'firebase/firestore';
 import { useOutletContext } from 'react-router-dom';
-import { db } from '../firebase';
+import { db, storage as firebaseStorage } from '../firebase';
+import { supabase } from '../supabase';
 
 export default function Settings() {
   const { isDbActionLoading, setIsDbActionLoading } = useOutletContext<any>();
@@ -164,9 +165,23 @@ export default function Settings() {
               <span className="text-slate-500">Database Engine:</span>
               <span className="text-slate-300">Cloud Firestore</span>
             </div>
+            <div className="flex justify-between items-center py-1.5 border-b border-slate-800/50">
+              <span className="text-slate-500">Storage Engine:</span>
+              <span className="text-slate-300">{supabase ? 'Supabase Storage' : 'Firebase Storage'}</span>
+            </div>
+            {supabase && (
+              <div className="flex justify-between items-center py-1.5 border-b border-slate-800/50">
+                <span className="text-slate-500">Storage Bucket:</span>
+                <span className="text-slate-300">APECERP</span>
+              </div>
+            )}
+            <div className="flex justify-between items-center py-1.5 border-b border-slate-800/50">
+              <span className="text-slate-500">Database State:</span>
+              <span className="text-green-400 font-bold">{db ? 'CONNECTED' : 'DISCONNECTED'}</span>
+            </div>
             <div className="flex justify-between items-center py-1.5">
-              <span className="text-slate-500">ERP State:</span>
-              <span className="text-green-400 font-bold">CONNECTED</span>
+              <span className="text-slate-500">Storage State:</span>
+              <span className="text-green-400 font-bold">{(supabase || firebaseStorage) ? 'CONNECTED' : 'DISCONNECTED'}</span>
             </div>
           </div>
         </div>
