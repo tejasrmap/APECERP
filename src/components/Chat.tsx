@@ -154,7 +154,7 @@ export default function Chat() {
         if (supabase) {
           const path = `chat_files/${activeRoomId}/${Date.now()}_${file.name}`;
           const { data: uploadData, error: uploadError } = await supabase.storage
-            .from('chat-files')
+            .from('APECERP')
             .upload(path, file, {
               cacheControl: '3600',
               upsert: false
@@ -165,7 +165,7 @@ export default function Chat() {
           }
 
           const { data: urlData } = supabase.storage
-            .from('chat-files')
+            .from('APECERP')
             .getPublicUrl(path);
 
           fileUrl = urlData.publicUrl;
