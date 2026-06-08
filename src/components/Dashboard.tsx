@@ -15,9 +15,7 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
-import { onAuthStateChanged } from 'firebase/auth';
-import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
-import { auth, db } from '../firebase';
+import { auth } from '../firebase';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -27,53 +25,28 @@ export default function Dashboard() {
   const [isDbActionLoading, setIsDbActionLoading] = useState(false);
   const [firestoreError, setFirestoreError] = useState<string | null>(null);
 
-  // Auto-register logged-in users to the 'team' collection if not already present
-  useEffect(() => {
-    if (!auth || !db) return;
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user && user.email) {
-        try {
-          const q = query(collection(db, 'team'), where('email', '==', user.email));
-          const snap = await getDocs(q);
-          if (snap.empty) {
-            await addDoc(collection(db, 'team'), {
-              name: user.displayName || user.email.split('@')[0] || 'Unknown User',
-              role: 'Team Member',
-              email: user.email,
-              status: 'Active'
-            });
-          }
-        } catch (err) {
-          console.error('Error auto-registering user in team:', err);
-        }
-      }
-    });
-    return () => unsubscribe();
-  }, []);
 
   const navItems = [
-    { name: 'Overview', icon: LayoutDashboard },
-    { name: 'Projects', icon: Activity },
+    { name: 'Dashboard', icon: LayoutDashboard },
     { name: 'Inventory', icon: Package },
-    { name: 'Team', icon: Users },
-    { name: 'Chat', icon: MessageSquare },
+    { name: 'Projects', icon: Activity },
+    { name: 'Workforce', icon: Users },
     { name: 'Settings', icon: Settings },
   ];
 
   // Helper to resolve active tab based on router pathname
   const getActiveTab = () => {
     const path = location.pathname;
-    if (path === '/dashboard/projects') return 'Projects';
     if (path === '/dashboard/inventory') return 'Inventory';
-    if (path === '/dashboard/team') return 'Team';
-    if (path === '/dashboard/chat') return 'Chat';
+    if (path === '/dashboard/projects') return 'Projects';
+    if (path === '/dashboard/workforce') return 'Workforce';
     if (path === '/dashboard/settings') return 'Settings';
-    return 'Overview';
+    return 'Dashboard';
   };
   const activeTab = getActiveTab();
 
   const getPathForTab = (tabName: string) => {
-    if (tabName === 'Overview') return '/dashboard';
+    if (tabName === 'Dashboard') return '/dashboard';
     return `/dashboard/${tabName.toLowerCase()}`;
   };
 
@@ -82,9 +55,9 @@ export default function Dashboard() {
       
       {/* Background Ambience */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-red-600/10 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-blue-800/10 rounded-full blur-[150px]" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-20"></div>
+        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-blue-100/50 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-red-50/40 rounded-full blur-[150px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f080_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f080_1px,transparent_1px)] bg-[size:24px_24px] opacity-40"></div>
       </div>
 
       {/* Mobile Sidebar Overlay */}
@@ -93,28 +66,28 @@ export default function Dashboard() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-slate-950/80 z-40 lg:hidden backdrop-blur-sm"
+          className="fixed inset-0 bg-slate-950/40 z-40 lg:hidden backdrop-blur-sm"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <aside
-        className={`fixed lg:relative z-50 w-72 h-full bg-slate-900/90 backdrop-blur-xl border-r border-slate-800/80 flex flex-col transition-transform duration-300 ease-out shadow-2xl lg:shadow-none lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`fixed lg:relative z-50 w-72 h-full bg-white border-r border-slate-200 flex flex-col transition-transform duration-300 ease-out shadow-xl lg:shadow-none lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
-        <div className="p-6 flex items-center justify-between border-b border-slate-800/50">
+        <div className="p-6 flex items-center justify-between border-b border-slate-200">
           <div className="flex items-center gap-3">
-             <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center overflow-hidden border border-slate-700 shadow-[0_0_15px_rgba(220,38,38,0.2)]">
+             <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center overflow-hidden border border-slate-200 shadow-sm shrink-0">
                <img src="/logo.jpeg" alt="APEC Logo" className="w-full h-full object-contain p-0.5" onError={(e) => {
                  (e.currentTarget as HTMLImageElement).src = '/logo.png';
                }} />
              </div>
              <div>
-                <h1 className="font-bold text-lg text-white leading-tight">APEC</h1>
-                <p className="text-[9px] text-red-500 font-bold uppercase tracking-widest">ERP System</p>
+                <h1 className="font-bold text-lg text-slate-900 leading-tight">APEC</h1>
+                <p className="text-[9px] text-red-550 font-bold uppercase tracking-widest">ERP System</p>
              </div>
           </div>
-          <button className="lg:hidden p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors" onClick={() => setIsSidebarOpen(false)}>
+          <button className="lg:hidden p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors" onClick={() => setIsSidebarOpen(false)}>
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -129,25 +102,25 @@ export default function Dashboard() {
                 onClick={() => { navigate(getPathForTab(item.name)); setIsSidebarOpen(false); }}
                 className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all ${
                   isActive 
-                    ? 'bg-gradient-to-r from-red-600/20 to-transparent text-red-400 font-medium border border-red-500/20 shadow-[inset_4px_0_0_0_#ef4444]' 
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 border border-transparent'
+                    ? 'bg-[#0e2a47] text-white font-medium shadow-sm' 
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
                 }`}
               >
-                <Icon className={`w-5 h-5 ${isActive ? 'text-red-400' : 'text-slate-500'}`} />
+                <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-slate-500'}`} />
                 {item.name}
               </button>
             )
           })}
         </nav>
 
-        <div className="p-4 border-t border-slate-800/50">
-          <div className="flex items-center gap-3 px-4 py-3 bg-slate-950/50 rounded-xl border border-slate-800/80 mb-4 shadow-inner">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center text-xs font-bold text-white border border-slate-600 shadow-md">
+        <div className="p-4 border-t border-slate-200">
+          <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-xl border border-slate-200 mb-4 shadow-sm">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center text-xs font-bold text-white border border-slate-500 shadow-sm">
               {auth?.currentUser?.email ? auth.currentUser.email.slice(0, 2).toUpperCase() : 'AD'}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-white truncate">{auth?.currentUser?.displayName || 'Admin User'}</p>
-              <p className="text-xs text-slate-400 truncate">{auth?.currentUser?.email || 'admin@apec.com'}</p>
+              <p className="text-sm font-semibold text-slate-900 truncate">{auth?.currentUser?.displayName || 'Admin User'}</p>
+              <p className="text-xs text-slate-500 truncate">{auth?.currentUser?.email || 'admin@apec.com'}</p>
             </div>
           </div>
           <button
@@ -162,7 +135,7 @@ export default function Dashboard() {
               }
               navigate('/');
             }}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors border border-transparent hover:border-red-500/20"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors border border-transparent hover:border-red-200"
           >
             <LogOut className="w-4 h-4" />
             Sign Out
@@ -173,29 +146,31 @@ export default function Dashboard() {
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 z-10 relative overflow-hidden h-full">
         {/* Header */}
-        <header className="h-16 lg:h-20 border-b border-slate-800/50 bg-slate-950/80 backdrop-blur-md flex items-center justify-between px-4 lg:px-8 shrink-0 relative z-20">
+        <header className="h-16 lg:h-20 border-b border-slate-200 bg-white/80 backdrop-blur-md flex items-center justify-between px-4 lg:px-8 shrink-0 relative z-20">
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setIsSidebarOpen(true)}
-              className="lg:hidden p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-white transition-colors"
+              className="lg:hidden p-2 rounded-lg bg-white border border-slate-200 text-slate-500 hover:text-slate-900 transition-colors"
             >
               <Menu className="w-5 h-5" />
             </button>
-            <h2 className="text-lg lg:text-xl font-bold text-white tracking-tight">{activeTab}</h2>
+            <h2 className="text-lg lg:text-xl font-bold text-slate-900 tracking-tight">
+              {activeTab === 'Workforce' ? 'Communication Center' : activeTab}
+            </h2>
           </div>
 
           <div className="flex items-center gap-3 lg:gap-5">
             <div className="hidden md:flex relative group">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-red-400 transition-colors" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-[#0e2a47] transition-colors" />
               <input 
                 type="text" 
-                placeholder="Search resources..." 
-                className="bg-slate-900/80 border border-slate-800 rounded-full py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 w-48 lg:w-64 placeholder:text-slate-500 transition-all shadow-inner text-white"
+                placeholder={activeTab === 'Workforce' ? "Search across all channels..." : "Search resources..."}
+                className="bg-slate-100 border border-slate-200 rounded-full py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-[#0e2a47] focus:ring-1 focus:ring-[#0e2a47]/30 w-48 lg:w-64 placeholder:text-slate-450 transition-all text-slate-900"
               />
             </div>
-            <button className="relative p-2 rounded-full hover:bg-slate-800 transition-colors border border-transparent hover:border-slate-700">
-              <Bell className="w-5 h-5 text-slate-400" />
-              <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-slate-950"></span>
+            <button className="relative p-2 rounded-full hover:bg-slate-100 transition-colors border border-transparent hover:border-slate-200">
+              <Bell className="w-5 h-5 text-slate-500 hover:text-slate-800" />
+              <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-white"></span>
             </button>
           </div>
         </header>

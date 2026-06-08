@@ -104,8 +104,8 @@ export default function Projects() {
 
   if (isProjectsLoading) {
     return (
-      <div className="absolute inset-0 flex items-center justify-center bg-slate-950/50 backdrop-blur-sm z-30">
-        <Loader2 className="w-10 h-10 animate-spin text-red-500" />
+      <div className="absolute inset-0 flex items-center justify-center bg-white/50 backdrop-blur-sm z-30">
+        <Loader2 className="w-10 h-10 animate-spin text-[#0e2a47]" />
       </div>
     );
   }
@@ -118,13 +118,13 @@ export default function Projects() {
     >
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="text-xl font-bold text-white">Project Directory</h3>
-          <p className="text-xs text-slate-400 mt-1">APEC active and pipeline installations</p>
+          <h3 className="text-xl font-bold text-slate-900">Project Directory</h3>
+          <p className="text-xs text-slate-500 mt-1">APEC active and pipeline installations</p>
         </div>
         <button 
           onClick={() => setIsAddingProject(!isAddingProject)}
           disabled={isDbActionLoading}
-          className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-md disabled:opacity-50"
+          className="px-4 py-2 rounded-xl bg-[#0e2a47] hover:bg-[#0a2540] text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm disabled:opacity-50"
         >
           {isAddingProject ? <ArrowLeft className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
           {isAddingProject ? 'Back to List' : 'Add Project'}
@@ -138,28 +138,28 @@ export default function Projects() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="max-w-xl bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl"
+            className="max-w-xl bg-white border border-slate-200 p-6 rounded-2xl shadow-md"
           >
-            <h4 className="text-sm font-semibold text-white mb-4">Register New APEC Installation</h4>
+            <h4 className="text-sm font-semibold text-slate-900 mb-4">Register New APEC Installation</h4>
             <form onSubmit={handleAddProject} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-slate-400 uppercase ml-1">Project Name</label>
+                <label className="text-xs font-medium text-slate-500 uppercase ml-1">Project Name</label>
                 <input 
                   type="text" 
                   value={newProjectName}
                   onChange={(e) => setNewProjectName(e.target.value)}
                   placeholder="e.g. Grid Substation Hubli"
                   required
-                  className="w-full bg-slate-950 border border-slate-700 text-white rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500/20 text-sm"
+                  className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl py-3 px-4 focus:outline-none focus:border-[#0e2a47] focus:ring-1 focus:ring-[#0e2a47]/30 text-sm"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-slate-400 uppercase ml-1">Status</label>
+                  <label className="text-xs font-medium text-slate-500 uppercase ml-1">Status</label>
                   <select
                     value={newProjectStatus}
                     onChange={(e) => setNewProjectStatus(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 text-white rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500/20 text-sm cursor-pointer"
+                    className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl py-3 px-4 focus:outline-none focus:border-[#0e2a47] focus:ring-1 focus:ring-[#0e2a47]/30 text-sm cursor-pointer"
                   >
                     <option value="Active">Active</option>
                     <option value="Pending">Pending</option>
@@ -167,30 +167,30 @@ export default function Projects() {
                   </select>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-slate-400 uppercase ml-1">Location Site</label>
+                  <label className="text-xs font-medium text-slate-500 uppercase ml-1">Location Site</label>
                   <input 
                     type="text" 
                     value={newProjectSite}
                     onChange={(e) => setNewProjectSite(e.target.value)}
                     placeholder="e.g. Site A"
-                    className="w-full bg-slate-950 border border-slate-700 text-white rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500/20 text-sm"
+                    className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl py-3 px-4 focus:outline-none focus:border-[#0e2a47] focus:ring-1 focus:ring-[#0e2a47]/30 text-sm"
                   />
                 </div>
               </div>
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-slate-400 uppercase ml-1">Project Manager</label>
+                <label className="text-xs font-medium text-slate-500 uppercase ml-1">Project Manager</label>
                 <input 
                   type="text" 
                   value={newProjectManager}
                   onChange={(e) => setNewProjectManager(e.target.value)}
                   placeholder="e.g. John Doe"
-                  className="w-full bg-slate-950 border border-slate-700 text-white rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500/20 text-sm"
+                  className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl py-3 px-4 focus:outline-none focus:border-[#0e2a47] focus:ring-1 focus:ring-[#0e2a47]/30 text-sm"
                 />
               </div>
               <button
                 type="submit"
                 disabled={isDbActionLoading}
-                className="w-full py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-semibold shadow-md transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full py-3 bg-[#0e2a47] hover:bg-[#0a2540] text-white rounded-xl text-xs font-semibold shadow-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {isDbActionLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Submit Project'}
               </button>
@@ -201,19 +201,19 @@ export default function Projects() {
             key="project-table"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden shadow-lg backdrop-blur-md"
+            className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm"
           >
             {projectsList.length === 0 ? (
               <div className="py-20 text-center flex flex-col items-center">
-                <Activity className="w-14 h-14 text-slate-800 mb-3" />
-                <p className="text-sm font-medium text-slate-400">No projects registered</p>
-                <p className="text-xs text-slate-600 mt-1">Get started by clicking Add Project or seeding database.</p>
+                <Activity className="w-14 h-14 text-slate-300 mb-3" />
+                <p className="text-sm font-medium text-slate-500">No projects registered</p>
+                <p className="text-xs text-slate-400 mt-1">Get started by clicking Add Project or seeding database.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-slate-800 bg-slate-950/40 text-xs uppercase tracking-wider text-slate-400 font-semibold">
+                    <tr className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wider text-slate-500 font-semibold">
                       <th className="p-4">Project Name</th>
                       <th className="p-4">Site Location</th>
                       <th className="p-4">Project Manager</th>
@@ -221,17 +221,17 @@ export default function Projects() {
                       <th className="p-4 text-center">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800/40 text-sm text-slate-300">
+                  <tbody className="divide-y divide-slate-100 text-sm text-slate-600">
                     {projectsList.map((p) => (
-                      <tr key={p.id} className="hover:bg-slate-900/20 transition-colors">
-                        <td className="p-4 font-medium text-white">{p.name}</td>
+                      <tr key={p.id} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="p-4 font-semibold text-slate-900">{p.name}</td>
                         <td className="p-4">{p.site}</td>
                         <td className="p-4">{p.manager}</td>
                         <td className="p-4">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            p.status === 'Active' ? 'bg-green-500/10 text-green-400' :
-                            p.status === 'Completed' ? 'bg-blue-500/10 text-blue-400' :
-                            'bg-amber-500/10 text-amber-400'
+                            p.status === 'Active' ? 'bg-green-50 text-green-700 border border-green-200/50' :
+                            p.status === 'Completed' ? 'bg-blue-50 text-blue-700 border border-blue-200/50' :
+                            'bg-amber-50 text-amber-700 border border-amber-200/50'
                           }`}>
                             {p.status}
                           </span>
@@ -240,7 +240,7 @@ export default function Projects() {
                           <button 
                             onClick={() => handleDeleteDocument('projects', p.id, p.name)}
                             disabled={isDbActionLoading}
-                            className="p-1 text-slate-500 hover:text-red-400 transition-colors rounded hover:bg-red-500/10 disabled:opacity-50"
+                            className="p-1 text-slate-400 hover:text-red-600 transition-colors rounded hover:bg-red-50 disabled:opacity-50"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>

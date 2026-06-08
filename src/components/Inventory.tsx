@@ -66,8 +66,8 @@ export default function Inventory() {
 
   if (isInventoryLoading) {
     return (
-      <div className="absolute inset-0 flex items-center justify-center bg-slate-950/50 backdrop-blur-sm z-30">
-        <Loader2 className="w-10 h-10 animate-spin text-red-500" />
+      <div className="absolute inset-0 flex items-center justify-center bg-white/50 backdrop-blur-sm z-30">
+        <Loader2 className="w-10 h-10 animate-spin text-[#0e2a47]" />
       </div>
     );
   }
@@ -79,38 +79,38 @@ export default function Inventory() {
       className="space-y-6"
     >
       <div>
-        <h3 className="text-xl font-bold text-white">APEC Inventory</h3>
-        <p className="text-xs text-slate-400 mt-1">Track power solutions assets, cables, and equipment</p>
+        <h3 className="text-xl font-bold text-slate-900">APEC Inventory</h3>
+        <p className="text-xs text-slate-500 mt-1">Track power solutions assets, cables, and equipment</p>
       </div>
 
-      <div className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden shadow-lg backdrop-blur-md">
+      <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
         {inventoryList.length === 0 ? (
           <div className="py-20 text-center flex flex-col items-center">
-            <Package className="w-14 h-14 text-slate-800 mb-3" />
-            <p className="text-sm font-medium text-slate-400">Inventory is empty</p>
-            <p className="text-xs text-slate-600 mt-1">Populate items using the Seeding controls in Settings.</p>
+            <Package className="w-14 h-14 text-slate-300 mb-3" />
+            <p className="text-sm font-medium text-slate-550">Inventory is empty</p>
+            <p className="text-xs text-slate-400 mt-1">Populate items using the Seeding controls in Settings.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-slate-800 bg-slate-950/40 text-xs uppercase tracking-wider text-slate-400 font-semibold">
+                <tr className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wider text-slate-500 font-semibold">
                   <th className="p-4">Item Description</th>
                   <th className="p-4">Available Quantity</th>
                   <th className="p-4">Status</th>
                   <th className="p-4 text-center">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/40 text-sm text-slate-300">
+              <tbody className="divide-y divide-slate-100 text-sm text-slate-600">
                 {inventoryList.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-900/20 transition-colors">
-                    <td className="p-4 font-medium text-white">{item.name}</td>
+                  <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
+                    <td className="p-4 font-semibold text-slate-900">{item.name}</td>
                     <td className="p-4">{item.quantity} {item.unit}</td>
                     <td className="p-4">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        item.status === 'In Stock' ? 'bg-green-500/10 text-green-400' :
-                        item.status === 'Low Stock' ? 'bg-amber-500/10 text-amber-400' :
-                        'bg-red-500/10 text-red-400'
+                        item.status === 'In Stock' ? 'bg-green-50 text-green-700 border border-green-200/50' :
+                        item.status === 'Low Stock' ? 'bg-amber-50 text-amber-700 border border-amber-200/50' :
+                        'bg-red-50 text-red-700 border border-red-200/50'
                       }`}>
                         {item.status}
                       </span>
@@ -119,7 +119,7 @@ export default function Inventory() {
                       <button 
                         onClick={() => handleDeleteDocument('inventory', item.id, item.name)}
                         disabled={isDbActionLoading}
-                        className="p-1 text-slate-500 hover:text-red-400 transition-colors rounded hover:bg-red-500/10 disabled:opacity-50"
+                        className="p-1 text-slate-400 hover:text-red-600 transition-colors rounded hover:bg-red-50 disabled:opacity-50"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>

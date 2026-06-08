@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '../firebase';
+import { auth, db } from '../firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
 
 export default function ProtectedRoute() {
@@ -17,9 +18,28 @@ export default function ProtectedRoute() {
       return;
     }
 
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        setAuthenticated(true);
+        if (db && user.email) {
+          try {
+            const q = query(collection(db, 'team'), where('email', '==', user.email));
+            const snap = await getDocs(q);
+            if (!snap.empty) {
+              setAuthenticated(true);
+            } else {
+              // Sign out if not in the team database
+              await auth.signOut();
+              localStorage.removeItem('isAuthenticated');
+              setAuthenticated(false);
+            }
+          } catch (err) {
+            console.error('Error checking team authorization:', err);
+            setAuthenticated(false);
+          }
+        } else {
+          // If Firestore is not configured/available, fall back to standard auth check
+          setAuthenticated(true);
+        }
       } else {
         // Double check localStorage in case they are logged in via local auth state
         const isLocalAuth = localStorage.getItem('isAuthenticated') === 'true';

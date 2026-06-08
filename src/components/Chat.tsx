@@ -230,25 +230,25 @@ export default function Chat() {
     <motion.div 
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex-1 flex bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden shadow-lg backdrop-blur-md h-[calc(100vh-160px)] min-h-[500px]"
+      className="flex-1 flex bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm h-[calc(100vh-160px)] min-h-[500px]"
     >
       {/* Contact List Panel (Left) */}
       <div 
-        className={`w-full md:w-80 border-r border-slate-850 flex flex-col shrink-0 bg-slate-950/20 ${
+        className={`w-full md:w-80 border-r border-slate-200 flex flex-col shrink-0 bg-slate-50 ${
           mobileView === 'chat' ? 'hidden md:flex' : 'flex'
         }`}
       >
         {/* Contact List Header */}
-        <div className="p-4 border-b border-slate-800/80">
-          <h3 className="text-sm font-bold text-white mb-3 tracking-wide uppercase">Operational Chats</h3>
+        <div className="p-4 border-b border-slate-200 bg-slate-50/50">
+          <h3 className="text-sm font-bold text-slate-700 mb-3 tracking-wide uppercase">Operational Chats</h3>
           <div className="relative group">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-red-400 transition-colors" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-[#0e2a47] transition-colors" />
             <input 
               type="text" 
               placeholder="Search team members..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-950/80 border border-slate-800 rounded-xl py-2 pl-10 pr-4 text-xs focus:outline-none focus:border-red-500/50 transition-all text-white placeholder:text-slate-650"
+              className="w-full bg-white border border-slate-200 rounded-xl py-2 pl-10 pr-4 text-xs focus:outline-none focus:border-[#0e2a47] focus:ring-1 focus:ring-[#0e2a47]/30 transition-all text-slate-900 placeholder:text-slate-400"
             />
           </div>
         </div>
@@ -261,29 +261,29 @@ export default function Chat() {
             onClick={() => { setSelectedChat('group'); setMobileView('chat'); }}
             className={`w-full text-left p-3 rounded-xl flex items-center gap-3 transition-all ${
               selectedChat === 'group' 
-                ? 'bg-red-600/10 border border-red-500/20 text-white' 
-                : 'hover:bg-slate-850/50 text-slate-400 hover:text-slate-200 border border-transparent'
+                ? 'bg-slate-150 border border-slate-200 text-[#0e2a47] font-semibold' 
+                : 'hover:bg-slate-100/50 text-slate-600 hover:text-slate-900 border border-transparent'
             }`}
           >
-            <div className="w-10 h-10 rounded-full bg-red-600/20 border border-red-500/30 flex items-center justify-center text-red-400 shrink-0 shadow-inner">
+            <div className="w-10 h-10 rounded-full bg-red-50 border border-red-200 flex items-center justify-center text-red-600 shrink-0 shadow-sm">
               <Users className="w-5 h-5" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex justify-between items-baseline">
-                <span className="text-xs font-semibold truncate text-white">Central Channel</span>
-                <span className="text-[9px] text-slate-500">Public</span>
+                <span className="text-xs font-semibold truncate text-slate-900">Central Channel</span>
+                <span className="text-[9px] text-slate-400">Public</span>
               </div>
               <p className="text-[10px] text-slate-500 truncate mt-0.5">APEC Operations Chatroom</p>
             </div>
           </button>
 
           <div className="pt-2 pb-1 px-3">
-            <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Direct Messages</span>
+            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Direct Messages</span>
           </div>
 
           {/* Contacts List */}
           {filteredContacts.length === 0 ? (
-            <div className="py-8 text-center text-xs text-slate-600">
+            <div className="py-8 text-center text-xs text-slate-400">
               No contacts found
             </div>
           ) : (
@@ -293,22 +293,22 @@ export default function Chat() {
                 onClick={() => { setSelectedChat(contact); setMobileView('chat'); }}
                 className={`w-full text-left p-3 rounded-xl flex items-center gap-3 transition-all ${
                   selectedChat !== 'group' && selectedChat.email === contact.email
-                    ? 'bg-red-600/10 border border-red-500/20 text-white' 
-                    : 'hover:bg-slate-850/50 text-slate-400 hover:text-slate-200 border border-transparent'
+                    ? 'bg-slate-150 border border-slate-200 text-[#0e2a47] font-semibold' 
+                    : 'hover:bg-slate-100/50 text-slate-600 hover:text-slate-900 border border-transparent'
                 }`}
               >
                 {/* Avatar Initials with online status indicator */}
                 <div className="relative shrink-0">
-                  <div className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-semibold text-slate-355 shadow">
+                  <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-xs font-semibold text-slate-700 shadow-sm">
                     {getInitials(contact.name)}
                   </div>
-                  <span className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-slate-950 ${getStatusColor(contact.status)}`}></span>
+                  <span className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white ${getStatusColor(contact.status)}`}></span>
                 </div>
                 
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-baseline">
-                    <span className="text-xs font-semibold truncate text-slate-200">{contact.name}</span>
-                    <span className="text-[8px] text-red-500 uppercase tracking-widest font-bold font-sans">{contact.status}</span>
+                    <span className="text-xs font-semibold truncate text-slate-800">{contact.name}</span>
+                    <span className="text-[8px] text-red-655 uppercase tracking-widest font-bold font-sans">{contact.status}</span>
                   </div>
                   <p className="text-[10px] text-slate-500 truncate mt-0.5">{contact.role}</p>
                 </div>
@@ -321,68 +321,68 @@ export default function Chat() {
 
       {/* Conversation Panel (Right) */}
       <div 
-        className={`flex-1 flex flex-col min-w-0 relative bg-slate-950/10 ${
+        className={`flex-1 flex flex-col min-w-0 relative bg-white ${
           mobileView === 'list' ? 'hidden md:flex' : 'flex'
         }`}
       >
         {/* Chat Header */}
-        <div className="p-4 border-b border-slate-800/80 bg-slate-950/20 flex items-center justify-between">
+        <div className="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
           <div className="flex items-center gap-3">
             {/* Mobile Back Button */}
             <button 
               onClick={() => setMobileView('list')}
-              className="md:hidden p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-white transition-colors"
+              className="md:hidden p-1.5 rounded-lg bg-white border border-slate-200 text-slate-500 hover:text-slate-900 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
             </button>
 
             {selectedChat === 'group' ? (
               <>
-                <div className="w-10 h-10 rounded-full bg-red-600/20 border border-red-500/30 flex items-center justify-center text-red-400 shrink-0">
+                <div className="w-10 h-10 rounded-full bg-red-50 border border-red-200 flex items-center justify-center text-red-600 shrink-0">
                   <Users className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-white">Central Operations Channel</h3>
+                  <h3 className="text-sm font-semibold text-slate-900">Central Operations Channel</h3>
                   <p className="text-[10px] text-slate-500 mt-0.5">Real-time group chat for all active project managers</p>
                 </div>
               </>
             ) : (
               <>
                 <div className="relative shrink-0">
-                  <div className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-semibold text-slate-300">
+                  <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-xs font-semibold text-slate-700">
                     {getInitials(selectedChat.name)}
                   </div>
-                  <span className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-slate-950 ${getStatusColor(selectedChat.status)}`}></span>
+                  <span className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white ${getStatusColor(selectedChat.status)}`}></span>
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-white">{selectedChat.name}</h3>
+                  <h3 className="text-sm font-semibold text-slate-900">{selectedChat.name}</h3>
                   <p className="text-[10px] text-slate-500 mt-0.5">{selectedChat.role} • {selectedChat.email}</p>
                 </div>
               </>
             )}
           </div>
 
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/10 border border-green-500/20">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-50 border border-green-200">
             <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-ping"></span>
-            <span className="text-[10px] text-green-400 font-semibold uppercase tracking-wider">Live Sync</span>
+            <span className="text-[10px] text-green-600 font-semibold uppercase tracking-wider">Live Sync</span>
           </div>
         </div>
 
         {/* Message stream */}
-        <div className="flex-1 p-4 overflow-y-auto space-y-4 max-h-[calc(100vh-320px)] scrollbar-thin">
+        <div className="flex-1 p-4 overflow-y-auto space-y-4 max-h-[calc(100vh-320px)] scrollbar-thin bg-slate-50/20">
           {isChatLoading ? (
             <div className="h-full flex items-center justify-center">
-              <Loader2 className="w-8 h-8 animate-spin text-red-500" />
+              <Loader2 className="w-8 h-8 animate-spin text-[#0e2a47]" />
             </div>
           ) : messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center p-6">
-              <MessageSquare className="w-12 h-12 text-slate-850 mb-2" />
-              <p className="text-sm font-medium text-slate-400">
+              <MessageSquare className="w-12 h-12 text-slate-300 mb-2" />
+              <p className="text-sm font-medium text-slate-500">
                 {selectedChat === 'group' 
                   ? 'No updates in this operational channel' 
                   : `Conversation with ${selectedChat.name} has not started`}
               </p>
-              <p className="text-xs text-slate-650 mt-1">Send a message below to start syncing updates!</p>
+              <p className="text-xs text-slate-400 mt-1">Send a message below to start syncing updates!</p>
             </div>
           ) : (
             messages.map((m) => {
@@ -394,23 +394,23 @@ export default function Chat() {
                   key={m.id} 
                   className={`flex flex-col max-w-[80%] ${isCurrentUser ? 'ml-auto items-end' : 'mr-auto items-start'}`}
                 >
-                  <span className="text-[10px] text-slate-500 mb-1 px-1 font-semibold truncate max-w-[200px]">
+                  <span className="text-[10px] text-slate-400 mb-1 px-1 font-semibold truncate max-w-[200px]">
                     {isCurrentUser ? 'You' : m.senderName}
                   </span>
                   
                   <div className={`p-3 rounded-2xl text-sm ${
                     isCurrentUser 
-                      ? 'bg-red-655 text-white rounded-tr-none' 
-                      : 'bg-slate-850 text-slate-200 rounded-tl-none border border-slate-800/80 shadow-md'
+                      ? 'bg-[#0e2a47] text-white rounded-tr-none shadow-sm' 
+                      : 'bg-slate-100 text-slate-800 rounded-tl-none border border-slate-200/60 shadow-sm'
                   }`}>
                     
                     {/* Render Image Attachments Inline */}
                     {m.fileUrl && isImage && (
-                      <div className="mb-2.5 rounded-xl overflow-hidden border border-slate-800 max-w-xs aspect-video bg-slate-950 flex items-center justify-center group relative shadow-inner">
+                      <div className="mb-2.5 rounded-xl overflow-hidden border border-slate-200 max-w-xs aspect-video bg-slate-100 flex items-center justify-center group relative shadow-inner">
                         <img src={m.fileUrl} alt={m.fileName} className="w-full h-full object-cover p-0.5" />
                         <button 
                           onClick={() => setViewingImage({ url: m.fileUrl, name: m.fileName })}
-                          className="absolute inset-0 bg-slate-950/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity duration-200 text-xs font-semibold gap-1.5 cursor-pointer w-full h-full border-none"
+                          className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity duration-200 text-xs font-semibold gap-1.5 cursor-pointer w-full h-full border-none"
                         >
                           <Download className="w-4 h-4" /> View Image
                         </button>
@@ -430,16 +430,16 @@ export default function Chat() {
                             setViewingPdf({ url: m.fileUrl, name: m.fileName });
                           }
                         }}
-                        className="mb-2.5 p-2.5 rounded-xl bg-slate-950/60 hover:bg-slate-950 border border-slate-800/80 flex items-center gap-3 hover:border-slate-700 transition-all max-w-xs group cursor-pointer"
+                        className="mb-2.5 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 flex items-center gap-3 hover:border-slate-350 transition-all max-w-xs group cursor-pointer"
                       >
-                        <div className="w-9 h-9 rounded-lg bg-red-600/10 border border-red-500/20 flex items-center justify-center text-red-500 shrink-0">
+                        <div className="w-9 h-9 rounded-lg bg-red-50 border border-red-200 flex items-center justify-center text-red-600 shrink-0">
                           <FileText className="w-4.5 h-4.5" />
                         </div>
                         <div className="flex-1 min-w-0 text-left">
-                          <p className="text-xs font-semibold text-white truncate">{m.fileName}</p>
+                          <p className="text-xs font-semibold text-slate-900 truncate">{m.fileName}</p>
                           <p className="text-[9px] text-slate-500 font-mono mt-0.5 uppercase tracking-wider">{m.fileType?.split('/')[1] || 'document'}</p>
                         </div>
-                        <div className="w-7 h-7 rounded-full hover:bg-slate-800 flex items-center justify-center text-slate-400 group-hover:text-white shrink-0 transition-colors">
+                        <div className="w-7 h-7 rounded-full hover:bg-slate-200 flex items-center justify-center text-slate-400 group-hover:text-slate-655 shrink-0 transition-colors">
                           <Download className="w-3.5 h-3.5" />
                         </div>
                       </a>
@@ -464,14 +464,14 @@ export default function Chat() {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 15 }}
-              className="p-3 bg-slate-900 border-t border-slate-800 flex items-center justify-between gap-3 shrink-0"
+              className="p-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3 shrink-0"
             >
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-9 h-9 rounded-lg bg-red-600/15 border border-red-500/20 flex items-center justify-center text-red-500 shrink-0 shadow-inner">
+                <div className="w-9 h-9 rounded-lg bg-red-50 border border-red-250 flex items-center justify-center text-red-600 shrink-0 shadow-sm">
                   <FileText className="w-5 h-5" />
                 </div>
                 <div className="min-w-0 text-left">
-                  <p className="text-xs font-semibold text-white truncate">{attachedFile.name}</p>
+                  <p className="text-xs font-semibold text-slate-900 truncate">{attachedFile.name}</p>
                   <p className="text-[9px] text-slate-500 font-mono mt-0.5">
                     {(attachedFile.size / 1024 / 1024).toFixed(2)} MB • {attachedFile.type || 'unknown type'}
                   </p>
@@ -480,7 +480,7 @@ export default function Chat() {
               <button 
                 type="button"
                 onClick={() => setAttachedFile(null)}
-                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
+                className="p-1.5 text-slate-500 hover:text-slate-800 rounded-lg hover:bg-slate-200 transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -489,7 +489,7 @@ export default function Chat() {
         </AnimatePresence>
 
         {/* Chat input panel */}
-        <form onSubmit={handleSendMessage} className="p-4 border-t border-slate-800/80 bg-slate-950/40 flex items-center gap-3">
+        <form onSubmit={handleSendMessage} className="p-4 border-t border-slate-200 bg-slate-50/80 flex items-center gap-3">
           <input 
             type="file" 
             ref={fileInputRef}
@@ -500,9 +500,9 @@ export default function Chat() {
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={fileUploading}
-            className="p-3 bg-slate-950 border border-slate-850 hover:border-slate-700 text-slate-400 hover:text-white rounded-xl transition-all shadow-md shrink-0 flex items-center justify-center disabled:opacity-50"
+            className="p-3 bg-white border border-slate-200 hover:border-slate-300 text-slate-500 hover:text-slate-800 rounded-xl transition-all shadow-sm shrink-0 flex items-center justify-center disabled:opacity-50"
           >
-            {fileUploading ? <Loader2 className="w-4 h-4 animate-spin text-red-500" /> : <Paperclip className="w-4 h-4" />}
+            {fileUploading ? <Loader2 className="w-4 h-4 animate-spin text-[#0e2a47]" /> : <Paperclip className="w-4 h-4" />}
           </button>
           
           <input 
@@ -515,7 +515,7 @@ export default function Chat() {
                 ? "Broadcast an operations update..." 
                 : `Send a direct message to ${selectedChat.name}...`
             }
-            className="flex-1 bg-slate-950 border border-slate-800 rounded-xl py-3 px-4 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500/20 text-sm placeholder:text-slate-650 text-white disabled:opacity-50"
+            className="flex-1 bg-white border border-slate-200 rounded-xl py-3 px-4 focus:outline-none focus:border-[#0e2a47] focus:ring-1 focus:ring-[#0e2a47]/30 text-sm placeholder:text-slate-400 text-slate-900 disabled:opacity-50"
           />
           <button 
             type="submit"

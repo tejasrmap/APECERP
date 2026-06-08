@@ -1,6 +1,6 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
-import Landing from './components/Landing';
+import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import Overview from './components/Overview';
 import Projects from './components/Projects';
@@ -13,14 +13,14 @@ import ProtectedRoute from './components/ProtectedRoute';
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<Landing />} />
+      <Route path="/" element={<Login />} />
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<Dashboard />}>
           <Route index element={<Overview />} />
           <Route path="projects" element={<Projects />} />
           <Route path="inventory" element={<Inventory />} />
           <Route path="team" element={<Team />} />
-          <Route path="chat" element={<Chat />} />
+          <Route path="workforce" element={<Chat />} />
           <Route path="settings" element={<Settings />} />
         </Route>
       </Route>
