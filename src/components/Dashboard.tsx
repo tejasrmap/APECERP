@@ -151,8 +151,15 @@ export default function Dashboard() {
             </div>
           </div>
           <button
-            onClick={() => {
+            onClick={async () => {
               localStorage.removeItem('isAuthenticated');
+              if (auth) {
+                try {
+                  await auth.signOut();
+                } catch (err) {
+                  console.error('Sign out failed:', err);
+                }
+              }
               navigate('/');
             }}
             className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors border border-transparent hover:border-red-500/20"
@@ -204,7 +211,7 @@ export default function Dashboard() {
                   <h4 className="font-bold text-sm text-white">Firestore Connection Warning</h4>
                   <p className="mt-1 opacity-80 leading-relaxed">
                     {firestoreError === 'permission-denied'
-                      ? 'Access denied. Your Firestore security rules are blocking database reads/writes. Please go to your Firebase Console > Firestore Database > Rules, and update them to allow public access for development (e.g. "allow read, write: if true;").'
+                      ? 'Access denied. Your Firestore security rules are blocking database reads/writes. Please update your Firebase Console rules to allow access to authenticated users (e.g. "allow read, write: if request.auth != null;").'
                       : `Database connection error: ${firestoreError}. Please verify your .env credentials or check your internet connection.`}
                   </p>
                 </div>
