@@ -65,8 +65,7 @@ export default function Login() {
         const lowerEmail = email.toLowerCase();
         if (
           (lowerEmail === 'admin@apecpowersolutions.com' && password === 'admin') ||
-          (lowerEmail === 'managingdirector@apecpowersolutions.com' && password === 'admin') ||
-          (lowerEmail === 'admin@apec.com' && password === 'admin')
+          (lowerEmail === 'managingdirector@apecpowersolutions.com' && password === 'admin')
         ) {
           setStep('success');
           setTimeout(() => {
@@ -86,8 +85,7 @@ export default function Login() {
         const emailLower = user.email.toLowerCase();
         const isAdminEmail = 
           emailLower === 'admin@apecpowersolutions.com' ||
-          emailLower === 'managingdirector@apecpowersolutions.com' ||
-          emailLower === 'admin@apec.com';
+          emailLower === 'managingdirector@apecpowersolutions.com';
 
         if (!isAdminEmail) {
           const q = query(collection(db, 'team'), where('email', '==', user.email));
@@ -140,8 +138,7 @@ export default function Login() {
         const emailLower = user.email.toLowerCase();
         const isAdminEmail = 
           emailLower === 'admin@apecpowersolutions.com' ||
-          emailLower === 'managingdirector@apecpowersolutions.com' ||
-          emailLower === 'admin@apec.com';
+          emailLower === 'managingdirector@apecpowersolutions.com';
 
         if (!isAdminEmail) {
           const q = query(collection(db, 'team'), where('email', '==', user.email));

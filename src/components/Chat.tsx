@@ -42,7 +42,7 @@ export default function Chat() {
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   
-  const currentUserEmail = auth?.currentUser?.email || 'admin@apec.com';
+  const currentUserEmail = auth?.currentUser?.email || 'admin@apecpowersolutions.com';
   const currentUserName = auth?.currentUser?.displayName || currentUserEmail.split('@')[0];
 
   // Auto-scroll chat to bottom

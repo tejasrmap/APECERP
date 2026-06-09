@@ -94,8 +94,7 @@ export default function Team() {
           {teamList.map((m) => {
             const isMemberAdmin = m.accessRole === 'Admin' || m.roleType === 'Admin' || [
               'admin@apecpowersolutions.com',
-              'managingdirector@apecpowersolutions.com',
-              'admin@apec.com'
+              'managingdirector@apecpowersolutions.com'
             ].includes(m.email?.toLowerCase());
 
             return (

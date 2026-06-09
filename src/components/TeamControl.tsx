@@ -290,8 +290,7 @@ export default function TeamControl() {
                     {teamList.map((m) => {
                       const isMemberAdmin = m.accessRole === 'Admin' || m.roleType === 'Admin' || [
                         'admin@apecpowersolutions.com',
-                        'managingdirector@apecpowersolutions.com',
-                        'admin@apec.com'
+                        'managingdirector@apecpowersolutions.com'
                       ].includes(m.email?.toLowerCase());
 
                       return (
@@ -329,7 +328,7 @@ export default function TeamControl() {
                               {/* Toggle Priority */}
                               <button
                                 onClick={() => handleTogglePriority(m.id, isMemberAdmin ? 'Admin' : 'User', m.name)}
-                                disabled={isDbActionLoading || ['admin@apec.com', 'admin@apecpowersolutions.com', 'managingdirector@apecpowersolutions.com'].includes(m.email?.toLowerCase())}
+                                disabled={isDbActionLoading || ['admin@apecpowersolutions.com', 'managingdirector@apecpowersolutions.com'].includes(m.email?.toLowerCase())}
                                 className="p-1.5 text-slate-400 hover:text-cyan-400 transition-colors rounded hover:bg-cyan-950/20 disabled:opacity-30"
                                 title={isMemberAdmin ? 'Demote to Standard User' : 'Promote to Administrative Access'}
                               >
@@ -339,7 +338,7 @@ export default function TeamControl() {
                               {/* Remove User */}
                               <button
                                 onClick={() => handleDeleteUser(m.id, m.name)}
-                                disabled={isDbActionLoading || ['admin@apec.com', 'admin@apecpowersolutions.com', 'managingdirector@apecpowersolutions.com'].includes(m.email?.toLowerCase())}
+                                disabled={isDbActionLoading || ['admin@apecpowersolutions.com', 'managingdirector@apecpowersolutions.com'].includes(m.email?.toLowerCase())}
                                 className="p-1.5 text-slate-400 hover:text-rose-500 transition-colors rounded hover:bg-rose-950/20 disabled:opacity-30"
                                 title="Revoke Credentials & Remove User"
                               >

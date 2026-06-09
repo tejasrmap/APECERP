@@ -44,8 +44,7 @@ export default function Dashboard() {
         // Check hardcoded admins first
         if (
           email === 'admin@apecpowersolutions.com' ||
-          email === 'managingdirector@apecpowersolutions.com' ||
-          email === 'admin@apec.com'
+          email === 'managingdirector@apecpowersolutions.com'
         ) {
           setIsAdmin(true);
         }
@@ -61,8 +60,7 @@ export default function Dashboard() {
                   setIsAdmin(true);
                 } else if (
                   email !== 'admin@apecpowersolutions.com' &&
-                  email !== 'managingdirector@apecpowersolutions.com' &&
-                  email !== 'admin@apec.com'
+                  email !== 'managingdirector@apecpowersolutions.com'
                 ) {
                   // If not in hardcoded admin list and not marked as admin in DB
                   setIsAdmin(false);
@@ -71,8 +69,7 @@ export default function Dashboard() {
                 // Not found in team collection (but maybe firebase auth worked)
                 if (
                   email !== 'admin@apecpowersolutions.com' &&
-                  email !== 'managingdirector@apecpowersolutions.com' &&
-                  email !== 'admin@apec.com'
+                  email !== 'managingdirector@apecpowersolutions.com'
                 ) {
                   setIsAdmin(false);
                 }
@@ -194,7 +191,7 @@ export default function Dashboard() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-slate-100 truncate">{auth?.currentUser?.displayName || 'Admin User'}</p>
-              <p className="text-xs text-slate-400 truncate">{auth?.currentUser?.email || 'admin@apec.com'}</p>
+              <p className="text-xs text-slate-400 truncate">{auth?.currentUser?.email || 'admin@apecpowersolutions.com'}</p>
             </div>
           </div>
           <button
