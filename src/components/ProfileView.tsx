@@ -161,9 +161,13 @@ export default function ProfileView() {
               </div>
 
               <div className="flex items-center gap-3">
-                <span className={`w-10 h-10 rounded-lg bg-gradient-to-br ${avatarClass} border flex items-center justify-center text-[10px] font-extrabold shadow-sm shrink-0`}>
-                  {profile.name.slice(0, 2).toUpperCase()}
-                </span>
+                {profile.photoUrl ? (
+                  <img src={profile.photoUrl} alt={profile.name} className="w-10 h-10 rounded-lg object-cover border border-slate-700 shadow-sm shrink-0" />
+                ) : (
+                  <span className={`w-10 h-10 rounded-lg bg-gradient-to-br ${avatarClass} border flex items-center justify-center text-[10px] font-extrabold shadow-sm shrink-0`}>
+                    {profile.name.slice(0, 2).toUpperCase()}
+                  </span>
+                )}
                 <div className="min-w-0">
                   <h4 className="text-xs font-extrabold text-slate-100 truncate leading-snug">{profile.name}</h4>
                   <p className="text-[9px] text-rose-400 font-bold truncate mt-0.5">{profile.role}</p>

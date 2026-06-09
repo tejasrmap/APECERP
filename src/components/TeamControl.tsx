@@ -17,11 +17,14 @@ import {
   X,
   ChevronDown,
   Wifi,
-  Edit
+  Edit,
+  Camera,
+  Upload
 } from 'lucide-react';
 import { collection, onSnapshot, doc, deleteDoc, addDoc, updateDoc, Timestamp } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useOutletContext } from 'react-router-dom';
-import { db } from '../firebase';
+import { db, storage } from '../firebase';
 
 export default function TeamControl() {
   const { setFirestoreError, isDbActionLoading, setIsDbActionLoading, isAdmin } = useOutletContext<any>();
@@ -41,6 +44,8 @@ export default function TeamControl() {
   const [newJoinedDate, setNewJoinedDate] = useState(new Date().toISOString().slice(0, 10));
   const [newSkills, setNewSkills] = useState('');
   const [newAvatar, setNewAvatar] = useState('cyan');
+  const [newPhotoFile, setNewPhotoFile] = useState<File | null>(null);
+  const [newPhotoPreview, setNewPhotoPreview] = useState<string>('');
   
   // Emergency & Medical States
   const [newEmergencyName, setNewEmergencyName] = useState('');
@@ -65,6 +70,15 @@ export default function TeamControl() {
   const [editBloodGroup, setEditBloodGroup] = useState('');
   const [editMedicalConditions, setEditMedicalConditions] = useState('');
   const [editAvatar, setEditAvatar] = useState('cyan');
+  const [editPhotoFile, setEditPhotoFile] = useState<File | null>(null);
+  const [editPhotoPreview, setEditPhotoPreview] = useState<string>('');
+
+  const uploadPhotoToStorage = async (file: File, empId: string): Promise<string> => {
+    if (!storage) return '';
+    const storageRef = ref(storage, `team-photos/${empId}-${Date.now()}`);
+    await uploadBytes(storageRef, file);
+    return await getDownloadURL(storageRef);
+  };
 
   const getVerificationUrl = (profile: any) => {
     if (!profile) return '';
@@ -95,6 +109,12 @@ export default function TeamControl() {
       const empId = editEmployeeId.trim() || selectedProfile.employeeId || selectedProfile.id;
       const profileLink = `${window.location.origin}/profile/${empId}`;
 
+      // Upload new photo if changed
+      let photoUrl = selectedProfile.photoUrl || '';
+      if (editPhotoFile) {
+        try { photoUrl = await uploadPhotoToStorage(editPhotoFile, empId); } catch {}
+      }
+
       const updatedFields = {
         name: editName.trim(),
         email: editEmail.trim(),
@@ -106,6 +126,7 @@ export default function TeamControl() {
         joinedDate: editJoinedDate,
         skills: formattedSkills,
         avatar: editAvatar,
+        photoUrl,
         emergencyName: editEmergencyName.trim() || 'N/A',
         emergencyPhone: editEmergencyPhone.trim() || 'N/A',
         bloodGroup: editBloodGroup || 'N/A',
@@ -129,6 +150,7 @@ export default function TeamControl() {
         ...updatedFields
       }));
 
+      setEditPhotoFile(null);
       setIsEditingProfile(false);
     } catch (err) {
       console.error('Error updating profile:', err);
@@ -179,6 +201,12 @@ export default function TeamControl() {
       const empId = newEmployeeId.trim() || `APEC-${Math.floor(1000 + Math.random() * 9000)}`;
       const profileLink = `${window.location.origin}/profile/${empId}`;
 
+      // Upload photo if selected
+      let photoUrl = '';
+      if (newPhotoFile) {
+        try { photoUrl = await uploadPhotoToStorage(newPhotoFile, empId); } catch {}
+      }
+
       await addDoc(collection(db, 'team'), {
         name: newName,
         email: newEmail.trim(),
@@ -191,6 +219,7 @@ export default function TeamControl() {
         joinedDate: newJoinedDate,
         skills: formattedSkills,
         avatar: newAvatar,
+        photoUrl,
         emergencyName: newEmergencyName.trim() || 'N/A',
         emergencyPhone: newEmergencyPhone.trim() || 'N/A',
         bloodGroup: newBloodGroup || 'N/A',
@@ -217,6 +246,8 @@ export default function TeamControl() {
       setNewJoinedDate(new Date().toISOString().slice(0, 10));
       setNewSkills('');
       setNewAvatar('cyan');
+      setNewPhotoFile(null);
+      setNewPhotoPreview('');
       setNewEmergencyName('');
       setNewEmergencyPhone('');
       setNewBloodGroup('');
@@ -339,38 +370,67 @@ export default function TeamControl() {
                 <h5 className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest border-b border-slate-900/60 pb-1.5 mb-3">
                   1. Profile Identity
                 </h5>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Full Name</label>
-                    <input 
-                      type="text" 
-                      value={newName}
-                      onChange={(e) => setNewName(e.target.value)}
-                      placeholder="e.g. Rahul Sharma"
-                      required
-                      className="w-full bg-slate-955/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
-                    />
+                <div className="flex gap-6">
+                  {/* Photo Upload */}
+                  <div className="flex flex-col items-center gap-2 shrink-0">
+                    <div className="relative w-20 h-20 rounded-xl overflow-hidden border-2 border-dashed border-slate-700 hover:border-cyan-500/50 transition-colors group cursor-pointer bg-slate-950/40">
+                      {newPhotoPreview ? (
+                        <img src={newPhotoPreview} alt="Preview" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center w-full h-full gap-1 text-slate-500 group-hover:text-cyan-400 transition-colors">
+                          <Camera className="w-6 h-6" />
+                          <span className="text-[8px] font-bold uppercase tracking-wider">Photo</span>
+                        </div>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setNewPhotoFile(file);
+                            setNewPhotoPreview(URL.createObjectURL(file));
+                          }
+                        }}
+                      />
+                    </div>
+                    <span className="text-[8px] text-slate-500 font-mono uppercase tracking-wider text-center">Click to<br/>upload</span>
                   </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Email Address</label>
-                    <input 
-                      type="email" 
-                      value={newEmail}
-                      onChange={(e) => setNewEmail(e.target.value)}
-                      placeholder="e.g. rahul@apec.com"
-                      required
-                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Phone Number</label>
-                    <input 
-                      type="tel" 
-                      value={newPhone}
-                      onChange={(e) => setNewPhone(e.target.value)}
-                      placeholder="e.g. +91 98765 43210"
-                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
-                    />
+                  {/* Text fields */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Full Name</label>
+                      <input 
+                        type="text" 
+                        value={newName}
+                        onChange={(e) => setNewName(e.target.value)}
+                        placeholder="e.g. Rahul Sharma"
+                        required
+                        className="w-full bg-slate-955/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Email Address</label>
+                      <input 
+                        type="email" 
+                        value={newEmail}
+                        onChange={(e) => setNewEmail(e.target.value)}
+                        placeholder="e.g. rahul@apec.com"
+                        required
+                        className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Phone Number</label>
+                      <input 
+                        type="tel" 
+                        value={newPhone}
+                        onChange={(e) => setNewPhone(e.target.value)}
+                        placeholder="e.g. +91 98765 43210"
+                        className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -722,9 +782,13 @@ export default function TeamControl() {
                         <tr key={m.id} className="hover:bg-slate-900/30 transition-colors">
                           <td className="p-4 font-mono text-xs text-slate-450">{m.employeeId || 'APEC-MEMBER'}</td>
                           <td className="p-4 font-bold text-slate-100 flex items-center gap-2.5">
-                            <span className={`w-8 h-8 rounded-full bg-gradient-to-br ${avatarClass} border flex items-center justify-center text-[10px] font-extrabold shrink-0`}>
-                              {m.name.slice(0, 2).toUpperCase()}
-                            </span>
+                            {m.photoUrl ? (
+                              <img src={m.photoUrl} alt={m.name} className="w-8 h-8 rounded-full object-cover border border-slate-700 shrink-0" />
+                            ) : (
+                              <span className={`w-8 h-8 rounded-full bg-gradient-to-br ${avatarClass} border flex items-center justify-center text-[10px] font-extrabold shrink-0`}>
+                                {m.name.slice(0, 2).toUpperCase()}
+                              </span>
+                            )}
                             <span className="truncate max-w-[120px]" title={m.name}>{m.name}</span>
                           </td>
                           <td className="p-4">
@@ -834,6 +898,8 @@ export default function TeamControl() {
                       setEditBloodGroup(selectedProfile.bloodGroup || '');
                       setEditMedicalConditions(selectedProfile.medicalConditions || '');
                       setEditAvatar(selectedProfile.avatar || 'cyan');
+                      setEditPhotoPreview(selectedProfile.photoUrl || '');
+                      setEditPhotoFile(null);
                       setIsEditingProfile(true);
                     }}
                     className="px-2.5 py-1 rounded-lg text-[10px] font-bold text-cyan-400 border border-cyan-500/20 bg-cyan-950/20 hover:bg-cyan-950/40 hover:border-cyan-500/40 transition-all flex items-center gap-1 cursor-pointer"
@@ -854,14 +920,22 @@ export default function TeamControl() {
               </div>
 
               <div className="flex items-center gap-4">
-                <span className={`w-12 h-12 rounded-full bg-gradient-to-br ${
-                  (isEditingProfile ? editAvatar : selectedProfile.avatar) === 'cyan' ? 'from-cyan-500/20 to-cyan-500/5 text-cyan-400 border-cyan-500/25' :
-                  (isEditingProfile ? editAvatar : selectedProfile.avatar) === 'blue' ? 'from-blue-500/20 to-blue-500/5 text-blue-400 border-blue-500/25' :
-                  (isEditingProfile ? editAvatar : selectedProfile.avatar) === 'red' ? 'from-rose-500/20 to-rose-500/5 text-rose-400 border-rose-500/25' :
-                  'from-amber-500/20 to-amber-500/5 text-amber-400 border-amber-500/25'
-                } border flex items-center justify-center text-sm font-extrabold shadow-sm`}>
-                  {((isEditingProfile ? editName : selectedProfile.name) || 'AP').slice(0, 2).toUpperCase()}
-                </span>
+                {(isEditingProfile ? editPhotoPreview : selectedProfile.photoUrl) ? (
+                  <img 
+                    src={isEditingProfile ? editPhotoPreview : selectedProfile.photoUrl} 
+                    alt={selectedProfile.name} 
+                    className="w-12 h-12 rounded-full object-cover border-2 border-slate-700 shadow-sm shrink-0"
+                  />
+                ) : (
+                  <span className={`w-12 h-12 rounded-full bg-gradient-to-br ${
+                    (isEditingProfile ? editAvatar : selectedProfile.avatar) === 'cyan' ? 'from-cyan-500/20 to-cyan-500/5 text-cyan-400 border-cyan-500/25' :
+                    (isEditingProfile ? editAvatar : selectedProfile.avatar) === 'blue' ? 'from-blue-500/20 to-blue-500/5 text-blue-400 border-blue-500/25' :
+                    (isEditingProfile ? editAvatar : selectedProfile.avatar) === 'red' ? 'from-rose-500/20 to-rose-500/5 text-rose-400 border-rose-500/25' :
+                    'from-amber-500/20 to-amber-500/5 text-amber-400 border-amber-500/25'
+                  } border flex items-center justify-center text-sm font-extrabold shadow-sm shrink-0`}>
+                    {((isEditingProfile ? editName : selectedProfile.name) || 'AP').slice(0, 2).toUpperCase()}
+                  </span>
+                )}
                 <div>
                   <h4 className="text-lg font-bold text-slate-100">{isEditingProfile ? (editName || 'New Profile') : selectedProfile.name}</h4>
                   <div className="flex items-center gap-2 mt-0.5">
@@ -907,14 +981,22 @@ export default function TeamControl() {
 
                 {/* Profile Avatar / Info */}
                 <div className="flex items-center gap-3">
-                  <span className={`w-12 h-12 rounded-xl bg-gradient-to-br ${
-                    (isEditingProfile ? editAvatar : selectedProfile.avatar) === 'cyan' ? 'from-cyan-500/20 to-cyan-500/5 text-cyan-400 border-cyan-500/20' :
-                    (isEditingProfile ? editAvatar : selectedProfile.avatar) === 'blue' ? 'from-blue-500/20 to-blue-500/5 text-blue-400 border-blue-500/20' :
-                    (isEditingProfile ? editAvatar : selectedProfile.avatar) === 'red' ? 'from-rose-500/20 to-rose-500/5 text-rose-400 border-rose-500/20' :
-                    'from-amber-500/20 to-amber-500/5 text-amber-400 border-amber-500/20'
-                  } border flex items-center justify-center text-sm font-extrabold shadow-sm shrink-0`}>
-                    {((isEditingProfile ? editName : selectedProfile.name) || 'AP').slice(0, 2).toUpperCase()}
-                  </span>
+                  {(isEditingProfile ? editPhotoPreview : selectedProfile.photoUrl) ? (
+                    <img 
+                      src={isEditingProfile ? editPhotoPreview : selectedProfile.photoUrl}
+                      alt={selectedProfile.name}
+                      className="w-12 h-12 rounded-xl object-cover border border-slate-700 shadow-sm shrink-0"
+                    />
+                  ) : (
+                    <span className={`w-12 h-12 rounded-xl bg-gradient-to-br ${
+                      (isEditingProfile ? editAvatar : selectedProfile.avatar) === 'cyan' ? 'from-cyan-500/20 to-cyan-500/5 text-cyan-400 border-cyan-500/20' :
+                      (isEditingProfile ? editAvatar : selectedProfile.avatar) === 'blue' ? 'from-blue-500/20 to-blue-500/5 text-blue-400 border-blue-500/20' :
+                      (isEditingProfile ? editAvatar : selectedProfile.avatar) === 'red' ? 'from-rose-500/20 to-rose-500/5 text-rose-400 border-rose-500/20' :
+                      'from-amber-500/20 to-amber-500/5 text-amber-400 border-amber-500/20'
+                    } border flex items-center justify-center text-sm font-extrabold shadow-sm shrink-0`}>
+                      {((isEditingProfile ? editName : selectedProfile.name) || 'AP').slice(0, 2).toUpperCase()}
+                    </span>
+                  )}
                   <div className="min-w-0">
                     <h4 className="text-sm font-bold text-slate-100 truncate">{isEditingProfile ? (editName || 'New Profile') : selectedProfile.name}</h4>
                     <p className="text-[10px] text-rose-500 font-bold truncate leading-tight">{isEditingProfile ? (editRole || 'Staff Member') : selectedProfile.role}</p>
@@ -950,6 +1032,37 @@ export default function TeamControl() {
                     <h5 className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest border-b border-slate-900/60 pb-1.5 mb-2">
                       1. Profile Identity
                     </h5>
+                    {/* Photo Upload Row */}
+                    <div className="flex items-center gap-4 pb-3 border-b border-slate-900/40">
+                      <div className="relative w-16 h-16 rounded-xl overflow-hidden border-2 border-dashed border-slate-700 hover:border-cyan-500/50 transition-colors cursor-pointer bg-slate-950/40 group shrink-0">
+                        {editPhotoPreview ? (
+                          <img src={editPhotoPreview} alt="Preview" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="flex flex-col items-center justify-center w-full h-full gap-1 text-slate-500 group-hover:text-cyan-400 transition-colors">
+                            <Camera className="w-5 h-5" />
+                          </div>
+                        )}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="absolute inset-0 opacity-0 cursor-pointer"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              setEditPhotoFile(file);
+                              setEditPhotoPreview(URL.createObjectURL(file));
+                            }
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">Employee Photo</p>
+                        <p className="text-[9px] text-slate-500 mt-0.5">Click the box to change photo. Uploaded to Firebase Storage.</p>
+                        {editPhotoPreview && (
+                          <button type="button" onClick={() => { setEditPhotoPreview(''); setEditPhotoFile(null); }} className="text-[9px] text-rose-400 hover:text-rose-300 mt-1 font-bold uppercase tracking-wider">Remove Photo</button>
+                        )}
+                      </div>
+                    </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1">
                         <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Full Name</label>

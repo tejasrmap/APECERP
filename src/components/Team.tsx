@@ -167,9 +167,13 @@ export default function Team() {
                 )}
                 
                 <div className="flex justify-between items-start mb-4">
-                  <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${avatarClass} border flex items-center justify-center text-sm font-bold shadow-sm`}>
-                    {m.name.slice(0, 2).toUpperCase()}
-                  </div>
+                  {m.photoUrl ? (
+                    <img src={m.photoUrl} alt={m.name} className="w-12 h-12 rounded-full object-cover border-2 border-slate-700 shadow-sm" />
+                  ) : (
+                    <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${avatarClass} border flex items-center justify-center text-sm font-bold shadow-sm`}>
+                      {m.name.slice(0, 2).toUpperCase()}
+                    </div>
+                  )}
                   <div className="flex flex-col items-end gap-1.5">
                     <span className="text-[9px] text-slate-500 font-mono bg-slate-950 px-2 py-0.5 rounded border border-slate-900">
                       {m.employeeId || 'APEC-MEMBER'}
@@ -265,14 +269,18 @@ export default function Team() {
               </button>
 
               <div className="flex items-center gap-4">
-                <span className={`w-12 h-12 rounded-full bg-gradient-to-br ${
-                  selectedProfile.avatar === 'cyan' ? 'from-cyan-500/20 to-cyan-500/5 text-cyan-400 border-cyan-500/25' :
-                  selectedProfile.avatar === 'blue' ? 'from-blue-500/20 to-blue-500/5 text-blue-400 border-blue-500/25' :
-                  selectedProfile.avatar === 'red' ? 'from-rose-500/20 to-rose-500/5 text-rose-455 border-rose-500/25' :
-                  'from-amber-500/20 to-amber-500/5 text-amber-400 border-amber-500/25'
-                } border flex items-center justify-center text-sm font-bold shadow-sm shrink-0`}>
-                  {selectedProfile.name.slice(0, 2).toUpperCase()}
-                </span>
+                {selectedProfile.photoUrl ? (
+                  <img src={selectedProfile.photoUrl} alt={selectedProfile.name} className="w-12 h-12 rounded-full object-cover border-2 border-slate-700 shadow-sm shrink-0" />
+                ) : (
+                  <span className={`w-12 h-12 rounded-full bg-gradient-to-br ${
+                    selectedProfile.avatar === 'cyan' ? 'from-cyan-500/20 to-cyan-500/5 text-cyan-400 border-cyan-500/25' :
+                    selectedProfile.avatar === 'blue' ? 'from-blue-500/20 to-blue-500/5 text-blue-400 border-blue-500/25' :
+                    selectedProfile.avatar === 'red' ? 'from-rose-500/20 to-rose-500/5 text-rose-455 border-rose-500/25' :
+                    'from-amber-500/20 to-amber-500/5 text-amber-400 border-amber-500/25'
+                  } border flex items-center justify-center text-sm font-bold shadow-sm shrink-0`}>
+                    {selectedProfile.name.slice(0, 2).toUpperCase()}
+                  </span>
+                )}
                 <div>
                   <h4 className="text-lg font-bold text-slate-100">{selectedProfile.name}</h4>
                   <div className="flex items-center gap-2 mt-0.5">
@@ -313,14 +321,18 @@ export default function Team() {
 
                 {/* Profile Avatar / Info */}
                 <div className="flex items-center gap-3">
-                  <span className={`w-12 h-12 rounded-xl bg-gradient-to-br ${
-                    selectedProfile.avatar === 'cyan' ? 'from-cyan-500/20 to-cyan-500/5 text-cyan-400 border-cyan-500/20' :
-                    selectedProfile.avatar === 'blue' ? 'from-blue-500/20 to-blue-500/5 text-blue-400 border-blue-500/20' :
-                    selectedProfile.avatar === 'red' ? 'from-rose-500/20 to-rose-500/5 text-rose-400 border-rose-500/20' :
-                    'from-amber-500/20 to-amber-500/5 text-amber-400 border-amber-500/20'
-                  } border flex items-center justify-center text-sm font-extrabold shadow-sm shrink-0`}>
-                    {selectedProfile.name.slice(0, 2).toUpperCase()}
-                  </span>
+                  {selectedProfile.photoUrl ? (
+                    <img src={selectedProfile.photoUrl} alt={selectedProfile.name} className="w-12 h-12 rounded-xl object-cover border border-slate-700 shadow-sm shrink-0" />
+                  ) : (
+                    <span className={`w-12 h-12 rounded-xl bg-gradient-to-br ${
+                      selectedProfile.avatar === 'cyan' ? 'from-cyan-500/20 to-cyan-500/5 text-cyan-400 border-cyan-500/20' :
+                      selectedProfile.avatar === 'blue' ? 'from-blue-500/20 to-blue-500/5 text-blue-400 border-blue-500/20' :
+                      selectedProfile.avatar === 'red' ? 'from-rose-500/20 to-rose-500/5 text-rose-400 border-rose-500/20' :
+                      'from-amber-500/20 to-amber-500/5 text-amber-400 border-amber-500/20'
+                    } border flex items-center justify-center text-sm font-extrabold shadow-sm shrink-0`}>
+                      {selectedProfile.name.slice(0, 2).toUpperCase()}
+                    </span>
+                  )}
                   <div className="min-w-0">
                     <h4 className="text-sm font-bold text-slate-100 truncate">{selectedProfile.name}</h4>
                     <p className="text-[10px] text-rose-500 font-bold truncate leading-tight">{selectedProfile.role}</p>
