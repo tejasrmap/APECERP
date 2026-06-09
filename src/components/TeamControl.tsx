@@ -115,10 +115,11 @@ export default function TeamControl() {
 
             try {
               const origin = window.location.origin;
+              const empId = target === 'form' ? (newEmployeeId.trim() || `APEC-${Math.floor(1000 + Math.random() * 9000)}`) : selectedProfile.employeeId;
               await ndef.write({
-                records: [{ recordType: "url", data: `${origin}/verify-tag/${finalUid}` }]
+                records: [{ recordType: "url", data: `${origin}/profile/${empId}` }]
               });
-              console.log("Written APEC verification route to tag:", `${origin}/verify-tag/${finalUid}`);
+              console.log("Written APEC verification route to tag:", `${origin}/profile/${empId}`);
             } catch (writeErr) {
               console.warn("NFC Tag is write-protected or write failed: ", writeErr);
             }

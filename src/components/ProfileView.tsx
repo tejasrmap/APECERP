@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Wifi, 
@@ -16,59 +16,102 @@ import {
 } from 'lucide-react';
 import { db } from '../firebase';
 
-export default function VerifyTag() {
-  const { tagUid } = useParams<{ tagUid: string }>();
+export default function ProfileView() {
+  const { id } = useParams<{ id: string }>();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any | null>(null);
 
   useEffect(() => {
-    if (!db || !tagUid) {
-      // Offline fallback demo profile if tagUid starts with "demo" or database is unavailable
+    if (!id) {
+      setLoading(false);
+      return;
+    }
+
+    const cleanedId = id.trim();
+
+    // Offline fallback demo profile
+    if (cleanedId.toUpperCase().startsWith("APEC-DEMO") || cleanedId === 'demo') {
       setTimeout(() => {
-        if (tagUid?.toUpperCase().startsWith("04:DEMO") || tagUid === 'demo') {
-          setProfile({
-            id: 'demo-tech',
-            name: 'Rahul Sharma',
-            email: 'r.sharma@apecpowersolutions.com',
-            role: 'Lead Grid Engineer',
-            employeeId: 'APEC-2026-009',
-            department: 'Grid Automation',
-            status: 'Active',
-            phone: '+91 94481 02941',
-            joinedDate: '2025-01-15',
-            avatar: 'cyan',
-            skills: ['HV Substation Audit', 'LOTO Protocol', 'PLC Systems', 'Transformer Safety'],
-            nfcTagUid: tagUid.toUpperCase(),
-            nfcCardStatus: 'Linked',
-            emergencyName: 'Priya Sharma (Spouse)',
-            emergencyPhone: '+91 94481 87654',
-            bloodGroup: 'B+',
-            medicalConditions: 'Allergy to Penicillin'
-          });
-        }
+        setProfile({
+          id: 'demo-tech',
+          name: 'Rahul Sharma',
+          email: 'r.sharma@apecpowersolutions.com',
+          role: 'Lead Grid Engineer',
+          employeeId: 'APEC-2026-009',
+          department: 'Grid Automation',
+          status: 'Active',
+          phone: '+91 94481 02941',
+          joinedDate: '2025-01-15',
+          avatar: 'cyan',
+          skills: ['HV Substation Audit', 'LOTO Protocol', 'PLC Systems', 'Transformer Safety'],
+          nfcTagUid: '04:FE:8B:2A',
+          nfcCardStatus: 'Linked',
+          emergencyName: 'Priya Sharma (Spouse)',
+          emergencyPhone: '+91 94481 87654',
+          bloodGroup: 'B+',
+          medicalConditions: 'Allergy to Penicillin'
+        });
         setLoading(false);
       }, 1000);
       return;
     }
 
-    const cleanedTag = tagUid.trim().toUpperCase();
-    const q = query(collection(db, 'team'), where('nfcTagUid', '==', cleanedTag));
+    if (!db) {
+      setLoading(false);
+      return;
+    }
+
+    // We search Firestore in a waterfall manner to be extremely robust:
+    // 1. Query by employeeId
+    // 2. Query by nfcTagUid (in case card serial was tapped)
+    // 3. Fallback to direct document ID lookup
+    const qEmp = query(collection(db, 'team'), where('employeeId', '==', cleanedId));
     
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const unsub = onSnapshot(qEmp, (snapshot) => {
       if (!snapshot.empty) {
         const docData = snapshot.docs[0].data();
         setProfile({ id: snapshot.docs[0].id, ...docData });
+        setLoading(false);
       } else {
-        setProfile(null);
+        // Try looking up by NFC Tag UID
+        const qNfc = query(collection(db, 'team'), where('nfcTagUid', '==', cleanedId.toUpperCase()));
+        onSnapshot(qNfc, (nfcSnapshot) => {
+          if (!nfcSnapshot.empty) {
+            const docData = nfcSnapshot.docs[0].data();
+            setProfile({ id: nfcSnapshot.docs[0].id, ...docData });
+            setLoading(false);
+          } else {
+            // Try looking up by Firestore document ID directly
+            try {
+              const docRef = doc(db, 'team', cleanedId);
+              onSnapshot(docRef, (docSnapshot) => {
+                if (docSnapshot.exists()) {
+                  setProfile({ id: docSnapshot.id, ...docSnapshot.data() });
+                } else {
+                  setProfile(null);
+                }
+                setLoading(false);
+              }, () => {
+                setProfile(null);
+                setLoading(false);
+              });
+            } catch {
+              setProfile(null);
+              setLoading(false);
+            }
+          }
+        }, () => {
+          setProfile(null);
+          setLoading(false);
+        });
       }
-      setLoading(false);
-    }, (err) => {
-      console.error("Verification query error: ", err);
+    }, () => {
+      setProfile(null);
       setLoading(false);
     });
 
-    return () => unsubscribe();
-  }, [tagUid]);
+    return () => unsub();
+  }, [id]);
 
   const avatarColors: Record<string, string> = {
     cyan: 'from-cyan-500/20 to-cyan-500/5 text-cyan-400 border-cyan-500/25',
@@ -88,11 +131,11 @@ export default function VerifyTag() {
       <motion.div 
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md bg-slate-950/60 backdrop-blur-md border border-white/10 rounded-3xl p-6 shadow-2xl relative space-y-6 z-10"
+        className="w-full max-w-md bg-slate-955/60 backdrop-blur-md border border-white/10 rounded-3xl p-6 shadow-2xl relative space-y-6 z-10"
       >
         {/* Verification Header */}
         <div className="text-center space-y-1">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-[10px] font-mono tracking-wider text-slate-400 uppercase">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-[10px] font-mono tracking-wider text-slate-405 uppercase">
             <Wifi className="w-3.5 h-3.5 text-cyan-405 animate-pulse" />
             NFC Digital ID Verification
           </div>
@@ -161,7 +204,7 @@ export default function VerifyTag() {
               <div className="flex justify-between items-end border-t border-slate-900 pt-2 font-mono text-[8px] text-slate-400">
                 <div>
                   <span className="text-slate-600 block text-[6.5px] tracking-wider">RFID CARD UID</span>
-                  <span className="font-bold text-cyan-400">{profile.nfcTagUid}</span>
+                  <span className="font-bold text-cyan-404 text-cyan-400">{profile.nfcTagUid || 'UNASSIGNED'}</span>
                 </div>
                 <div>
                   <span className="text-slate-605 text-slate-600 block text-[6.5px] tracking-wider text-right">EMPLOYEE ID</span>
@@ -212,7 +255,7 @@ export default function VerifyTag() {
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <span className="text-slate-550 text-[8.5px] uppercase tracking-wider block text-slate-500">Medical notes</span>
+                    <span className="text-slate-550 text-[8.5px] uppercase tracking-wider block text-slate-500">Medical Notes</span>
                     <span className="text-slate-355 font-medium block truncate mt-0.5" title={profile.medicalConditions}>
                       {profile.medicalConditions || 'None'}
                     </span>
@@ -227,7 +270,7 @@ export default function VerifyTag() {
                 href={`tel:${profile.emergencyPhone}`}
                 className="w-full py-3 bg-rose-950/20 border border-rose-500/30 hover:border-rose-500/60 hover:bg-rose-950/30 text-rose-400 hover:text-rose-300 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-sm"
               >
-                <Phone className="w-4 h-4 text-rose-500 animate-pulse" />
+                <Phone className="w-4 h-4 text-rose-505 animate-pulse" />
                 Call Emergency Contact
               </a>
             )}
@@ -240,11 +283,11 @@ export default function VerifyTag() {
             <div className="space-y-2">
               <h3 className="text-sm font-bold text-rose-550 uppercase tracking-widest font-mono text-rose-500">Verification Failed</h3>
               <p className="text-xs text-slate-400 leading-relaxed max-w-xs mx-auto">
-                No active employee credentials match card ID: <span className="font-mono text-cyan-400 block mt-1 break-all bg-slate-900/60 py-1.5 px-3 rounded-lg border border-slate-800">{tagUid}</span>
+                No active employee credentials match ID: <span className="font-mono text-cyan-400 block mt-1 break-all bg-slate-900/60 py-1.5 px-3 rounded-lg border border-slate-800">{id}</span>
               </p>
             </div>
             <p className="text-[10px] text-slate-500 max-w-[240px] mx-auto leading-relaxed">
-              If this is a new pass token, register it inside the Admin Team Control dashboard first.
+              Verify that the worker ID or Firestore key is correct, or register it inside the Admin Control dashboard.
             </p>
           </div>
         )}
