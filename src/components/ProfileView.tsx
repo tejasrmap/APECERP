@@ -1,18 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { collection, query, where, onSnapshot, doc } from 'firebase/firestore';
-import { motion, AnimatePresence } from 'motion/react';
-import { 
-  Phone, 
-  Briefcase, 
-  Calendar, 
-  Award, 
-  CheckCircle2, 
-  AlertTriangle, 
+import { motion } from 'motion/react';
+import {
+  Phone,
+  Mail,
+  Briefcase,
+  Calendar,
+  Award,
+  CheckCircle2,
+  AlertTriangle,
   Activity,
-  ShieldAlert,
+  Shield,
   ArrowLeft,
-  Shield
+  MapPin,
+  HeartPulse,
+  User,
+  BadgeCheck
 } from 'lucide-react';
 import { db } from '../firebase';
 
@@ -22,15 +26,10 @@ export default function ProfileView() {
   const [profile, setProfile] = useState<any | null>(null);
 
   useEffect(() => {
-    if (!id) {
-      setLoading(false);
-      return;
-    }
-
+    if (!id) { setLoading(false); return; }
     const cleanedId = id.trim();
 
-    // Offline fallback demo profile
-    if (cleanedId.toUpperCase().startsWith("APEC-DEMO") || cleanedId === 'demo') {
+    if (cleanedId.toUpperCase().startsWith('APEC-DEMO') || cleanedId === 'demo') {
       setTimeout(() => {
         setProfile({
           id: 'demo-tech',
@@ -43,6 +42,7 @@ export default function ProfileView() {
           phone: '+91 94481 02941',
           joinedDate: '2025-01-15',
           avatar: 'cyan',
+          accessRole: 'User',
           skills: ['HV Substation Audit', 'LOTO Protocol', 'PLC Systems', 'Transformer Safety'],
           emergencyName: 'Priya Sharma (Spouse)',
           emergencyPhone: '+91 94481 87654',
@@ -54,229 +54,286 @@ export default function ProfileView() {
       return;
     }
 
-    if (!db) {
-      setLoading(false);
-      return;
-    }
+    if (!db) { setLoading(false); return; }
 
-    // Lookup by employeeId first, then fall back to direct Firestore document ID
     const qEmp = query(collection(db, 'team'), where('employeeId', '==', cleanedId));
-    
     const unsub = onSnapshot(qEmp, (snapshot) => {
       if (!snapshot.empty) {
-        const docData = snapshot.docs[0].data();
-        setProfile({ id: snapshot.docs[0].id, ...docData });
+        setProfile({ id: snapshot.docs[0].id, ...snapshot.docs[0].data() });
         setLoading(false);
       } else {
-        // Fallback to Firestore document ID lookup
         try {
           const docRef = doc(db, 'team', cleanedId);
           onSnapshot(docRef, (docSnapshot) => {
-            if (docSnapshot.exists()) {
-              setProfile({ id: docSnapshot.id, ...docSnapshot.data() });
-            } else {
-              setProfile(null);
-            }
+            setProfile(docSnapshot.exists() ? { id: docSnapshot.id, ...docSnapshot.data() } : null);
             setLoading(false);
-          }, () => {
-            setProfile(null);
-            setLoading(false);
-          });
-        } catch {
-          setProfile(null);
-          setLoading(false);
-        }
+          }, () => { setProfile(null); setLoading(false); });
+        } catch { setProfile(null); setLoading(false); }
       }
-    }, () => {
-      setProfile(null);
-      setLoading(false);
-    });
+    }, () => { setProfile(null); setLoading(false); });
 
     return () => unsub();
   }, [id]);
 
-  const avatarColors: Record<string, string> = {
-    cyan: 'from-cyan-500/20 to-cyan-500/5 text-cyan-400 border-cyan-500/25',
-    blue: 'from-blue-500/20 to-blue-500/5 text-blue-400 border-blue-500/25',
-    red: 'from-rose-500/20 to-rose-500/5 text-rose-400 border-rose-500/25',
-    gold: 'from-amber-500/20 to-amber-500/5 text-amber-400 border-amber-500/25'
+  const isAdmin = profile?.accessRole === 'Admin' || profile?.roleType === 'Admin' || [
+    'admin@apecpowersolutions.com',
+    'managingdirector@apecpowersolutions.com'
+  ].includes(profile?.email?.toLowerCase());
+
+  const avatarGradients: Record<string, string> = {
+    cyan: 'from-cyan-500 to-cyan-700',
+    blue: 'from-blue-500 to-blue-700',
+    red: 'from-rose-500 to-rose-700',
+    gold: 'from-amber-400 to-amber-600',
   };
-  const avatarClass = profile ? (avatarColors[profile.avatar || 'cyan'] || avatarColors.cyan) : '';
+  const avatarGrad = profile ? (avatarGradients[profile.avatar || 'cyan'] || avatarGradients.cyan) : avatarGradients.cyan;
+
+  const statusColor =
+    profile?.status === 'Active' ? 'bg-green-500/15 text-green-400 border-green-500/30' :
+    profile?.status === 'Site Visit' ? 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30' :
+    'bg-amber-500/15 text-amber-400 border-amber-500/30';
 
   return (
-    <div className="min-h-screen bg-[#04060b] text-slate-100 flex flex-col items-center justify-center p-4 relative overflow-hidden font-sans">
-      {/* Cyber Grid background */}
-      <div className="absolute inset-0 cyber-grid opacity-10 pointer-events-none" />
-      <div className="absolute top-[-20%] left-[-20%] w-[60%] h-[60%] rounded-full bg-cyan-500/5 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-20%] right-[-20%] w-[60%] h-[60%] rounded-full bg-rose-500/5 blur-[120px] pointer-events-none" />
+    <div className="min-h-screen bg-[#04060b] text-slate-100 relative overflow-hidden font-sans">
+      {/* Background */}
+      <div className="absolute inset-0 cyber-grid opacity-[0.04] pointer-events-none" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80vw] h-[40vh] rounded-full bg-cyan-500/5 blur-[140px] pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-[50vw] h-[40vh] rounded-full bg-rose-500/4 blur-[120px] pointer-events-none" />
 
-      <motion.div 
-        initial={{ opacity: 0, y: 15 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md bg-slate-955/60 backdrop-blur-md border border-white/10 rounded-3xl p-6 shadow-2xl relative space-y-6 z-10"
-      >
-        {/* Profile Header */}
-        <div className="text-center space-y-1">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-[10px] font-mono tracking-wider text-slate-400 uppercase">
-            <Shield className="w-3.5 h-3.5 text-cyan-400" />
-            APEC Company ID
+      {/* Top bar */}
+      <div className="relative z-10 flex items-center justify-between px-6 py-4 border-b border-white/5 backdrop-blur-sm bg-black/20">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center shadow-[0_0_12px_rgba(6,182,212,0.4)]">
+            <Shield className="w-4 h-4 text-white" />
           </div>
-          <h2 className="text-xl font-extrabold tracking-tight bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent pt-2">
-            Employee Profile
-          </h2>
+          <span className="text-sm font-extrabold tracking-tight text-slate-100">APEC <span className="text-cyan-400">ERP</span></span>
         </div>
+        <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Employee Identity Portal</span>
+        <Link to="/" className="inline-flex items-center gap-1.5 text-[10px] text-slate-500 hover:text-cyan-400 transition-colors font-mono uppercase tracking-wider">
+          <ArrowLeft className="w-3.5 h-3.5" />
+          Portal
+        </Link>
+      </div>
 
-        {loading ? (
-          <div className="py-16 text-center space-y-3">
-            <div className="relative w-12 h-12 mx-auto flex items-center justify-center">
-              <div className="absolute inset-0 rounded-full bg-cyan-500/10 border border-cyan-500/30 animate-ping" />
-              <Activity className="w-6 h-6 text-cyan-405 animate-pulse" />
-            </div>
-            <p className="text-xs text-slate-500 font-mono tracking-widest uppercase">Querying Registry...</p>
+      {/* ─── LOADING STATE ─── */}
+      {loading && (
+        <div className="flex flex-col items-center justify-center min-h-[80vh] gap-4">
+          <div className="relative w-14 h-14">
+            <div className="absolute inset-0 rounded-full border border-cyan-500/30 animate-ping" />
+            <div className="absolute inset-2 rounded-full border border-cyan-500/50 animate-ping" style={{ animationDelay: '0.2s' }} />
+            <Activity className="absolute inset-0 m-auto w-6 h-6 text-cyan-400 animate-pulse" />
           </div>
-        ) : profile ? (
-          <div className="space-y-6 animate-[fadeIn_0.3s_ease-out]">
-            {/* STATUS HEADER BADGE */}
-            <div className="text-center">
-              <div className="inline-flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-green-500/5 border border-green-500/20 text-green-400 w-full shadow-[0_0_15px_rgba(34,197,94,0.05)]">
-                <CheckCircle2 className="w-8 h-8 text-green-400" />
-                <span className="text-xs font-bold font-mono tracking-widest uppercase">✓ VERIFIED EMPLOYEE</span>
-                <span className="text-[9px] text-slate-500 font-mono uppercase">APEC Power Solutions</span>
-              </div>
+          <p className="text-xs font-mono text-slate-500 tracking-widest uppercase">Querying Registry...</p>
+        </div>
+      )}
+
+      {/* ─── NOT FOUND ─── */}
+      {!loading && !profile && (
+        <div className="flex flex-col items-center justify-center min-h-[80vh] gap-6 px-4">
+          <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center gap-4 text-center">
+            <div className="w-20 h-20 rounded-3xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center shadow-[0_0_30px_rgba(239,68,68,0.1)]">
+              <AlertTriangle className="w-10 h-10 text-rose-500" />
             </div>
-
-            {/* High-security Company ID card graphic */}
-            <div className="relative w-full h-44 rounded-2xl p-4 overflow-hidden border border-cyan-500/20 bg-gradient-to-br from-cyan-950/20 to-slate-900/40 shadow-xl flex flex-col justify-between group">
-              <div className="absolute inset-0 cyber-grid opacity-10" />
-              <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent pointer-events-none" />
-              
-              <div className="flex justify-between items-start">
-                <div>
-                  <h5 className="text-[8px] font-extrabold uppercase tracking-widest text-cyan-400 font-mono">APEC Company ID</h5>
-                  <span className="text-[7px] text-slate-500 uppercase tracking-widest font-mono">Digital Credential</span>
-                </div>
-                <span className="text-[7px] font-extrabold px-1.5 py-0.5 rounded border border-cyan-500/20 bg-cyan-950/30 text-cyan-400 font-mono tracking-wider">
-                  {profile.accessRole === 'Admin' ? 'ADMIN ACCESS' : 'STAFF ACCESS'}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-3">
-                {profile.photoUrl ? (
-                  <img src={profile.photoUrl} alt={profile.name} className="w-10 h-10 rounded-lg object-cover border border-slate-700 shadow-sm shrink-0" />
-                ) : (
-                  <span className={`w-10 h-10 rounded-lg bg-gradient-to-br ${avatarClass} border flex items-center justify-center text-[10px] font-extrabold shadow-sm shrink-0`}>
-                    {profile.name.slice(0, 2).toUpperCase()}
-                  </span>
-                )}
-                <div className="min-w-0">
-                  <h4 className="text-xs font-extrabold text-slate-100 truncate leading-snug">{profile.name}</h4>
-                  <p className="text-[9px] text-rose-400 font-bold truncate mt-0.5">{profile.role}</p>
-                  <p className="text-[8px] text-slate-500 font-mono truncate">{profile.department || 'Operations'}</p>
-                </div>
-              </div>
-
-              <div className="flex justify-between items-end border-t border-slate-900 pt-2 font-mono text-[8px] text-slate-400">
-                <div>
-                  <span className="text-slate-600 block text-[6.5px] tracking-wider">EMPLOYEE ID</span>
-                  <span className="font-bold text-cyan-400">{profile.employeeId || 'N/A'}</span>
-                </div>
-                <div>
-                  <span className="text-slate-600 block text-[6.5px] tracking-wider text-right">STATUS</span>
-                  <span className="font-bold text-green-400">{profile.status || 'Active'}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Core credentials info grid */}
-            <div className="grid grid-cols-2 gap-4 text-xs bg-slate-950/65 p-4 rounded-2xl border border-slate-900 font-mono">
-              <div className="space-y-1">
-                <span className="text-slate-550 text-[8.5px] uppercase tracking-wider block text-slate-500">Contact Number</span>
-                <span className="text-slate-300 font-bold block">{profile.phone || 'N/A'}</span>
-              </div>
-              <div className="space-y-1">
-                <span className="text-slate-550 text-[8.5px] uppercase tracking-wider block text-slate-500">Email Address</span>
-                <span className="text-slate-300 font-bold block truncate" title={profile.email}>{profile.email}</span>
-              </div>
-              <div className="space-y-1">
-                <span className="text-slate-550 text-[8.5px] uppercase tracking-wider block text-slate-500">Department</span>
-                <span className="text-slate-300 font-bold block truncate">{profile.department || 'Operations'}</span>
-              </div>
-              <div className="space-y-1">
-                <span className="text-slate-550 text-[8.5px] uppercase tracking-wider block text-slate-500">Joined Date</span>
-                <span className="text-slate-300 font-bold block">
-                  {profile.joinedDate ? new Date(profile.joinedDate).toLocaleDateString(undefined, { year: 'numeric', month: 'short' }) : 'N/A'}
-                </span>
-              </div>
-            </div>
-
-            {/* Emergency & Health Information */}
-            <div className="space-y-2">
-              <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block ml-1">Emergency & Medical Info</span>
-              <div className="grid grid-cols-2 gap-4 text-xs bg-rose-955/5 p-4 rounded-2xl border border-rose-500/10 font-mono">
-                <div className="space-y-1">
-                  <span className="text-slate-550 text-[8.5px] uppercase tracking-wider block text-slate-500">Emergency Contact</span>
-                  <span className="text-slate-205 font-bold block truncate text-slate-200">{profile.emergencyName || 'N/A'}</span>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-slate-550 text-[8.5px] uppercase tracking-wider block text-slate-500">Emergency Phone</span>
-                  <span className="text-slate-205 font-bold block truncate text-slate-200">{profile.emergencyPhone || 'N/A'}</span>
-                </div>
-                <div className="space-y-1 col-span-2 border-t border-slate-900/60 pt-2 mt-1 flex justify-between gap-4">
-                  <div>
-                    <span className="text-slate-550 text-[8.5px] uppercase tracking-wider block text-slate-500">Blood Group</span>
-                    <span className="text-rose-405 font-extrabold flex items-center gap-0.5 mt-0.5 text-rose-400">
-                      🩸 {profile.bloodGroup || 'N/A'}
-                    </span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="text-slate-550 text-[8.5px] uppercase tracking-wider block text-slate-500">Medical Notes</span>
-                    <span className="text-slate-355 font-medium block truncate mt-0.5" title={profile.medicalConditions}>
-                      {profile.medicalConditions || 'None'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Emergency Action Buttons */}
-            {profile.emergencyPhone && profile.emergencyPhone !== 'N/A' && (
-              <a 
-                href={`tel:${profile.emergencyPhone}`}
-                className="w-full py-3 bg-rose-950/20 border border-rose-500/30 hover:border-rose-500/60 hover:bg-rose-950/30 text-rose-400 hover:text-rose-300 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-sm"
-              >
-                <Phone className="w-4 h-4 text-rose-505 animate-pulse" />
-                Call Emergency Contact
-              </a>
-            )}
-          </div>
-        ) : (
-          <div className="py-10 text-center space-y-6 animate-[fadeIn_0.3s_ease-out]">
-            <div className="w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/25 flex items-center justify-center text-rose-500 mx-auto shadow-[0_0_15px_rgba(239,68,68,0.1)]">
-              <AlertTriangle className="w-8 h-8 animate-pulse" />
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-sm font-bold text-rose-550 uppercase tracking-widest font-mono text-rose-500">Verification Failed</h3>
-              <p className="text-xs text-slate-400 leading-relaxed max-w-xs mx-auto">
-                No active employee credentials match ID: <span className="font-mono text-cyan-400 block mt-1 break-all bg-slate-900/60 py-1.5 px-3 rounded-lg border border-slate-800">{id}</span>
+            <div>
+              <h3 className="text-lg font-bold text-rose-400 uppercase tracking-widest font-mono">Profile Not Found</h3>
+              <p className="text-xs text-slate-400 mt-2 max-w-xs leading-relaxed">
+                No employee record matches ID:
               </p>
+              <span className="inline-block mt-2 font-mono text-cyan-400 text-xs bg-slate-900/80 border border-slate-800 rounded-lg px-3 py-1.5 break-all">{id}</span>
             </div>
-            <p className="text-[10px] text-slate-500 max-w-[240px] mx-auto leading-relaxed">
-              Verify that the worker ID or Firestore key is correct, or register it inside the Admin Control dashboard.
-            </p>
-          </div>
-        )}
-
-        {/* Back Link */}
-        <div className="pt-2 border-t border-slate-900 flex justify-center">
-          <Link 
-            to="/" 
-            className="inline-flex items-center gap-1 text-[10px] text-slate-500 hover:text-cyan-400 transition-colors uppercase tracking-wider font-mono"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            Return to Login
-          </Link>
+            <Link to="/" className="mt-2 px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500/30 text-slate-400 hover:text-cyan-400 text-xs font-bold transition-all flex items-center gap-1.5">
+              <ArrowLeft className="w-3.5 h-3.5" /> Return to Portal
+            </Link>
+          </motion.div>
         </div>
-      </motion.div>
+      )}
+
+      {/* ─── PROFILE ─── */}
+      {!loading && profile && (
+        <div className="relative z-10 max-w-2xl mx-auto px-4 py-8 space-y-5">
+
+          {/* ── HERO CARD ── */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="relative rounded-3xl overflow-hidden border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.5)]"
+          >
+            {/* Hero gradient banner */}
+            <div className="h-28 bg-gradient-to-r from-slate-900 via-cyan-950/40 to-slate-900 relative">
+              <div className="absolute inset-0 cyber-grid opacity-10" />
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#06090f]" />
+              {/* Verified badge top right */}
+              <div className="absolute top-4 right-4 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/10 border border-green-500/25 backdrop-blur-sm">
+                <CheckCircle2 className="w-3.5 h-3.5 text-green-400" />
+                <span className="text-[9px] font-extrabold text-green-400 uppercase tracking-widest font-mono">Verified</span>
+              </div>
+              {/* Company label top left */}
+              <div className="absolute top-4 left-4 flex items-center gap-1.5">
+                <Shield className="w-3.5 h-3.5 text-cyan-400/60" />
+                <span className="text-[9px] font-mono text-cyan-400/60 uppercase tracking-widest">APEC Power Solutions</span>
+              </div>
+            </div>
+
+            {/* Profile info area */}
+            <div className="bg-[#06090f] px-6 pb-6">
+              {/* Avatar — overlapping the banner */}
+              <div className="flex items-end gap-5 -mt-12 mb-4">
+                <div className="relative shrink-0">
+                  {profile.photoUrl ? (
+                    <img
+                      src={profile.photoUrl}
+                      alt={profile.name}
+                      className="w-24 h-24 rounded-2xl object-cover border-4 border-[#06090f] shadow-[0_8px_30px_rgba(0,0,0,0.6)]"
+                    />
+                  ) : (
+                    <div className={`w-24 h-24 rounded-2xl bg-gradient-to-br ${avatarGrad} border-4 border-[#06090f] flex items-center justify-center text-2xl font-extrabold text-white shadow-[0_8px_30px_rgba(0,0,0,0.6)]`}>
+                      {profile.name.slice(0, 2).toUpperCase()}
+                    </div>
+                  )}
+                  {/* Online dot */}
+                  <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[#06090f] ${profile.status === 'Active' ? 'bg-green-400' : profile.status === 'Site Visit' ? 'bg-cyan-400' : 'bg-amber-400'}`} />
+                </div>
+                <div className="mb-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h1 className="text-xl font-extrabold text-slate-100 leading-tight">{profile.name}</h1>
+                    {isAdmin && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/25 text-cyan-400 text-[9px] font-extrabold uppercase tracking-widest">
+                        <BadgeCheck className="w-3 h-3" /> Admin
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-rose-400 font-bold mt-0.5">{profile.role || 'Staff Member'}</p>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <Briefcase className="w-3 h-3 text-slate-500" />
+                    <span className="text-xs text-slate-500 font-mono">{profile.department || 'Operations'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Employee ID + Status row */}
+              <div className="flex items-center justify-between flex-wrap gap-3 mt-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] text-slate-500 uppercase tracking-wider font-mono">Employee ID</span>
+                  <span className="font-mono text-xs font-extrabold text-cyan-400 bg-cyan-950/30 border border-cyan-500/20 px-2 py-0.5 rounded-lg">{profile.employeeId || 'APEC-MEMBER'}</span>
+                </div>
+                <span className={`inline-flex items-center px-3 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest border ${statusColor}`}>
+                  {profile.status || 'Active'}
+                </span>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* ── INFO GRID ── */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+            className="grid grid-cols-2 gap-3"
+          >
+            {[
+              { icon: Phone, label: 'Phone', value: profile.phone || 'N/A', color: 'text-cyan-400' },
+              { icon: Mail, label: 'Email', value: profile.email || 'N/A', color: 'text-cyan-400', truncate: true },
+              { icon: Briefcase, label: 'Department', value: profile.department || 'Operations', color: 'text-slate-300' },
+              { icon: Calendar, label: 'Joined', value: profile.joinedDate ? new Date(profile.joinedDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A', color: 'text-slate-300' },
+            ].map(({ icon: Icon, label, value, color, truncate }) => (
+              <div key={label} className="bg-slate-950/60 border border-white/5 rounded-2xl p-4 space-y-1.5 hover:border-cyan-500/15 transition-colors">
+                <div className="flex items-center gap-1.5">
+                  <Icon className="w-3.5 h-3.5 text-slate-500" />
+                  <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">{label}</span>
+                </div>
+                <p className={`text-xs font-bold ${color} ${truncate ? 'truncate' : ''}`} title={value}>{value}</p>
+              </div>
+            ))}
+          </motion.div>
+
+          {/* ── SKILLS ── */}
+          {profile.skills && profile.skills.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.15 }}
+              className="bg-slate-950/60 border border-white/5 rounded-2xl p-4 space-y-3"
+            >
+              <div className="flex items-center gap-2">
+                <Award className="w-4 h-4 text-cyan-400" />
+                <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Skills & Certifications</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {profile.skills.map((skill: string, idx: number) => (
+                  <span key={idx} className="px-2.5 py-1 rounded-xl bg-slate-900 border border-slate-800 text-[10px] text-slate-300 font-semibold flex items-center gap-1.5 hover:border-cyan-500/25 hover:text-cyan-400 transition-colors">
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0" />
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {/* ── EMERGENCY CARD ── */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+            className="rounded-2xl overflow-hidden border border-rose-500/15 shadow-[0_0_30px_rgba(239,68,68,0.04)]"
+          >
+            {/* Header */}
+            <div className="flex items-center gap-2 px-4 py-3 bg-rose-500/5 border-b border-rose-500/10">
+              <HeartPulse className="w-4 h-4 text-rose-400" />
+              <span className="text-[10px] font-extrabold text-rose-400 uppercase tracking-widest">Emergency & Medical</span>
+            </div>
+            <div className="bg-slate-950/60 p-4 grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <span className="text-[9px] text-slate-500 uppercase tracking-wider font-mono block">Emergency Contact</span>
+                <span className="text-sm font-bold text-slate-100">{profile.emergencyName || 'N/A'}</span>
+              </div>
+              <div className="space-y-1">
+                <span className="text-[9px] text-slate-500 uppercase tracking-wider font-mono block">Emergency Phone</span>
+                <span className="text-sm font-bold text-slate-100">{profile.emergencyPhone || 'N/A'}</span>
+              </div>
+              <div className="space-y-1">
+                <span className="text-[9px] text-slate-500 uppercase tracking-wider font-mono block">Blood Group</span>
+                <span className="text-sm font-extrabold text-rose-400 flex items-center gap-1">🩸 {profile.bloodGroup || 'N/A'}</span>
+              </div>
+              <div className="space-y-1">
+                <span className="text-[9px] text-slate-500 uppercase tracking-wider font-mono block">Medical Notes</span>
+                <span className="text-xs font-medium text-slate-300 leading-snug">{profile.medicalConditions || 'None'}</span>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* ── EMERGENCY CALL BUTTON ── */}
+          {profile.emergencyPhone && profile.emergencyPhone !== 'N/A' && (
+            <motion.a
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.25 }}
+              href={`tel:${profile.emergencyPhone}`}
+              className="flex w-full items-center justify-center gap-2.5 py-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/25 hover:bg-rose-500/20 hover:border-rose-500/50 text-rose-400 hover:text-rose-300 font-bold text-sm transition-all shadow-[0_4px_20px_rgba(239,68,68,0.08)] hover:shadow-[0_4px_20px_rgba(239,68,68,0.18)] active:scale-[0.98]"
+            >
+              <Phone className="w-4 h-4 animate-pulse" />
+              Call Emergency Contact
+            </motion.a>
+          )}
+
+          {/* ── FOOTER ── */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
+            className="flex items-center justify-between pt-2 pb-4"
+          >
+            <div className="flex items-center gap-1.5">
+              <User className="w-3 h-3 text-slate-600" />
+              <span className="text-[9px] text-slate-600 font-mono uppercase tracking-wider">APEC Company ID · {profile.employeeId}</span>
+            </div>
+            <Link to="/" className="inline-flex items-center gap-1 text-[9px] text-slate-600 hover:text-cyan-400 transition-colors font-mono uppercase tracking-wider">
+              <ArrowLeft className="w-3 h-3" /> Portal
+            </Link>
+          </motion.div>
+
+        </div>
+      )}
     </div>
   );
 }
