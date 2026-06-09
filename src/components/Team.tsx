@@ -25,6 +25,12 @@ export default function Team() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
 
+  const getVerificationUrl = (profile: any) => {
+    if (!profile) return '';
+    const empId = (profile.employeeId && profile.employeeId !== 'undefined') ? profile.employeeId : profile.id;
+    return `${window.location.origin}/profile/${empId}`;
+  };
+
   // Safety fallback timeout to prevent infinite loading state
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -396,19 +402,19 @@ export default function Team() {
                   <div className="min-w-0 flex-1">
                     <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Verification Link</span>
                     <a 
-                      href={selectedProfile.profileUrl || `${window.location.origin}/profile/${selectedProfile.employeeId}`} 
+                      href={getVerificationUrl(selectedProfile)} 
                       target="_blank" 
                       rel="noreferrer" 
                       className="text-cyan-400 hover:underline font-bold text-[10px] block truncate"
                       title="Open Profile Page"
                     >
-                      {(selectedProfile.profileUrl || `${window.location.origin}/profile/${selectedProfile.employeeId}`).replace(/^https?:\/\//, '')}
+                      {getVerificationUrl(selectedProfile).replace(/^https?:\/\//, '')}
                     </a>
                   </div>
                   <button
                     type="button"
                     onClick={() => {
-                      navigator.clipboard.writeText(selectedProfile.profileUrl || `${window.location.origin}/profile/${selectedProfile.employeeId}`);
+                      navigator.clipboard.writeText(getVerificationUrl(selectedProfile));
                       alert("Employee profile verification link copied to clipboard!");
                     }}
                     className="px-2.5 py-1 bg-slate-950 border border-slate-900 hover:border-cyan-500/30 hover:text-cyan-400 text-slate-400 rounded-lg text-[9.5px] font-bold transition-all cursor-pointer font-mono shrink-0"

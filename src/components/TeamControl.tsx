@@ -16,7 +16,8 @@ import {
   Award,
   X,
   ChevronDown,
-  Wifi
+  Wifi,
+  Edit
 } from 'lucide-react';
 import { collection, onSnapshot, doc, deleteDoc, addDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { useOutletContext } from 'react-router-dom';
@@ -46,6 +47,30 @@ export default function TeamControl() {
   const [newEmergencyPhone, setNewEmergencyPhone] = useState('');
   const [newBloodGroup, setNewBloodGroup] = useState('');
   const [newMedicalConditions, setNewMedicalConditions] = useState('');
+  
+  // Profile Edit States
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [openEditDropdown, setOpenEditDropdown] = useState<'dept' | 'priority' | 'status' | 'avatar' | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editRole, setEditRole] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editEmployeeId, setEditEmployeeId] = useState('');
+  const [editDepartment, setEditDepartment] = useState('');
+  const [editStatus, setEditStatus] = useState('');
+  const [editJoinedDate, setEditJoinedDate] = useState('');
+  const [editSkills, setEditSkills] = useState('');
+  const [editEmergencyName, setEditEmergencyName] = useState('');
+  const [editEmergencyPhone, setEditEmergencyPhone] = useState('');
+  const [editBloodGroup, setEditBloodGroup] = useState('');
+  const [editMedicalConditions, setEditMedicalConditions] = useState('');
+  const [editAvatar, setEditAvatar] = useState('cyan');
+
+  const getVerificationUrl = (profile: any) => {
+    if (!profile) return '';
+    const empId = (profile.employeeId && profile.employeeId !== 'undefined') ? profile.employeeId : profile.id;
+    return `${window.location.origin}/profile/${empId}`;
+  };
   
   const [isAddingUser, setIsAddingUser] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
@@ -177,6 +202,66 @@ export default function TeamControl() {
       }));
     } catch (err) {
       console.error('Error revoking tag:', err);
+    } finally {
+      setIsDbActionLoading(false);
+    }
+  };
+
+  const handleSaveProfileChanges = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedProfile || !db) return;
+    if (!editName.trim() || !editEmail.trim()) {
+      alert('Name and Email are required.');
+      return;
+    }
+
+    setIsDbActionLoading(true);
+    try {
+      const formattedSkills = editSkills
+        ? editSkills.split(',').map(s => s.trim()).filter(Boolean)
+        : [];
+
+      const empId = editEmployeeId.trim() || selectedProfile.employeeId || selectedProfile.id;
+      const profileLink = `${window.location.origin}/profile/${empId}`;
+
+      const updatedFields = {
+        name: editName.trim(),
+        email: editEmail.trim(),
+        role: editRole.trim() || 'Staff Member',
+        phone: editPhone.trim() || 'N/A',
+        employeeId: empId,
+        department: editDepartment,
+        status: editStatus,
+        joinedDate: editJoinedDate,
+        skills: formattedSkills,
+        avatar: editAvatar,
+        emergencyName: editEmergencyName.trim() || 'N/A',
+        emergencyPhone: editEmergencyPhone.trim() || 'N/A',
+        bloodGroup: editBloodGroup || 'N/A',
+        medicalConditions: editMedicalConditions.trim() || 'None',
+        profileUrl: profileLink
+      };
+
+      await updateDoc(doc(db, 'team', selectedProfile.id), updatedFields);
+
+      // Log activity
+      await addDoc(collection(db, 'activities'), {
+        title: 'Profile Updated',
+        desc: `Administrative updates saved for "${editName.trim()}" (Role: ${editRole.trim() || 'Staff Member'})`,
+        type: 'settings',
+        timestamp: Timestamp.now()
+      });
+
+      // Update local state to reflect changes
+      setSelectedProfile((prev: any) => ({
+        ...prev,
+        ...updatedFields
+      }));
+
+      setIsEditingProfile(false);
+    } catch (err) {
+      console.error('Error updating profile:', err);
+      alert('Failed to save profile changes. Please try again.');
     } finally {
       setIsDbActionLoading(false);
     }
@@ -900,30 +985,60 @@ export default function TeamControl() {
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="relative w-full max-w-lg glass-card p-6 rounded-2xl shadow-2xl border border-white/10 z-10 space-y-6"
+              className="relative w-full max-w-lg glass-card p-6 rounded-2xl shadow-2xl border border-white/10 z-10 space-y-6 max-h-[90vh] overflow-y-auto custom-scrollbar"
             >
-              <button 
-                onClick={() => setSelectedProfile(null)}
-                className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 transition-all"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="absolute top-4 right-4 flex items-center gap-2">
+                {!isEditingProfile && (
+                  <button 
+                    onClick={() => {
+                      setEditName(selectedProfile.name || '');
+                      setEditEmail(selectedProfile.email || '');
+                      setEditRole(selectedProfile.role || '');
+                      setEditPhone(selectedProfile.phone || '');
+                      setEditEmployeeId(selectedProfile.employeeId || '');
+                      setEditDepartment(selectedProfile.department || 'Operations Control');
+                      setEditStatus(selectedProfile.status || 'Active');
+                      setEditJoinedDate(selectedProfile.joinedDate || '');
+                      setEditSkills(selectedProfile.skills ? selectedProfile.skills.join(', ') : '');
+                      setEditEmergencyName(selectedProfile.emergencyName || '');
+                      setEditEmergencyPhone(selectedProfile.emergencyPhone || '');
+                      setEditBloodGroup(selectedProfile.bloodGroup || '');
+                      setEditMedicalConditions(selectedProfile.medicalConditions || '');
+                      setEditAvatar(selectedProfile.avatar || 'cyan');
+                      setIsEditingProfile(true);
+                    }}
+                    className="px-2.5 py-1 rounded-lg text-[10px] font-bold text-cyan-400 border border-cyan-500/20 bg-cyan-950/20 hover:bg-cyan-950/40 hover:border-cyan-500/40 transition-all flex items-center gap-1 cursor-pointer"
+                  >
+                    <Edit className="w-3 h-3" />
+                    Edit Profile
+                  </button>
+                )}
+                <button 
+                  onClick={() => {
+                    setSelectedProfile(null);
+                    setIsEditingProfile(false);
+                  }}
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 transition-all cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
 
               <div className="flex items-center gap-4">
                 <span className={`w-12 h-12 rounded-full bg-gradient-to-br ${
-                  selectedProfile.avatar === 'cyan' ? 'from-cyan-500/20 to-cyan-500/5 text-cyan-405 border-cyan-500/25' :
-                  selectedProfile.avatar === 'blue' ? 'from-blue-500/20 to-blue-500/5 text-blue-400 border-blue-500/25' :
-                  selectedProfile.avatar === 'red' ? 'from-rose-500/20 to-rose-500/5 text-rose-400 border-rose-500/25' :
+                  (isEditingProfile ? editAvatar : selectedProfile.avatar) === 'cyan' ? 'from-cyan-500/20 to-cyan-500/5 text-cyan-400 border-cyan-500/25' :
+                  (isEditingProfile ? editAvatar : selectedProfile.avatar) === 'blue' ? 'from-blue-500/20 to-blue-500/5 text-blue-400 border-blue-500/25' :
+                  (isEditingProfile ? editAvatar : selectedProfile.avatar) === 'red' ? 'from-rose-500/20 to-rose-500/5 text-rose-400 border-rose-500/25' :
                   'from-amber-500/20 to-amber-500/5 text-amber-400 border-amber-500/25'
                 } border flex items-center justify-center text-sm font-extrabold shadow-sm`}>
-                  {selectedProfile.name.slice(0, 2).toUpperCase()}
+                  {((isEditingProfile ? editName : selectedProfile.name) || 'AP').slice(0, 2).toUpperCase()}
                 </span>
                 <div>
-                  <h4 className="text-lg font-bold text-slate-100">{selectedProfile.name}</h4>
+                  <h4 className="text-lg font-bold text-slate-100">{isEditingProfile ? (editName || 'New Profile') : selectedProfile.name}</h4>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-xs text-rose-505 font-bold">{selectedProfile.role}</span>
+                    <span className="text-xs text-rose-500 font-bold">{isEditingProfile ? (editRole || 'Staff Member') : selectedProfile.role}</span>
                     <span className="text-[10px] bg-slate-950 px-2 py-0.5 rounded border border-slate-900 text-slate-400 font-mono">
-                      {selectedProfile.employeeId || 'APEC-MEMBER'}
+                      {isEditingProfile ? (editEmployeeId || 'APEC-MEMBER') : (selectedProfile.employeeId || 'APEC-MEMBER')}
                     </span>
                   </div>
                 </div>
@@ -951,7 +1066,7 @@ export default function TeamControl() {
                       'admin@apecpowersolutions.com',
                       'managingdirector@apecpowersolutions.com'
                     ].includes(selectedProfile.email?.toLowerCase())
-                      ? 'bg-cyan-950/40 text-cyan-405 border-cyan-500/25 shadow-[0_0_8px_rgba(6,182,212,0.1)]'
+                      ? 'bg-cyan-950/40 text-cyan-400 border-cyan-500/25 shadow-[0_0_8px_rgba(6,182,212,0.1)]'
                       : 'bg-slate-800 text-slate-400 border-slate-700'
                   } font-mono`}>
                     {selectedProfile.accessRole === 'Admin' || selectedProfile.roleType === 'Admin' || [
@@ -964,17 +1079,17 @@ export default function TeamControl() {
                 {/* Profile Avatar / Info */}
                 <div className="flex items-center gap-3">
                   <span className={`w-12 h-12 rounded-xl bg-gradient-to-br ${
-                    selectedProfile.avatar === 'cyan' ? 'from-cyan-500/20 to-cyan-500/5 text-cyan-400 border-cyan-500/20' :
-                    selectedProfile.avatar === 'blue' ? 'from-blue-500/20 to-blue-500/5 text-blue-400 border-blue-500/20' :
-                    selectedProfile.avatar === 'red' ? 'from-rose-500/20 to-rose-500/5 text-rose-400 border-rose-500/20' :
+                    (isEditingProfile ? editAvatar : selectedProfile.avatar) === 'cyan' ? 'from-cyan-500/20 to-cyan-500/5 text-cyan-400 border-cyan-500/20' :
+                    (isEditingProfile ? editAvatar : selectedProfile.avatar) === 'blue' ? 'from-blue-500/20 to-blue-500/5 text-blue-400 border-blue-500/20' :
+                    (isEditingProfile ? editAvatar : selectedProfile.avatar) === 'red' ? 'from-rose-500/20 to-rose-500/5 text-rose-400 border-rose-500/20' :
                     'from-amber-500/20 to-amber-500/5 text-amber-400 border-amber-500/20'
                   } border flex items-center justify-center text-sm font-extrabold shadow-sm shrink-0`}>
-                    {selectedProfile.name.slice(0, 2).toUpperCase()}
+                    {((isEditingProfile ? editName : selectedProfile.name) || 'AP').slice(0, 2).toUpperCase()}
                   </span>
                   <div className="min-w-0">
-                    <h4 className="text-sm font-bold text-slate-100 truncate">{selectedProfile.name}</h4>
-                    <p className="text-[10px] text-rose-505 font-bold truncate leading-tight">{selectedProfile.role}</p>
-                    <p className="text-[9px] text-slate-500 font-mono truncate mt-0.5">{selectedProfile.department || 'Operations'}</p>
+                    <h4 className="text-sm font-bold text-slate-100 truncate">{isEditingProfile ? (editName || 'New Profile') : selectedProfile.name}</h4>
+                    <p className="text-[10px] text-rose-500 font-bold truncate leading-tight">{isEditingProfile ? (editRole || 'Staff Member') : selectedProfile.role}</p>
+                    <p className="text-[9px] text-slate-500 font-mono truncate mt-0.5">{isEditingProfile ? editDepartment : (selectedProfile.department || 'Operations')}</p>
                   </div>
                 </div>
 
@@ -989,7 +1104,7 @@ export default function TeamControl() {
                   <div>
                     <span className="text-slate-500 block uppercase text-[7px] tracking-wider text-right">TAG STATUS</span>
                     <span className={`font-bold uppercase block text-right ${
-                      selectedProfile.nfcCardStatus === 'Linked' ? 'text-green-450' :
+                      selectedProfile.nfcCardStatus === 'Linked' ? 'text-green-400' :
                       selectedProfile.nfcCardStatus === 'Revoked' ? 'text-rose-500' :
                       'text-amber-500'
                     }`}>
@@ -999,146 +1114,457 @@ export default function TeamControl() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 text-xs bg-slate-955/45 p-4 rounded-xl border border-slate-900/60 font-mono">
-                <div className="space-y-1">
-                  <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Department</span>
-                  <span className="text-slate-350 font-bold flex items-center gap-1.5">
-                    <Briefcase className="w-3.5 h-3.5 text-cyan-500" />
-                    {selectedProfile.department || 'Operations'}
-                  </span>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Status</span>
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                    selectedProfile.status === 'Active' ? 'bg-green-500/10 text-green-405 border border-green-500/20' :
-                    selectedProfile.status === 'Site Visit' ? 'bg-cyan-500/10 text-cyan-405 border border-cyan-500/20' :
-                    'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                  } border`}>
-                    {selectedProfile.status || 'Active'}
-                  </span>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Email Address</span>
-                  <span className="text-slate-350 font-bold block truncate">{selectedProfile.email}</span>
-                </div>
-                <div className="space-y-1">
-                  <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Phone Number</span>
-                  <span className="text-slate-350 font-bold flex items-center gap-1.5">
-                    <Phone className="w-3.5 h-3.5 text-cyan-500" />
-                    {selectedProfile.phone || 'N/A'}
-                  </span>
-                </div>
-                <div className="space-y-1 col-span-2 border-t border-slate-900/80 pt-2 mt-1">
-                  <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Joined Date</span>
-                  <span className="text-slate-350 font-bold flex items-center gap-1.5">
-                    <Calendar className="w-3.5 h-3.5 text-cyan-500" />
-                    {selectedProfile.joinedDate ? new Date(selectedProfile.joinedDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}
-                  </span>
-                </div>
-                <div className="space-y-1 col-span-2 border-t border-slate-900/80 pt-2 flex justify-between items-center gap-4">
-                  <div className="min-w-0 flex-1">
-                    <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Verification Link</span>
-                    <a 
-                      href={selectedProfile.profileUrl || `${window.location.origin}/profile/${selectedProfile.employeeId}`} 
-                      target="_blank" 
-                      rel="noreferrer" 
-                      className="text-cyan-400 hover:underline font-bold text-[10px] block truncate"
-                      title="Open Profile Page"
+              {isEditingProfile ? (
+                <form onSubmit={handleSaveProfileChanges} className="space-y-6">
+                  {/* Section 1: Identity */}
+                  <div className="space-y-3 p-4 bg-slate-950/20 rounded-xl border border-white/5">
+                    <h5 className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest border-b border-slate-900/60 pb-1.5 mb-2">
+                      1. Profile Identity
+                    </h5>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Full Name</label>
+                        <input 
+                          type="text" 
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          required
+                          className="w-full bg-slate-955/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/10 transition-all"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Role Description</label>
+                        <input 
+                          type="text" 
+                          value={editRole}
+                          onChange={(e) => setEditRole(e.target.value)}
+                          className="w-full bg-slate-955/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/10 transition-all"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Employee ID</label>
+                        <input 
+                          type="text" 
+                          value={editEmployeeId}
+                          onChange={(e) => setEditEmployeeId(e.target.value)}
+                          className="w-full bg-slate-955/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/10 transition-all font-mono"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Phone Number</label>
+                        <input 
+                          type="text" 
+                          value={editPhone}
+                          onChange={(e) => setEditPhone(e.target.value)}
+                          className="w-full bg-slate-955/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/10 transition-all"
+                        />
+                      </div>
+                      <div className="space-y-1 col-span-2">
+                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Email Address</label>
+                        <input 
+                          type="email" 
+                          value={editEmail}
+                          onChange={(e) => setEditEmail(e.target.value)}
+                          required
+                          className="w-full bg-slate-955/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/10 transition-all"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Section 2: Department, Status & Details */}
+                  <div className="space-y-3 p-4 bg-slate-955/20 rounded-xl border border-white/5">
+                    <h5 className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest border-b border-slate-900/60 pb-1.5 mb-2">
+                      2. Access & Operations
+                    </h5>
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Department Select */}
+                      <div className="space-y-1 relative">
+                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Department</label>
+                        <button
+                          type="button"
+                          onClick={() => setOpenEditDropdown(openEditDropdown === 'dept' ? null : 'dept')}
+                          className="w-full bg-slate-955/60 border border-slate-800 text-slate-100 rounded-xl py-2 px-3 focus:outline-none focus:border-cyan-500/50 text-xs flex justify-between items-center transition-all cursor-pointer text-left"
+                        >
+                          <span>{editDepartment}</span>
+                          <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${openEditDropdown === 'dept' ? 'rotate-180' : ''}`} />
+                        </button>
+                        <AnimatePresence>
+                          {openEditDropdown === 'dept' && (
+                            <motion.div
+                              initial={{ opacity: 0, y: 5 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: 5 }}
+                              className="absolute z-30 w-full mt-1 bg-[#090d16]/95 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl overflow-hidden p-1 space-y-0.5"
+                            >
+                              {[
+                                "Operations Control",
+                                "Solar Installation",
+                                "High Voltage Substations",
+                                "Grid Automation",
+                                "Safety & Compliance"
+                              ].map((dept) => (
+                                <button
+                                  key={dept}
+                                  type="button"
+                                  onClick={() => {
+                                    setEditDepartment(dept);
+                                    setOpenEditDropdown(null);
+                                  }}
+                                  className={`w-full text-left px-3 py-2 text-xs rounded-lg transition-colors flex items-center justify-between ${
+                                    editDepartment === dept 
+                                      ? 'bg-cyan-500/10 text-cyan-400 font-semibold' 
+                                      : 'text-slate-300 hover:bg-slate-800/40 hover:text-slate-100'
+                                  }`}
+                                >
+                                  <span>{dept}</span>
+                                  {editDepartment === dept && <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />}
+                                </button>
+                              ))}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+
+                      {/* Status Select */}
+                      <div className="space-y-1 relative">
+                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Status</label>
+                        <button
+                          type="button"
+                          onClick={() => setOpenEditDropdown(openEditDropdown === 'status' ? null : 'status')}
+                          className="w-full bg-slate-955/60 border border-slate-800 text-slate-100 rounded-xl py-2 px-3 focus:outline-none focus:border-cyan-500/50 text-xs flex justify-between items-center transition-all cursor-pointer text-left"
+                        >
+                          <span>{editStatus}</span>
+                          <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${openEditDropdown === 'status' ? 'rotate-180' : ''}`} />
+                        </button>
+                        <AnimatePresence>
+                          {openEditDropdown === 'status' && (
+                            <motion.div
+                              initial={{ opacity: 0, y: 5 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: 5 }}
+                              className="absolute z-30 w-full mt-1 bg-[#090d16]/95 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl overflow-hidden p-1 space-y-0.5"
+                            >
+                              {["Active", "Site Visit", "On Leave"].map((st) => (
+                                <button
+                                  key={st}
+                                  type="button"
+                                  onClick={() => {
+                                    setEditStatus(st);
+                                    setOpenEditDropdown(null);
+                                  }}
+                                  className={`w-full text-left px-3 py-2 text-xs rounded-lg transition-colors flex items-center justify-between ${
+                                    editStatus === st 
+                                      ? 'bg-cyan-500/10 text-cyan-400 font-semibold' 
+                                      : 'text-slate-300 hover:bg-slate-800/40 hover:text-slate-100'
+                                  }`}
+                                >
+                                  <span>{st}</span>
+                                  {editStatus === st && <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />}
+                                </button>
+                              ))}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+
+                      {/* Joined Date */}
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Joined Date</label>
+                        <input 
+                          type="date" 
+                          value={editJoinedDate}
+                          onChange={(e) => setEditJoinedDate(e.target.value)}
+                          className="w-full bg-slate-955/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/10 transition-all font-mono"
+                        />
+                      </div>
+
+                      {/* Avatar Theme Select */}
+                      <div className="space-y-1 relative">
+                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Avatar Theme</label>
+                        <button
+                          type="button"
+                          onClick={() => setOpenEditDropdown(openEditDropdown === 'avatar' ? null : 'avatar')}
+                          className="w-full bg-slate-955/60 border border-slate-800 text-slate-100 rounded-xl py-2 px-3 focus:outline-none focus:border-cyan-505 text-xs flex justify-between items-center transition-all cursor-pointer text-left font-mono"
+                        >
+                          <span className="capitalize">{editAvatar} Theme</span>
+                          <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${openEditDropdown === 'avatar' ? 'rotate-180' : ''}`} />
+                        </button>
+                        <AnimatePresence>
+                          {openEditDropdown === 'avatar' && (
+                            <motion.div
+                              initial={{ opacity: 0, y: 5 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: 5 }}
+                              className="absolute z-30 w-full mt-1 bg-[#090d16]/95 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl overflow-hidden p-1 space-y-0.5"
+                            >
+                              {[
+                                { value: 'cyan', label: 'Cyan Theme' },
+                                { value: 'blue', label: 'Blue Theme' },
+                                { value: 'red', label: 'Red Theme' },
+                                { value: 'gold', label: 'Gold Theme' }
+                              ].map((theme) => (
+                                <button
+                                  key={theme.value}
+                                  type="button"
+                                  onClick={() => {
+                                    setEditAvatar(theme.value);
+                                    setOpenEditDropdown(null);
+                                  }}
+                                  className={`w-full text-left px-3 py-2 text-xs rounded-lg transition-colors flex items-center justify-between ${
+                                    editAvatar === theme.value 
+                                      ? 'bg-cyan-500/10 text-cyan-400 font-semibold' 
+                                      : 'text-slate-300 hover:bg-slate-800/40 hover:text-slate-100'
+                                  }`}
+                                >
+                                  <span>{theme.label}</span>
+                                  {editAvatar === theme.value && <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />}
+                                </button>
+                              ))}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+
+                      {/* Skills & Certifications */}
+                      <div className="space-y-1 col-span-2">
+                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Skills & Certifications (comma separated)</label>
+                        <input 
+                          type="text" 
+                          value={editSkills}
+                          onChange={(e) => setEditSkills(e.target.value)}
+                          placeholder="e.g. Solar, HV Safety, LOTO"
+                          className="w-full bg-slate-955/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/10 transition-all"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Section 3: Health & Emergency */}
+                  <div className="space-y-3 p-4 bg-rose-955/5 rounded-xl border border-rose-500/10">
+                    <h5 className="text-[10px] font-bold text-rose-400 uppercase tracking-widest border-b border-rose-900/60 pb-1.5 mb-2">
+                      3. Health & Emergency Credentials
+                    </h5>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Emergency Contact Name</label>
+                        <input 
+                          type="text" 
+                          value={editEmergencyName}
+                          onChange={(e) => setEditEmergencyName(e.target.value)}
+                          placeholder="Contact name"
+                          className="w-full bg-slate-955/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/10 transition-all"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Emergency Contact Phone</label>
+                        <input 
+                          type="text" 
+                          value={editEmergencyPhone}
+                          onChange={(e) => setEditEmergencyPhone(e.target.value)}
+                          placeholder="Contact phone"
+                          className="w-full bg-slate-955/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/10 transition-all"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Blood Group</label>
+                        <select
+                          value={editBloodGroup}
+                          onChange={(e) => setEditBloodGroup(e.target.value)}
+                          className="w-full bg-slate-955/60 border border-slate-800 text-slate-150 focus:outline-none focus:border-cyan-500/50 text-xs cursor-pointer rounded-xl py-2 px-3 text-slate-100 bg-[#090d16]"
+                        >
+                          <option value="">Select Blood Group...</option>
+                          <option value="A+">A+</option>
+                          <option value="A-">A-</option>
+                          <option value="B+">B+</option>
+                          <option value="B-">B-</option>
+                          <option value="AB+">AB+</option>
+                          <option value="AB-">AB-</option>
+                          <option value="O+">O+</option>
+                          <option value="O-">O-</option>
+                        </select>
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Medical Notes</label>
+                        <input 
+                          type="text" 
+                          value={editMedicalConditions}
+                          onChange={(e) => setEditMedicalConditions(e.target.value)}
+                          placeholder="Allergies, chronic conditions"
+                          className="w-full bg-slate-955/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/10 transition-all"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 flex gap-3">
+                    <button
+                      type="submit"
+                      disabled={isDbActionLoading}
+                      className="w-full py-2.5 bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-955 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
                     >
-                      {(selectedProfile.profileUrl || `${window.location.origin}/profile/${selectedProfile.employeeId}`).replace(/^https?:\/\//, '')}
-                    </a>
+                      {isDbActionLoading ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <span>Saving Changes...</span>
+                        </>
+                      ) : (
+                        <span>Save Profile Changes</span>
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsEditingProfile(false)}
+                      className="w-full py-2.5 bg-slate-805 border border-slate-700 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                    >
+                      Cancel
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      navigator.clipboard.writeText(selectedProfile.profileUrl || `${window.location.origin}/profile/${selectedProfile.employeeId}`);
-                      alert("Employee profile verification link copied to clipboard!");
-                    }}
-                    className="px-2.5 py-1 bg-slate-950 border border-slate-900 hover:border-cyan-500/30 hover:text-cyan-400 text-slate-400 rounded-lg text-[9.5px] font-bold transition-all cursor-pointer font-mono shrink-0"
-                  >
-                    Copy Link
-                  </button>
-                </div>
-              </div>
-
-              {/* Emergency & Medical Credentials */}
-              <div className="space-y-2">
-                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Emergency & Medical Info</span>
-                <div className="grid grid-cols-2 gap-4 text-xs bg-rose-950/5 p-4 rounded-xl border border-rose-500/10 font-mono">
-                  <div className="space-y-1">
-                    <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Emergency Contact</span>
-                    <span className="text-slate-200 font-bold block truncate">{selectedProfile.emergencyName || 'N/A'}</span>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Contact Phone</span>
-                    <span className="text-slate-200 font-bold block truncate">{selectedProfile.emergencyPhone || 'N/A'}</span>
-                  </div>
-                  <div className="space-y-1 col-span-2 border-t border-slate-900/60 pt-2 mt-1 flex justify-between gap-6">
+                </form>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-4 text-xs bg-slate-955/45 p-4 rounded-xl border border-slate-900/60 font-mono">
                     <div className="space-y-1">
-                      <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Blood Group</span>
-                      <span className="text-rose-450 font-bold flex items-center gap-1 text-rose-400">
-                        <span className="text-[10px]">🩸</span> {selectedProfile.bloodGroup || 'N/A'}
+                      <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Department</span>
+                      <span className="text-slate-350 font-bold flex items-center gap-1.5">
+                        <Briefcase className="w-3.5 h-3.5 text-cyan-500" />
+                        {selectedProfile.department || 'Operations'}
                       </span>
                     </div>
-                    <div className="space-y-1 flex-1">
-                      <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Medical Notes</span>
-                      <span className="text-slate-350 font-medium block truncate" title={selectedProfile.medicalConditions}>
-                        {selectedProfile.medicalConditions || 'None'}
+                    <div className="space-y-1">
+                      <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Status</span>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        selectedProfile.status === 'Active' ? 'bg-green-500/10 text-green-450 border border-green-500/20' :
+                        selectedProfile.status === 'Site Visit' ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' :
+                        'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                      } border`}>
+                        {selectedProfile.status || 'Active'}
                       </span>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Email Address</span>
+                      <span className="text-slate-350 font-bold block truncate">{selectedProfile.email}</span>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Phone Number</span>
+                      <span className="text-slate-350 font-bold flex items-center gap-1.5">
+                        <Phone className="w-3.5 h-3.5 text-cyan-500" />
+                        {selectedProfile.phone || 'N/A'}
+                      </span>
+                    </div>
+                    <div className="space-y-1 col-span-2 border-t border-slate-900/80 pt-2 mt-1">
+                      <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Joined Date</span>
+                      <span className="text-slate-350 font-bold flex items-center gap-1.5">
+                        <Calendar className="w-3.5 h-3.5 text-cyan-500" />
+                        {selectedProfile.joinedDate ? new Date(selectedProfile.joinedDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}
+                      </span>
+                    </div>
+                    <div className="space-y-1 col-span-2 border-t border-slate-900/80 pt-2 flex justify-between items-center gap-4">
+                      <div className="min-w-0 flex-1">
+                        <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Verification Link</span>
+                        <a 
+                          href={getVerificationUrl(selectedProfile)} 
+                          target="_blank" 
+                          rel="noreferrer" 
+                          className="text-cyan-400 hover:underline font-bold text-[10px] block truncate"
+                          title="Open Profile Page"
+                        >
+                          {getVerificationUrl(selectedProfile).replace(/^https?:\/\//, '')}
+                        </a>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(getVerificationUrl(selectedProfile));
+                          alert("Employee profile verification link copied to clipboard!");
+                        }}
+                        className="px-2.5 py-1 bg-slate-950 border border-slate-900 hover:border-cyan-500/30 hover:text-cyan-400 text-slate-400 rounded-lg text-[9.5px] font-bold transition-all cursor-pointer font-mono shrink-0"
+                      >
+                        Copy Link
+                      </button>
                     </div>
                   </div>
-                </div>
-              </div>
 
-              <div className="space-y-2">
-                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Skills & Certifications</span>
-                <div className="flex flex-wrap gap-1.5">
-                  {selectedProfile.skills && selectedProfile.skills.length > 0 ? (
-                    selectedProfile.skills.map((skill: string, idx: number) => (
-                      <span key={idx} className="px-2.5 py-1 rounded bg-slate-950 border border-slate-900 text-xs text-slate-400 font-semibold flex items-center gap-1">
-                        <Award className="w-3 h-3 text-cyan-500" />
-                        {skill}
-                      </span>
-                    ))
-                  ) : (
-                    <span className="text-xs text-slate-505 italic">No specialized skills/certifications listed</span>
-                  )}
-                </div>
-              </div>
+                  {/* Emergency & Medical Credentials */}
+                  <div className="space-y-2">
+                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Emergency & Medical Info</span>
+                    <div className="grid grid-cols-2 gap-4 text-xs bg-rose-955/5 p-4 rounded-xl border border-rose-500/10 font-mono">
+                      <div className="space-y-1">
+                        <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Emergency Contact</span>
+                        <span className="text-slate-200 font-bold block truncate">{selectedProfile.emergencyName || 'N/A'}</span>
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Contact Phone</span>
+                        <span className="text-slate-200 font-bold block truncate">{selectedProfile.emergencyPhone || 'N/A'}</span>
+                      </div>
+                      <div className="space-y-1 col-span-2 border-t border-slate-900/60 pt-2 mt-1 flex justify-between gap-6">
+                        <div className="space-y-1">
+                          <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Blood Group</span>
+                          <span className="text-rose-400 font-bold flex items-center gap-1 text-rose-405">
+                            <span className="text-[10px]">🩸</span> {selectedProfile.bloodGroup || 'N/A'}
+                          </span>
+                        </div>
+                        <div className="space-y-1 flex-1">
+                          <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Medical Notes</span>
+                          <span className="text-slate-355 font-medium block truncate" title={selectedProfile.medicalConditions}>
+                            {selectedProfile.medicalConditions || 'None'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
-              {/* NFC Card Management Actions */}
-              <div className="pt-2 flex gap-3">
-                {selectedProfile.nfcTagUid ? (
-                  <button
-                    type="button"
-                    onClick={handleRevokeNfc}
-                    disabled={isDbActionLoading}
-                    className="w-full py-2.5 bg-rose-955/20 border border-rose-900/30 hover:border-rose-900/50 hover:bg-rose-950/20 text-rose-500 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span>Revoke Contactless Pass</span>
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => startNfcScan('profile')}
-                    disabled={isDbActionLoading || isNfcScanning}
-                    className="w-full py-2.5 bg-cyan-950/40 border border-cyan-500/30 hover:border-cyan-500/50 hover:bg-cyan-950/20 text-cyan-400 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
-                  >
-                    {isNfcScanning && nfcScanTarget === 'profile' ? (
-                      <>
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        <span>Initializing Scanner...</span>
-                      </>
+                  <div className="space-y-2">
+                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Skills & Certifications</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {selectedProfile.skills && selectedProfile.skills.length > 0 ? (
+                        selectedProfile.skills.map((skill: string, idx: number) => (
+                          <span key={idx} className="px-2.5 py-1 rounded bg-slate-950 border border-slate-900 text-xs text-slate-400 font-semibold flex items-center gap-1">
+                            <Award className="w-3 h-3 text-cyan-500" />
+                            {skill}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-xs text-slate-505 italic">No specialized skills/certifications listed</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* NFC Card Management Actions */}
+                  <div className="pt-2 flex gap-3">
+                    {selectedProfile.nfcTagUid ? (
+                      <button
+                        type="button"
+                        onClick={handleRevokeNfc}
+                        disabled={isDbActionLoading}
+                        className="w-full py-2.5 bg-rose-955/20 border border-rose-900/30 hover:border-rose-900/50 hover:bg-rose-950/20 text-rose-500 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Revoke Contactless Pass</span>
+                      </button>
                     ) : (
-                      <>
-                        <Wifi className="w-3.5 h-3.5" />
-                        <span>Link Contactless Pass</span>
-                      </>
+                      <button
+                        type="button"
+                        onClick={() => startNfcScan('profile')}
+                        disabled={isDbActionLoading || isNfcScanning}
+                        className="w-full py-2.5 bg-cyan-950/40 border border-cyan-500/30 hover:border-cyan-500/50 hover:bg-cyan-950/20 text-cyan-400 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                      >
+                        {isNfcScanning && nfcScanTarget === 'profile' ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            <span>Initializing Scanner...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Wifi className="w-3.5 h-3.5" />
+                            <span>Link Contactless Pass</span>
+                          </>
+                        )}
+                      </button>
                     )}
-                  </button>
-                )}
-              </div>
+                  </div>
+                </>
+              )}
             </motion.div>
           </div>
         )}
