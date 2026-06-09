@@ -27,6 +27,7 @@ export default function Overview() {
   const [pendingAlertsCount, setPendingAlertsCount] = useState(0);
 
   // IoT Telemetry State
+  const [isManualOverride, setIsManualOverride] = useState(false);
   const [telemetry, setTelemetry] = useState({
     voltage: 415.2,
     current: 124.8,
@@ -37,6 +38,7 @@ export default function Overview() {
   });
 
   useEffect(() => {
+    if (isManualOverride) return;
     const interval = setInterval(() => {
       setTelemetry(prev => ({
         voltage: parseFloat((415 + Math.random() * 3).toFixed(1)),
@@ -48,7 +50,7 @@ export default function Overview() {
       }));
     }, 2500);
     return () => clearInterval(interval);
-  }, []);
+  }, [isManualOverride]);
 
   // Reports Exporter logic
   const handleExport = (format: 'pdf' | 'csv') => {
@@ -360,36 +362,72 @@ export default function Overview() {
         <div className="flex justify-between items-center mb-6">
           <div>
             <h3 className="text-lg font-semibold text-slate-100 flex items-center gap-2 print:text-slate-900">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping print:hidden" />
+              <span className={`w-2 h-2 rounded-full ${isManualOverride ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500 animate-ping'} print:hidden`} />
               Live Telemetry Grid (APEC Power Assets)
             </h3>
             <p className="text-xs text-slate-400 mt-0.5 print:text-slate-500">Real-time substation and inverter performance metrics</p>
           </div>
-          <span className="text-[10px] bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2 py-0.5 rounded font-mono uppercase tracking-wider print:hidden">
-            Active Feed
-          </span>
+          <div className="flex items-center gap-3 print:hidden">
+            <label className="flex items-center gap-1.5 text-[11px] font-mono text-slate-400 cursor-pointer hover:text-slate-200 transition-colors">
+              <input 
+                type="checkbox"
+                checked={isManualOverride}
+                onChange={(e) => setIsManualOverride(e.target.checked)}
+                className="w-3.5 h-3.5 bg-slate-950 border border-slate-800 text-cyan-500 focus:ring-cyan-500/20 rounded cursor-pointer"
+              />
+              Manual Sliders
+            </label>
+            <span className={`text-[10px] ${isManualOverride ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'} border px-2.5 py-0.5 rounded-md font-mono uppercase tracking-wider`}>
+              {isManualOverride ? 'Overrides' : 'Active'}
+            </span>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 print:grid-cols-3">
           {[
-            { label: 'Substation Voltage', value: `${telemetry.voltage} V`, change: 'Normal Range', color: 'text-cyan-400' },
-            { label: 'Substation Load', value: `${telemetry.current} A`, change: 'Optimal Peak', color: 'text-amber-400' },
-            { label: 'Grid Frequency', value: `${telemetry.frequency} Hz`, change: 'Stable', color: 'text-emerald-400' },
-            { label: 'Solar Output', value: `${telemetry.solarOutput} kW`, change: 'Peak Sun', color: 'text-yellow-400' },
-            { label: 'Battery Core Temp', value: `${telemetry.batteryTemp} °C`, change: 'Nominal', color: 'text-teal-400' },
-            { label: 'Inverter Efficiency', value: `${telemetry.gridEfficiency} %`, change: '+0.4% Dev', color: 'text-cyan-400' },
+            { key: 'voltage', label: 'Substation Voltage', value: `${telemetry.voltage} V`, min: 380, max: 450, step: 0.1, change: 'Normal Range', color: 'text-cyan-400' },
+            { key: 'current', label: 'Substation Load', value: `${telemetry.current} A`, min: 50, max: 250, step: 0.1, change: 'Optimal Peak', color: 'text-amber-400' },
+            { key: 'frequency', label: 'Grid Frequency', value: `${telemetry.frequency} Hz`, min: 48, max: 52, step: 0.01, change: 'Stable', color: 'text-emerald-400' },
+            { key: 'solarOutput', label: 'Solar Output', value: `${telemetry.solarOutput} kW`, min: 0, max: 100, step: 0.1, change: 'Peak Sun', color: 'text-yellow-400' },
+            { key: 'batteryTemp', label: 'Battery Core Temp', value: `${telemetry.batteryTemp} °C`, min: 15, max: 80, step: 0.1, change: 'Nominal', color: 'text-teal-400' },
+            { key: 'gridEfficiency', label: 'Inverter Efficiency', value: `${telemetry.gridEfficiency} %`, min: 80, max: 100, step: 0.1, change: '+0.4% Dev', color: 'text-cyan-400' },
           ].map((item, idx) => (
-            <div key={idx} className="p-4 bg-slate-950/45 rounded-xl border border-slate-900/60 flex flex-col justify-between hover:border-slate-800 transition-colors print:border-slate-200 print:bg-white">
-              <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">{item.label}</span>
-              <span className={`text-xl font-bold my-1 tracking-tight ${item.color} print:text-slate-900`}>{item.value}</span>
-              <span className="text-[9px] text-slate-400 font-mono flex items-center gap-1 print:text-slate-550">
-                <span className="w-1 h-1 rounded-full bg-slate-450" />
-                {item.change}
-              </span>
+            <div key={idx} className="p-4 bg-slate-950/45 rounded-xl border border-slate-900/60 flex flex-col justify-between hover:border-slate-800 transition-colors print:border-slate-200 print:bg-white min-h-[125px]">
+              <div>
+                <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider block">{item.label}</span>
+                <span className={`text-xl font-bold my-1 tracking-tight block ${item.color} print:text-slate-900`}>{item.value}</span>
+              </div>
+              
+              {isManualOverride ? (
+                <div className="mt-2 space-y-1 print:hidden">
+                  <input 
+                    type="range" 
+                    min={item.min}
+                    max={item.max}
+                    step={item.step}
+                    value={(telemetry as any)[item.key]}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      setTelemetry(prev => ({ ...prev, [item.key]: val }));
+                    }}
+                    className="w-full accent-cyan-500 h-1 bg-slate-900 rounded-lg appearance-none cursor-pointer"
+                  />
+                  <div className="flex justify-between text-[8px] text-slate-600 font-mono">
+                    <span>{item.min}</span>
+                    <span>{item.max}</span>
+                  </div>
+                </div>
+              ) : (
+                <span className="text-[9px] text-slate-400 font-mono flex items-center gap-1 print:text-slate-550 mt-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-slate-500/50" />
+                  {item.change}
+                </span>
+              )}
             </div>
           ))}
         </div>
       </div>
+
     </motion.div>
   );
 }
