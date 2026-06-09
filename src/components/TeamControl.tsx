@@ -220,6 +220,9 @@ export default function TeamControl() {
         ? newSkills.split(',').map(s => s.trim()).filter(Boolean)
         : [];
 
+      const empId = newEmployeeId.trim() || `APEC-${Math.floor(1000 + Math.random() * 9000)}`;
+      const profileLink = `${window.location.origin}/profile/${empId}`;
+
       await addDoc(collection(db, 'team'), {
         name: newName,
         email: newEmail.trim(),
@@ -227,7 +230,7 @@ export default function TeamControl() {
         accessRole: newAccessRole,
         status: newStatus,
         phone: newPhone || 'N/A',
-        employeeId: newEmployeeId.trim() || `APEC-${Math.floor(1000 + Math.random() * 9000)}`,
+        employeeId: empId,
         department: newDepartment,
         joinedDate: newJoinedDate,
         skills: formattedSkills,
@@ -238,7 +241,8 @@ export default function TeamControl() {
         emergencyName: newEmergencyName.trim() || 'N/A',
         emergencyPhone: newEmergencyPhone.trim() || 'N/A',
         bloodGroup: newBloodGroup || 'N/A',
-        medicalConditions: newMedicalConditions.trim() || 'None'
+        medicalConditions: newMedicalConditions.trim() || 'None',
+        profileUrl: profileLink
       });
 
       // Log activity
@@ -1024,12 +1028,36 @@ export default function TeamControl() {
                     {selectedProfile.phone || 'N/A'}
                   </span>
                 </div>
-                <div className="space-y-1 col-span-2">
-                  <span className="text-slate-500 block uppercase tracking-wider text-[9px] border-t border-slate-900/80 pt-2 mt-1">Joined Date</span>
+                <div className="space-y-1 col-span-2 border-t border-slate-900/80 pt-2 mt-1">
+                  <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Joined Date</span>
                   <span className="text-slate-350 font-bold flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5 text-cyan-500" />
                     {selectedProfile.joinedDate ? new Date(selectedProfile.joinedDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}
                   </span>
+                </div>
+                <div className="space-y-1 col-span-2 border-t border-slate-900/80 pt-2 flex justify-between items-center gap-4">
+                  <div className="min-w-0 flex-1">
+                    <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Verification Link</span>
+                    <a 
+                      href={selectedProfile.profileUrl || `${window.location.origin}/profile/${selectedProfile.employeeId}`} 
+                      target="_blank" 
+                      rel="noreferrer" 
+                      className="text-cyan-400 hover:underline font-bold text-[10px] block truncate"
+                      title="Open Profile Page"
+                    >
+                      {(selectedProfile.profileUrl || `${window.location.origin}/profile/${selectedProfile.employeeId}`).replace(/^https?:\/\//, '')}
+                    </a>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(selectedProfile.profileUrl || `${window.location.origin}/profile/${selectedProfile.employeeId}`);
+                      alert("Employee profile verification link copied to clipboard!");
+                    }}
+                    className="px-2.5 py-1 bg-slate-950 border border-slate-900 hover:border-cyan-500/30 hover:text-cyan-400 text-slate-400 rounded-lg text-[9.5px] font-bold transition-all cursor-pointer font-mono shrink-0"
+                  >
+                    Copy Link
+                  </button>
                 </div>
               </div>
 
