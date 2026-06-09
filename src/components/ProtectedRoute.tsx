@@ -21,20 +21,29 @@ export default function ProtectedRoute() {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         if (db && user.email) {
-          try {
-            const q = query(collection(db, 'team'), where('email', '==', user.email));
-            const snap = await getDocs(q);
-            if (!snap.empty) {
-              setAuthenticated(true);
-            } else {
-              // Sign out if not in the team database
-              await auth.signOut();
-              localStorage.removeItem('isAuthenticated');
+          const emailLower = user.email.toLowerCase();
+          const isAdminEmail = 
+            emailLower === 'admin@apecpowersolutions.com' ||
+            emailLower === 'managingdirector@apecpowersolutions.com';
+
+          if (isAdminEmail) {
+            setAuthenticated(true);
+          } else {
+            try {
+              const q = query(collection(db, 'team'), where('email', '==', user.email));
+              const snap = await getDocs(q);
+              if (!snap.empty) {
+                setAuthenticated(true);
+              } else {
+                // Sign out if not in the team database
+                await auth.signOut();
+                localStorage.removeItem('isAuthenticated');
+                setAuthenticated(false);
+              }
+            } catch (err) {
+              console.error('Error checking team authorization:', err);
               setAuthenticated(false);
             }
-          } catch (err) {
-            console.error('Error checking team authorization:', err);
-            setAuthenticated(false);
           }
         } else {
           // If Firestore is not configured/available, fall back to standard auth check

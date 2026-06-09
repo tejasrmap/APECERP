@@ -28,7 +28,15 @@ export default function Login() {
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user && user.email) {
-        if (db) {
+        const emailLower = user.email.toLowerCase();
+        const isAdminEmail = 
+          emailLower === 'admin@apecpowersolutions.com' ||
+          emailLower === 'managingdirector@apecpowersolutions.com';
+
+        if (isAdminEmail) {
+          localStorage.setItem('isAuthenticated', 'true');
+          navigate('/dashboard');
+        } else if (db) {
           try {
             const q = query(collection(db, 'team'), where('email', '==', user.email));
             const snap = await getDocs(q);
