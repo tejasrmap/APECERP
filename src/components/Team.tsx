@@ -66,8 +66,8 @@ export default function Team() {
 
   if (isTeamLoading) {
     return (
-      <div className="absolute inset-0 flex items-center justify-center bg-white/50 backdrop-blur-sm z-30">
-        <Loader2 className="w-10 h-10 animate-spin text-[#0e2a47]" />
+      <div className="absolute inset-0 flex items-center justify-center bg-[#070a13]/50 backdrop-blur-sm z-30">
+        <Loader2 className="w-10 h-10 animate-spin text-cyan-400" />
       </div>
     );
   }
@@ -79,39 +79,39 @@ export default function Team() {
       className="space-y-6"
     >
       <div>
-        <h3 className="text-xl font-bold text-slate-900">Engineering Team</h3>
-        <p className="text-xs text-slate-500 mt-1">Registered technicians, safety personnel, and managers</p>
+        <h3 className="text-xl font-bold text-slate-100">Engineering Team</h3>
+        <p className="text-xs text-slate-400 mt-1">Registered technicians, safety personnel, and managers</p>
       </div>
 
       {teamList.length === 0 ? (
-        <div className="glass-card border border-white/60 rounded-2xl py-20 text-center flex flex-col items-center shadow-[0_8px_30px_rgba(15,23,42,0.03)]">
-          <Users className="w-14 h-14 text-slate-300 mb-3" />
-          <p className="text-sm font-medium text-slate-500">No team members registered</p>
-          <p className="text-xs text-slate-400 mt-1">Populate profiles using Seeding settings.</p>
+        <div className="glass-card border border-white/10 rounded-2xl py-20 text-center flex flex-col items-center shadow-[0_8px_30px_rgba(0,0,0,0.3)]">
+          <Users className="w-14 h-14 text-slate-755 mb-3 text-slate-700" />
+          <p className="text-sm font-medium text-slate-400">No team members registered</p>
+          <p className="text-xs text-slate-500 mt-1">Populate profiles using Seeding settings.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {teamList.map((m) => (
-            <div key={m.id} className="p-6 rounded-2xl glass-card border border-white/60 flex flex-col relative group hover:border-white/90 shadow-[0_8px_30px_rgba(15,23,42,0.03)] hover:shadow-[0_12px_40px_rgba(15,23,42,0.06)] hover:-translate-y-0.5 transition-all duration-300">
+            <div key={m.id} className="p-6 rounded-2xl glass-card flex flex-col relative group hover:border-white/15 shadow-[0_8px_30px_rgba(0,0,0,0.3)] hover:-translate-y-0.5 transition-all duration-300">
               <button
                 onClick={() => handleDeleteDocument('team', m.id, m.name)}
                 disabled={isDbActionLoading}
-                className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-red-600 transition-colors rounded hover:bg-red-50 opacity-0 group-hover:opacity-100 disabled:opacity-50"
+                className="absolute top-4 right-4 p-1.5 text-slate-505 hover:text-rose-500 transition-colors rounded hover:bg-rose-950/20 opacity-0 group-hover:opacity-100 disabled:opacity-50"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
-              <div className="w-12 h-12 rounded-full bg-white border border-slate-200/80 flex items-center justify-center text-sm font-bold text-[#0e2a47] mb-4 shadow-sm">
+              <div className="w-12 h-12 rounded-full bg-slate-800 border border-slate-750 flex items-center justify-center text-sm font-bold text-slate-100 mb-4 shadow-sm">
                 {m.name.slice(0,2).toUpperCase()}
               </div>
-              <h4 className="text-base font-bold text-slate-900 leading-snug">{m.name}</h4>
-              <p className="text-xs text-red-650 font-bold tracking-wide mt-0.5">{m.role}</p>
-              <p className="text-xs text-slate-500 mt-2.5 truncate font-mono">{m.email}</p>
-              <div className="mt-4 pt-3 border-t border-slate-100/50 flex items-center justify-between">
-                <span className="text-[10px] text-slate-400 font-semibold uppercase">Status</span>
+              <h4 className="text-base font-bold text-slate-100 leading-snug">{m.name}</h4>
+              <p className="text-xs text-rose-500 font-bold tracking-wide mt-0.5">{m.role}</p>
+              <p className="text-xs text-slate-400 mt-2.5 truncate font-mono">{m.email}</p>
+              <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between">
+                <span className="text-[10px] text-slate-505 font-semibold uppercase text-slate-500">Status</span>
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                  m.status === 'Active' ? 'bg-green-50 text-green-700 border border-green-200/50' :
-                  m.status === 'Site Visit' ? 'bg-blue-50 text-blue-700 border border-blue-200/50' :
-                  'bg-amber-50 text-amber-700 border border-amber-200/50'
+                  m.status === 'Active' ? 'bg-green-955/40 text-green-400 border border-green-500/25' :
+                  m.status === 'Site Visit' ? 'bg-cyan-950/40 text-cyan-400 border border-cyan-500/25' :
+                  'bg-amber-955/40 text-amber-400 border border-amber-500/25'
                 }`}>
                   {m.status}
                 </span>

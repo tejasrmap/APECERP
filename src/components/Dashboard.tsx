@@ -51,13 +51,13 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="h-screen w-full bg-slate-50 flex font-sans text-slate-800 overflow-hidden relative selection:bg-[#0e2a47]/15">
+    <div className="h-screen w-full bg-[#070a13] flex font-sans text-slate-200 overflow-hidden relative selection:bg-cyan-500/15 selection:text-cyan-400">
       
       {/* Background Ambience */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-25%] left-[-15%] w-[60%] h-[60%] bg-blue-100/45 rounded-full blur-[140px]" />
-        <div className="absolute bottom-[-25%] right-[-15%] w-[70%] h-[70%] bg-red-50/35 rounded-full blur-[160px]" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f060_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f060_1px,transparent_1px)] bg-[size:24px_24px] opacity-50"></div>
+        <div className="absolute top-[-25%] left-[-15%] w-[60%] h-[60%] bg-cyan-950/15 rounded-full blur-[140px]" />
+        <div className="absolute bottom-[-25%] right-[-15%] w-[70%] h-[70%] bg-rose-955/10 rounded-full blur-[160px]" />
+        <div className="absolute inset-0 cyber-grid opacity-50"></div>
       </div>
 
       {/* Mobile Sidebar Overlay */}
@@ -66,7 +66,7 @@ export default function Dashboard() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-slate-950/20 z-40 lg:hidden backdrop-blur-sm"
+          className="fixed inset-0 bg-slate-950/40 z-40 lg:hidden backdrop-blur-sm"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
@@ -75,19 +75,19 @@ export default function Dashboard() {
       <aside
         className={`fixed lg:relative z-50 w-72 h-full glass-sidebar flex flex-col transition-transform duration-300 ease-out shadow-2xl lg:shadow-none lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
-        <div className="p-6 flex items-center justify-between border-b border-slate-200/80">
+        <div className="p-6 flex items-center justify-between border-b border-slate-800/80">
           <div className="flex items-center gap-3">
-             <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center overflow-hidden border border-slate-200/80 shadow-sm shrink-0">
+             <div className="w-10 h-10 rounded-full bg-slate-900/60 flex items-center justify-center overflow-hidden border border-slate-700/80 shadow-md shrink-0">
                <img src="/logo.jpeg" alt="APEC Logo" className="w-full h-full object-contain p-0.5" onError={(e) => {
-                 (e.currentTarget as HTMLImageElement).src = '/logo.png';
+                  (e.currentTarget as HTMLImageElement).src = '/logo.png';
                }} />
              </div>
              <div>
-                <h1 className="font-bold text-lg text-slate-900 leading-tight">APEC</h1>
-                <p className="text-[9px] text-red-650 font-bold uppercase tracking-widest">ERP System</p>
+                 <h1 className="font-bold text-lg text-slate-100 leading-tight">APEC</h1>
+                 <p className="text-[9px] text-cyan-405 font-bold uppercase tracking-widest text-cyan-400">ERP System</p>
              </div>
           </div>
-          <button className="lg:hidden p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100/80 rounded-lg transition-colors" onClick={() => setIsSidebarOpen(false)}>
+          <button className="lg:hidden p-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 rounded-lg transition-colors" onClick={() => setIsSidebarOpen(false)}>
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -102,25 +102,25 @@ export default function Dashboard() {
                 onClick={() => { navigate(getPathForTab(item.name)); setIsSidebarOpen(false); }}
                 className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 ${
                   isActive 
-                    ? 'bg-[#0e2a47] text-white font-medium shadow-md glowing-active' 
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/60 border border-transparent'
+                    ? 'bg-cyan-950/40 text-cyan-400 border border-cyan-500/30 font-medium shadow-md glowing-active' 
+                    : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/40 border border-transparent'
                 }`}
               >
-                <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-slate-500'}`} />
+                <Icon className={`w-5 h-5 ${isActive ? 'text-cyan-400' : 'text-slate-500'}`} />
                 {item.name}
               </button>
             )
           })}
         </nav>
 
-        <div className="p-4 border-t border-slate-200/80">
-          <div className="flex items-center gap-3 px-4 py-3 bg-slate-50/65 rounded-xl border border-slate-200/50 mb-4 shadow-[inset_0_2px_4px_rgba(0,0,0,0.015)]">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center text-xs font-bold text-white border border-slate-500 shadow-sm shrink-0">
+        <div className="p-4 border-t border-slate-800/80">
+          <div className="flex items-center gap-3 px-4 py-3 bg-slate-900/40 rounded-xl border border-slate-800/60 mb-4 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center text-xs font-bold text-slate-200 border border-slate-750 shadow-sm shrink-0">
               {auth?.currentUser?.email ? auth.currentUser.email.slice(0, 2).toUpperCase() : 'AD'}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-slate-900 truncate">{auth?.currentUser?.displayName || 'Admin User'}</p>
-              <p className="text-xs text-slate-500 truncate">{auth?.currentUser?.email || 'admin@apec.com'}</p>
+              <p className="text-sm font-semibold text-slate-100 truncate">{auth?.currentUser?.displayName || 'Admin User'}</p>
+              <p className="text-xs text-slate-400 truncate">{auth?.currentUser?.email || 'admin@apec.com'}</p>
             </div>
           </div>
           <button
@@ -135,7 +135,7 @@ export default function Dashboard() {
               }
               navigate('/');
             }}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors border border-transparent hover:border-red-200"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium text-rose-500 hover:bg-rose-950/20 hover:text-rose-450 transition-colors border border-transparent hover:border-rose-900/30"
           >
             <LogOut className="w-4 h-4" />
             Sign Out
@@ -146,31 +146,31 @@ export default function Dashboard() {
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 z-10 relative overflow-hidden h-full">
         {/* Header */}
-        <header className="h-16 lg:h-20 border-b border-slate-200/80 bg-white/70 backdrop-blur-md flex items-center justify-between px-4 lg:px-8 shrink-0 relative z-20">
+        <header className="h-16 lg:h-20 border-b border-slate-800 bg-[#090d16]/70 backdrop-blur-md flex items-center justify-between px-4 lg:px-8 shrink-0 relative z-20">
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setIsSidebarOpen(true)}
-              className="lg:hidden p-2 rounded-lg bg-white border border-slate-200 text-slate-500 hover:text-slate-900 transition-colors"
+              className="lg:hidden p-2 rounded-lg bg-slate-900/60 border border-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
             >
               <Menu className="w-5 h-5" />
             </button>
-            <h2 className="text-lg lg:text-xl font-bold text-slate-900 tracking-tight">
+            <h2 className="text-lg lg:text-xl font-bold text-slate-100 tracking-tight">
               {activeTab === 'Workforce' ? 'Communication Center' : activeTab}
             </h2>
           </div>
 
           <div className="flex items-center gap-3 lg:gap-5">
             <div className="hidden md:flex relative group">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-[#0e2a47] transition-colors" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-550 group-focus-within:text-cyan-400 transition-colors" />
               <input 
                 type="text" 
                 placeholder={activeTab === 'Workforce' ? "Search across all channels..." : "Search resources..."}
-                className="bg-slate-100/80 border border-slate-200/80 rounded-full py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-[#0e2a47] focus:ring-1 focus:ring-[#0e2a47]/20 w-48 lg:w-64 placeholder:text-slate-450 transition-all text-slate-900 shadow-[inset_0_2px_4px_rgba(0,0,0,0.01)]"
+                className="bg-slate-900/80 border border-slate-800 rounded-full py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 w-48 lg:w-64 placeholder:text-slate-500 transition-all text-slate-100 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
               />
             </div>
-            <button className="relative p-2 rounded-full hover:bg-slate-100 transition-colors border border-transparent hover:border-slate-200">
-              <Bell className="w-5 h-5 text-slate-500 hover:text-slate-800" />
-              <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-white"></span>
+            <button className="relative p-2 rounded-full hover:bg-slate-800 transition-colors border border-transparent hover:border-slate-700">
+              <Bell className="w-5 h-5 text-slate-400 hover:text-slate-250" />
+              <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-rose-500 border-2 border-slate-900"></span>
             </button>
           </div>
         </header>
