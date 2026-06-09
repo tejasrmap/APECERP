@@ -12,10 +12,12 @@ import {
   Activity,
   AlertTriangle,
   X,
-  MessageSquare
+  MessageSquare,
+  Shield
 } from 'lucide-react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
-import { auth } from '../firebase';
+import { auth, db } from '../firebase';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -25,6 +27,75 @@ export default function Dashboard() {
   const [isDbActionLoading, setIsDbActionLoading] = useState(false);
   const [firestoreError, setFirestoreError] = useState<string | null>(null);
 
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [userProfile, setUserProfile] = useState<any>(null);
+
+  useEffect(() => {
+    if (!auth) {
+      // Fallback local auth is admin
+      setIsAdmin(true);
+      return;
+    }
+
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      if (user && user.email) {
+        const email = user.email.toLowerCase();
+        
+        // Check hardcoded admins first
+        if (
+          email === 'admin@apecpowersolutions.com' ||
+          email === 'managingdirector@apecpowersolutions.com' ||
+          email === 'admin@apec.com'
+        ) {
+          setIsAdmin(true);
+        }
+
+        if (db) {
+          try {
+            const q = query(collection(db, 'team'), where('email', '==', user.email));
+            const unsubProfile = onSnapshot(q, (snap) => {
+              if (!snap.empty) {
+                const docData = snap.docs[0].data();
+                setUserProfile({ id: snap.docs[0].id, ...docData });
+                if (docData.accessRole === 'Admin' || docData.roleType === 'Admin') {
+                  setIsAdmin(true);
+                } else if (
+                  email !== 'admin@apecpowersolutions.com' &&
+                  email !== 'managingdirector@apecpowersolutions.com' &&
+                  email !== 'admin@apec.com'
+                ) {
+                  // If not in hardcoded admin list and not marked as admin in DB
+                  setIsAdmin(false);
+                }
+              } else {
+                // Not found in team collection (but maybe firebase auth worked)
+                if (
+                  email !== 'admin@apecpowersolutions.com' &&
+                  email !== 'managingdirector@apecpowersolutions.com' &&
+                  email !== 'admin@apec.com'
+                ) {
+                  setIsAdmin(false);
+                }
+              }
+            }, (err) => {
+              console.error('Profile listener error:', err);
+            });
+            return () => unsubProfile();
+          } catch (err) {
+            console.error('Error fetching user profile:', err);
+          }
+        }
+      } else {
+        // Double check local auth state
+        const isLocalAuth = localStorage.getItem('isAuthenticated') === 'true';
+        if (isLocalAuth) {
+          setIsAdmin(true);
+        }
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const navItems = [
     { name: 'Dashboard', icon: LayoutDashboard },
@@ -32,6 +103,7 @@ export default function Dashboard() {
     { name: 'Projects', icon: Activity },
     { name: 'Workforce', icon: Users },
     { name: 'Settings', icon: Settings },
+    ...(isAdmin ? [{ name: 'Team Control', icon: Shield }] : [])
   ];
 
   // Helper to resolve active tab based on router pathname
@@ -41,12 +113,14 @@ export default function Dashboard() {
     if (path === '/dashboard/projects') return 'Projects';
     if (path === '/dashboard/workforce') return 'Workforce';
     if (path === '/dashboard/settings') return 'Settings';
+    if (path === '/dashboard/team-control') return 'Team Control';
     return 'Dashboard';
   };
   const activeTab = getActiveTab();
 
   const getPathForTab = (tabName: string) => {
     if (tabName === 'Dashboard') return '/dashboard';
+    if (tabName === 'Team Control') return '/dashboard/team-control';
     return `/dashboard/${tabName.toLowerCase()}`;
   };
 
@@ -193,7 +267,7 @@ export default function Dashboard() {
               </div>
             )}
             
-            <Outlet context={{ firestoreError, setFirestoreError, isDbActionLoading, setIsDbActionLoading }} />
+            <Outlet context={{ firestoreError, setFirestoreError, isDbActionLoading, setIsDbActionLoading, isAdmin, userProfile }} />
           </div>
         </div>
       </main>

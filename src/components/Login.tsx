@@ -62,7 +62,12 @@ export default function Login() {
     try {
       if (!auth) {
         // Fallback for development/no auth config
-        if (email === 'admin@apec.com' && password === 'admin') {
+        const lowerEmail = email.toLowerCase();
+        if (
+          (lowerEmail === 'admin@apecpowersolutions.com' && password === 'admin') ||
+          (lowerEmail === 'managingdirector@apecpowersolutions.com' && password === 'admin') ||
+          (lowerEmail === 'admin@apec.com' && password === 'admin')
+        ) {
           setStep('success');
           setTimeout(() => {
             localStorage.setItem('isAuthenticated', 'true');
@@ -78,11 +83,19 @@ export default function Login() {
 
       // Check if user is in 'team' database
       if (db && user && user.email) {
-        const q = query(collection(db, 'team'), where('email', '==', user.email));
-        const snap = await getDocs(q);
-        if (snap.empty) {
-          await auth.signOut();
-          throw new Error('Access denied. This email is not registered as a team member.');
+        const emailLower = user.email.toLowerCase();
+        const isAdminEmail = 
+          emailLower === 'admin@apecpowersolutions.com' ||
+          emailLower === 'managingdirector@apecpowersolutions.com' ||
+          emailLower === 'admin@apec.com';
+
+        if (!isAdminEmail) {
+          const q = query(collection(db, 'team'), where('email', '==', user.email));
+          const snap = await getDocs(q);
+          if (snap.empty) {
+            await auth.signOut();
+            throw new Error('Access denied. This email is not registered as a team member.');
+          }
         }
       }
       
@@ -124,11 +137,19 @@ export default function Login() {
       
       // Check if user is in 'team' database
       if (db && user && user.email) {
-        const q = query(collection(db, 'team'), where('email', '==', user.email));
-        const snap = await getDocs(q);
-        if (snap.empty) {
-          await auth.signOut();
-          throw new Error('Access denied. Your Google account is not registered as a team member.');
+        const emailLower = user.email.toLowerCase();
+        const isAdminEmail = 
+          emailLower === 'admin@apecpowersolutions.com' ||
+          emailLower === 'managingdirector@apecpowersolutions.com' ||
+          emailLower === 'admin@apec.com';
+
+        if (!isAdminEmail) {
+          const q = query(collection(db, 'team'), where('email', '==', user.email));
+          const snap = await getDocs(q);
+          if (snap.empty) {
+            await auth.signOut();
+            throw new Error('Access denied. Your Google account is not registered as a team member.');
+          }
         }
       }
       

@@ -10,7 +10,7 @@ import { useOutletContext } from 'react-router-dom';
 import { db } from '../firebase';
 
 export default function Team() {
-  const { setFirestoreError, isDbActionLoading, setIsDbActionLoading } = useOutletContext<any>();
+  const { setFirestoreError, isDbActionLoading, setIsDbActionLoading, isAdmin } = useOutletContext<any>();
 
   const [teamList, setTeamList] = useState<any[]>([]);
   const [isTeamLoading, setIsTeamLoading] = useState(true);
@@ -91,33 +91,52 @@ export default function Team() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          {teamList.map((m) => (
-            <div key={m.id} className="p-6 rounded-2xl glass-card flex flex-col relative group hover:border-white/15 shadow-[0_8px_30px_rgba(0,0,0,0.3)] hover:-translate-y-0.5 transition-all duration-300">
-              <button
-                onClick={() => handleDeleteDocument('team', m.id, m.name)}
-                disabled={isDbActionLoading}
-                className="absolute top-4 right-4 p-1.5 text-slate-505 hover:text-rose-500 transition-colors rounded hover:bg-rose-950/20 opacity-0 group-hover:opacity-100 disabled:opacity-50"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-              <div className="w-12 h-12 rounded-full bg-slate-800 border border-slate-750 flex items-center justify-center text-sm font-bold text-slate-100 mb-4 shadow-sm">
-                {m.name.slice(0,2).toUpperCase()}
+          {teamList.map((m) => {
+            const isMemberAdmin = m.accessRole === 'Admin' || m.roleType === 'Admin' || [
+              'admin@apecpowersolutions.com',
+              'managingdirector@apecpowersolutions.com',
+              'admin@apec.com'
+            ].includes(m.email?.toLowerCase());
+
+            return (
+              <div key={m.id} className="p-6 rounded-2xl glass-card flex flex-col relative group hover:border-white/15 shadow-[0_8px_30px_rgba(0,0,0,0.3)] hover:-translate-y-0.5 transition-all duration-300">
+                {isAdmin && (
+                  <button
+                    onClick={() => handleDeleteDocument('team', m.id, m.name)}
+                    disabled={isDbActionLoading}
+                    className="absolute top-4 right-4 p-1.5 text-slate-505 hover:text-rose-500 transition-colors rounded hover:bg-rose-950/20 opacity-0 group-hover:opacity-100 disabled:opacity-50"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                )}
+                <div className="w-12 h-12 rounded-full bg-slate-800 border border-slate-750 flex items-center justify-center text-sm font-bold text-slate-100 mb-4 shadow-sm">
+                  {m.name.slice(0,2).toUpperCase()}
+                </div>
+                <h4 className="text-base font-bold text-slate-100 leading-snug">{m.name}</h4>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <p className="text-xs text-rose-500 font-bold tracking-wide">{m.role}</p>
+                  <span className={`px-1.5 py-0.5 rounded text-[8px] font-extrabold uppercase tracking-widest ${
+                    isMemberAdmin
+                      ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
+                      : 'bg-slate-800 text-slate-400 border border-slate-700'
+                  } border`}>
+                    {isMemberAdmin ? 'Admin' : 'User'}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 mt-2.5 truncate font-mono">{m.email}</p>
+                <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between">
+                  <span className="text-[10px] text-slate-505 font-semibold uppercase text-slate-500">Status</span>
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                    m.status === 'Active' ? 'bg-green-955/40 text-green-400 border border-green-500/25' :
+                    m.status === 'Site Visit' ? 'bg-cyan-950/40 text-cyan-400 border border-cyan-500/25' :
+                    'bg-amber-955/40 text-amber-400 border border-amber-500/25'
+                  }`}>
+                    {m.status}
+                  </span>
+                </div>
               </div>
-              <h4 className="text-base font-bold text-slate-100 leading-snug">{m.name}</h4>
-              <p className="text-xs text-rose-500 font-bold tracking-wide mt-0.5">{m.role}</p>
-              <p className="text-xs text-slate-400 mt-2.5 truncate font-mono">{m.email}</p>
-              <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between">
-                <span className="text-[10px] text-slate-505 font-semibold uppercase text-slate-500">Status</span>
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                  m.status === 'Active' ? 'bg-green-955/40 text-green-400 border border-green-500/25' :
-                  m.status === 'Site Visit' ? 'bg-cyan-950/40 text-cyan-400 border border-cyan-500/25' :
-                  'bg-amber-955/40 text-amber-400 border border-amber-500/25'
-                }`}>
-                  {m.status}
-                </span>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </motion.div>

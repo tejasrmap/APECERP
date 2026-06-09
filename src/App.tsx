@@ -8,6 +8,7 @@ import Inventory from './components/Inventory';
 import Team from './components/Team';
 import Chat from './components/Chat';
 import Settings from './components/Settings';
+import TeamControl from './components/TeamControl';
 import ProtectedRoute from './components/ProtectedRoute';
 
 export default function App() {
@@ -22,6 +23,7 @@ export default function App() {
           <Route path="team" element={<Team />} />
           <Route path="workforce" element={<Chat />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="team-control" element={<TeamControl />} />
         </Route>
       </Route>
     </Routes>
