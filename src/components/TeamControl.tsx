@@ -22,9 +22,9 @@ import {
   Upload
 } from 'lucide-react';
 import { collection, onSnapshot, doc, deleteDoc, addDoc, updateDoc, Timestamp } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useOutletContext } from 'react-router-dom';
-import { db, storage } from '../firebase';
+import { db } from '../firebase';
+import { supabase } from '../supabase';
 
 export default function TeamControl() {
   const { setFirestoreError, isDbActionLoading, setIsDbActionLoading, isAdmin } = useOutletContext<any>();
@@ -73,11 +73,47 @@ export default function TeamControl() {
   const [editPhotoFile, setEditPhotoFile] = useState<File | null>(null);
   const [editPhotoPreview, setEditPhotoPreview] = useState<string>('');
 
-  const uploadPhotoToStorage = async (file: File, empId: string): Promise<string> => {
-    if (!storage) return '';
-    const storageRef = ref(storage, `team-photos/${empId}-${Date.now()}`);
-    await uploadBytes(storageRef, file);
-    return await getDownloadURL(storageRef);
+  // Compress image to base64 (fallback when Supabase is unavailable)
+  const compressImageToBase64 = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = reject;
+      reader.onload = (ev) => {
+        const img = new Image();
+        img.onerror = reject;
+        img.onload = () => {
+          const MAX = 256;
+          let { width, height } = img;
+          if (width > MAX || height > MAX) {
+            if (width > height) { height = Math.round((height / width) * MAX); width = MAX; }
+            else { width = Math.round((width / height) * MAX); height = MAX; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          canvas.getContext('2d')!.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', 0.8));
+        };
+        img.src = ev.target!.result as string;
+      };
+      reader.readAsDataURL(file);
+    });
+
+  // Upload employee photo — Supabase Storage first, base64 fallback
+  const uploadEmployeePhoto = async (file: File, empId: string): Promise<string> => {
+    if (supabase) {
+      const ext = file.name.split('.').pop() || 'jpg';
+      const path = `team-photos/${empId}-${Date.now()}.${ext}`;
+      const { error } = await supabase.storage
+        .from('APECERP')
+        .upload(path, file, { cacheControl: '3600', upsert: true });
+      if (!error) {
+        const { data } = supabase.storage.from('APECERP').getPublicUrl(path);
+        return data.publicUrl;
+      }
+    }
+    // Fallback: compress & store as base64 in Firestore
+    return compressImageToBase64(file);
   };
 
   const getVerificationUrl = (profile: any) => {
@@ -109,10 +145,10 @@ export default function TeamControl() {
       const empId = editEmployeeId.trim() || selectedProfile.employeeId || selectedProfile.id;
       const profileLink = `${window.location.origin}/profile/${empId}`;
 
-      // Upload new photo if changed
+      // Upload new photo to Supabase (base64 fallback if unavailable)
       let photoUrl = selectedProfile.photoUrl || '';
       if (editPhotoFile) {
-        try { photoUrl = await uploadPhotoToStorage(editPhotoFile, empId); } catch {}
+        try { photoUrl = await uploadEmployeePhoto(editPhotoFile, empId); } catch {}
       }
 
       const updatedFields = {
@@ -201,10 +237,10 @@ export default function TeamControl() {
       const empId = newEmployeeId.trim() || `APEC-${Math.floor(1000 + Math.random() * 9000)}`;
       const profileLink = `${window.location.origin}/profile/${empId}`;
 
-      // Upload photo if selected
+      // Upload photo to Supabase (base64 fallback if unavailable)
       let photoUrl = '';
       if (newPhotoFile) {
-        try { photoUrl = await uploadPhotoToStorage(newPhotoFile, empId); } catch {}
+        try { photoUrl = await uploadEmployeePhoto(newPhotoFile, empId); } catch {}
       }
 
       await addDoc(collection(db, 'team'), {
