@@ -8,7 +8,8 @@ import {
   Phone,
   Briefcase,
   Calendar,
-  Award
+  Award,
+  Wifi
 } from 'lucide-react';
 import { collection, onSnapshot, doc, deleteDoc, addDoc, Timestamp } from 'firebase/firestore';
 import { useOutletContext } from 'react-router-dom';
@@ -85,7 +86,8 @@ export default function Team() {
     const roleMatch = m.role?.toLowerCase().includes(term) || false;
     const deptMatch = m.department?.toLowerCase().includes(term) || false;
     const skillMatch = m.skills?.some((s: string) => s.toLowerCase().includes(term)) || false;
-    return nameMatch || emailMatch || roleMatch || deptMatch || skillMatch;
+    const nfcMatch = m.nfcTagUid?.toLowerCase().includes(term) || false;
+    return nameMatch || emailMatch || roleMatch || deptMatch || skillMatch || nfcMatch;
   });
 
   return (
@@ -107,7 +109,7 @@ export default function Team() {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search name, skills, department..."
+            placeholder="Search name, skills, department, NFC..."
             className="w-full bg-slate-900/60 border border-slate-800 rounded-xl py-2 pl-10 pr-4 text-xs focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 text-slate-100 placeholder:text-slate-500 transition-all shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
           />
         </div>
@@ -147,7 +149,7 @@ export default function Team() {
                   <button
                     onClick={() => handleDeleteDocument('team', m.id, m.name)}
                     disabled={isDbActionLoading}
-                    className="absolute top-4 right-4 p-1.5 text-slate-500 hover:text-rose-500 transition-colors rounded hover:bg-rose-950/20 opacity-0 group-hover:opacity-100 disabled:opacity-50"
+                    className="absolute top-4 right-4 p-1.5 text-slate-500 hover:text-rose-500 transition-colors rounded hover:bg-rose-955/20 opacity-0 group-hover:opacity-100 disabled:opacity-50"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -157,9 +159,17 @@ export default function Team() {
                   <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${avatarClass} border flex items-center justify-center text-sm font-bold shadow-sm`}>
                     {m.name.slice(0, 2).toUpperCase()}
                   </div>
-                  <span className="text-[9px] text-slate-500 font-mono bg-slate-950 px-2 py-0.5 rounded border border-slate-900">
-                    {m.employeeId || 'APEC-MEMBER'}
-                  </span>
+                  <div className="flex flex-col items-end gap-1.5">
+                    <span className="text-[9px] text-slate-500 font-mono bg-slate-950 px-2 py-0.5 rounded border border-slate-900">
+                      {m.employeeId || 'APEC-MEMBER'}
+                    </span>
+                    {m.nfcTagUid && (
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-cyan-950/40 text-cyan-405 border border-cyan-500/20 text-[7px] font-mono tracking-widest font-extrabold uppercase shadow-[0_0_8px_rgba(6,182,212,0.1)]" title={`NFC Card Linked: ${m.nfcTagUid}`}>
+                        <Wifi className="w-2.5 h-2.5 animate-pulse" />
+                        RFID ACTIVE
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <h4 className="text-base font-bold text-slate-100 leading-snug truncate" title={m.name}>{m.name}</h4>
