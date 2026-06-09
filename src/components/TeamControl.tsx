@@ -8,7 +8,13 @@ import {
   ShieldAlert, 
   Shield, 
   ArrowRight,
-  TrendingUp
+  TrendingUp,
+  Eye,
+  Phone,
+  Briefcase,
+  Calendar,
+  Award,
+  X
 } from 'lucide-react';
 import { collection, onSnapshot, doc, deleteDoc, addDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { useOutletContext } from 'react-router-dom';
@@ -26,7 +32,15 @@ export default function TeamControl() {
   const [newRole, setNewRole] = useState('');
   const [newAccessRole, setNewAccessRole] = useState('User');
   const [newStatus, setNewStatus] = useState('Active');
+  const [newPhone, setNewPhone] = useState('');
+  const [newEmployeeId, setNewEmployeeId] = useState('');
+  const [newDepartment, setNewDepartment] = useState('Operations Control');
+  const [newJoinedDate, setNewJoinedDate] = useState(new Date().toISOString().slice(0, 10));
+  const [newSkills, setNewSkills] = useState('');
+  const [newAvatar, setNewAvatar] = useState('cyan');
+  
   const [isAddingUser, setIsAddingUser] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
 
   // Safety fallback timeout to prevent infinite loading state
   useEffect(() => {
@@ -62,18 +76,28 @@ export default function TeamControl() {
 
     setIsDbActionLoading(true);
     try {
+      const formattedSkills = newSkills
+        ? newSkills.split(',').map(s => s.trim()).filter(Boolean)
+        : [];
+
       await addDoc(collection(db, 'team'), {
         name: newName,
         email: newEmail.trim(),
         role: newRole || 'Staff Member',
         accessRole: newAccessRole,
-        status: newStatus
+        status: newStatus,
+        phone: newPhone || 'N/A',
+        employeeId: newEmployeeId.trim() || `APEC-${Math.floor(1000 + Math.random() * 9000)}`,
+        department: newDepartment,
+        joinedDate: newJoinedDate,
+        skills: formattedSkills,
+        avatar: newAvatar
       });
 
       // Log activity
       await addDoc(collection(db, 'activities'), {
         title: 'Team member added',
-        desc: `"${newName}" was registered as an ERP user with role "${newRole || 'Staff Member'}" (${newAccessRole})`,
+        desc: `"${newName}" was registered as an ERP user with role "${newRole || 'Staff Member'}" in ${newDepartment}`,
         type: 'task',
         timestamp: Timestamp.now()
       });
@@ -83,6 +107,12 @@ export default function TeamControl() {
       setNewRole('');
       setNewAccessRole('User');
       setNewStatus('Active');
+      setNewPhone('');
+      setNewEmployeeId('');
+      setNewDepartment('Operations Control');
+      setNewJoinedDate(new Date().toISOString().slice(0, 10));
+      setNewSkills('');
+      setNewAvatar('cyan');
       setIsAddingUser(false);
     } catch (err) {
       console.error('Error adding user:', err);
@@ -186,46 +216,108 @@ export default function TeamControl() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="max-w-xl glass-card p-6 rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.3)]"
+            className="w-full max-w-2xl glass-card p-6 rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.3)]"
           >
             <h4 className="text-sm font-bold text-slate-100 mb-4">Register Operations Account</h4>
             <form onSubmit={handleAddUser} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-400 uppercase ml-1 tracking-wider">Full Name</label>
-                <input 
-                  type="text" 
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  placeholder="e.g. Rahul Sharma"
-                  required
-                  className="w-full bg-slate-955/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all text-sm shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-400 uppercase ml-1 tracking-wider">Full Name</label>
+                  <input 
+                    type="text" 
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    placeholder="e.g. Rahul Sharma"
+                    required
+                    className="w-full bg-slate-955/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all text-sm shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-400 uppercase ml-1 tracking-wider">Email Address</label>
+                  <input 
+                    type="email" 
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    placeholder="e.g. rahul@apecpowersolutions.com"
+                    required
+                    className="w-full bg-slate-955/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all text-sm shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
+                  />
+                </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-400 uppercase ml-1 tracking-wider">Email Address</label>
-                <input 
-                  type="email" 
-                  value={newEmail}
-                  onChange={(e) => setNewEmail(e.target.value)}
-                  placeholder="e.g. rahul@apecpowersolutions.com"
-                  required
-                  className="w-full bg-slate-955/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all text-sm shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-400 uppercase ml-1 tracking-wider">Role Description</label>
+                  <input 
+                    type="text" 
+                    value={newRole}
+                    onChange={(e) => setNewRole(e.target.value)}
+                    placeholder="e.g. Lead Substation Electrician"
+                    className="w-full bg-slate-955/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all text-sm shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-400 uppercase ml-1 tracking-wider">Specialization / Department</label>
+                  <select
+                    value={newDepartment}
+                    onChange={(e) => setNewDepartment(e.target.value)}
+                    className="w-full bg-slate-955/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all text-sm cursor-pointer shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
+                  >
+                    <option value="Operations Control">Operations Control</option>
+                    <option value="Solar Installation">Solar Installation</option>
+                    <option value="High Voltage Substations">High Voltage Substations</option>
+                    <option value="Grid Automation">Grid Automation</option>
+                    <option value="Safety & Compliance">Safety & Compliance</option>
+                  </select>
+                </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-400 uppercase ml-1 tracking-wider">Role Description</label>
-                <input 
-                  type="text" 
-                  value={newRole}
-                  onChange={(e) => setNewRole(e.target.value)}
-                  placeholder="e.g. Safety Inspector, Lead Engineer"
-                  className="w-full bg-slate-955/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all text-sm shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-400 uppercase ml-1 tracking-wider">Employee ID (Optional)</label>
+                  <input 
+                    type="text" 
+                    value={newEmployeeId}
+                    onChange={(e) => setNewEmployeeId(e.target.value)}
+                    placeholder="e.g. APEC-2026-042 (Auto-generated if empty)"
+                    className="w-full bg-slate-955/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all text-sm shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-400 uppercase ml-1 tracking-wider">Phone Number</label>
+                  <input 
+                    type="tel" 
+                    value={newPhone}
+                    onChange={(e) => setNewPhone(e.target.value)}
+                    placeholder="e.g. +91 98765 43210"
+                    className="w-full bg-slate-955/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all text-sm shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
+                  />
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-400 uppercase ml-1 tracking-wider">Joined Date</label>
+                  <input 
+                    type="date" 
+                    value={newJoinedDate}
+                    onChange={(e) => setNewJoinedDate(e.target.value)}
+                    className="w-full bg-slate-955/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all text-sm shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-400 uppercase ml-1 tracking-wider">Skills & Certifications (Comma-separated)</label>
+                  <input 
+                    type="text" 
+                    value={newSkills}
+                    onChange={(e) => setNewSkills(e.target.value)}
+                    placeholder="e.g. HV Licensing, First Aid, Grid Synchronization"
+                    className="w-full bg-slate-955/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all text-sm shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-slate-400 uppercase ml-1 tracking-wider">Access Role (Priority)</label>
                   <select
@@ -247,6 +339,19 @@ export default function TeamControl() {
                     <option value="Active" className="bg-slate-900 text-slate-100">Active</option>
                     <option value="Site Visit" className="bg-slate-900 text-slate-100">Site Visit</option>
                     <option value="On Leave" className="bg-slate-900 text-slate-100">On Leave</option>
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-400 uppercase ml-1 tracking-wider">Avatar Color Theme</label>
+                  <select
+                    value={newAvatar}
+                    onChange={(e) => setNewAvatar(e.target.value)}
+                    className="w-full bg-slate-955/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all text-sm cursor-pointer shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
+                  >
+                    <option value="cyan" className="bg-slate-900 text-slate-100">Cyan Operations</option>
+                    <option value="blue" className="bg-slate-900 text-slate-100">Blue Technical</option>
+                    <option value="red" className="bg-slate-900 text-slate-100">Red Emergency</option>
+                    <option value="gold" className="bg-slate-900 text-slate-100">Gold Executive</option>
                   </select>
                 </div>
               </div>
@@ -271,16 +376,16 @@ export default function TeamControl() {
               <div className="py-20 text-center flex flex-col items-center">
                 <Users className="w-14 h-14 text-slate-700 mb-3" />
                 <p className="text-sm font-medium text-slate-400">Database registry is empty</p>
-                <p className="text-xs text-slate-500 mt-1">Populate users by clicking "Add Team Member".</p>
+                <p className="text-xs text-slate-505 mt-1">Populate users by clicking "Add Team Member".</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
+                <table className="w-full text-left border-collapse text-xs">
                   <thead>
-                    <tr className="border-b border-slate-800 bg-slate-950/45 text-xs uppercase tracking-wider text-slate-400 font-semibold">
+                    <tr className="border-b border-slate-800 bg-slate-950/45 uppercase tracking-wider text-slate-400 font-semibold">
+                      <th className="p-4">Employee ID</th>
                       <th className="p-4">Name</th>
-                      <th className="p-4">Email</th>
-                      <th className="p-4">Role Description</th>
+                      <th className="p-4">Role / Department</th>
                       <th className="p-4">Access Priority</th>
                       <th className="p-4">Status</th>
                       <th className="p-4 text-center">Actions</th>
@@ -293,11 +398,27 @@ export default function TeamControl() {
                         'managingdirector@apecpowersolutions.com'
                       ].includes(m.email?.toLowerCase());
 
+                      const avatarColors: Record<string, string> = {
+                        cyan: 'from-cyan-500/20 to-cyan-500/5 text-cyan-405 border-cyan-500/25',
+                        blue: 'from-blue-500/20 to-blue-500/5 text-blue-400 border-blue-500/25',
+                        red: 'from-rose-500/20 to-rose-500/5 text-rose-400 border-rose-500/25',
+                        gold: 'from-amber-500/20 to-amber-500/5 text-amber-400 border-amber-500/25'
+                      };
+                      const avatarClass = avatarColors[m.avatar || 'cyan'] || avatarColors.cyan;
+
                       return (
                         <tr key={m.id} className="hover:bg-slate-900/30 transition-colors">
-                          <td className="p-4 font-bold text-slate-100">{m.name}</td>
-                          <td className="p-4 font-mono text-xs">{m.email}</td>
-                          <td className="p-4 font-medium">{m.role}</td>
+                          <td className="p-4 font-mono text-xs text-slate-400">{m.employeeId || 'APEC-MEMBER'}</td>
+                          <td className="p-4 font-bold text-slate-100 flex items-center gap-2.5">
+                            <span className={`w-8 h-8 rounded-full bg-gradient-to-br ${avatarClass} border flex items-center justify-center text-[10px] font-extrabold`}>
+                              {m.name.slice(0, 2).toUpperCase()}
+                            </span>
+                            {m.name}
+                          </td>
+                          <td className="p-4">
+                            <div className="font-medium text-slate-205">{m.role}</div>
+                            <div className="text-[10px] text-slate-500 font-mono mt-0.5">{m.department || 'Operations'}</div>
+                          </td>
                           <td className="p-4">
                             <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                               isMemberAdmin 
@@ -325,6 +446,15 @@ export default function TeamControl() {
                           </td>
                           <td className="p-4 text-center">
                             <div className="flex items-center justify-center gap-2">
+                              {/* View details */}
+                              <button
+                                onClick={() => setSelectedProfile(m)}
+                                className="p-1.5 text-slate-400 hover:text-cyan-400 transition-colors rounded hover:bg-cyan-950/20"
+                                title="View Complete Profile Details"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
+
                               {/* Toggle Priority */}
                               <button
                                 onClick={() => handleTogglePriority(m.id, isMemberAdmin ? 'Admin' : 'User', m.name)}
@@ -354,6 +484,108 @@ export default function TeamControl() {
               </div>
             )}
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Profile Detail Drawer Modal */}
+      <AnimatePresence>
+        {selectedProfile && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-slate-955/65 backdrop-blur-sm"
+              onClick={() => setSelectedProfile(null)}
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="relative w-full max-w-lg glass-card p-6 rounded-2xl shadow-2xl border border-white/10 z-10 space-y-6"
+            >
+              <button 
+                onClick={() => setSelectedProfile(null)}
+                className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 transition-all"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="flex items-center gap-4">
+                <span className={`w-16 h-16 rounded-full bg-gradient-to-br ${
+                  selectedProfile.avatar === 'cyan' ? 'from-cyan-500/20 to-cyan-500/5 text-cyan-400 border-cyan-500/20' :
+                  selectedProfile.avatar === 'blue' ? 'from-blue-500/20 to-blue-500/5 text-blue-400 border-blue-500/20' :
+                  selectedProfile.avatar === 'red' ? 'from-rose-500/20 to-rose-500/5 text-rose-400 border-rose-500/20' :
+                  'from-amber-500/20 to-amber-500/5 text-amber-400 border-amber-500/20'
+                } border flex items-center justify-center text-xl font-extrabold shadow-sm`}>
+                  {selectedProfile.name.slice(0, 2).toUpperCase()}
+                </span>
+                <div>
+                  <h4 className="text-lg font-bold text-slate-100">{selectedProfile.name}</h4>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-xs text-rose-505 font-bold">{selectedProfile.role}</span>
+                    <span className="text-[10px] bg-slate-950 px-2 py-0.5 rounded border border-slate-900 text-slate-400 font-mono">
+                      {selectedProfile.employeeId || 'APEC-MEMBER'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 text-xs bg-slate-950/45 p-4 rounded-xl border border-slate-900/60 font-mono">
+                <div className="space-y-1">
+                  <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Department</span>
+                  <span className="text-slate-350 font-bold flex items-center gap-1.5">
+                    <Briefcase className="w-3.5 h-3.5 text-cyan-500" />
+                    {selectedProfile.department || 'Operations'}
+                  </span>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Status</span>
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                    selectedProfile.status === 'Active' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
+                    selectedProfile.status === 'Site Visit' ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' :
+                    'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                  } border`}>
+                    {selectedProfile.status || 'Active'}
+                  </span>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Email Address</span>
+                  <span className="text-slate-350 font-bold block truncate">{selectedProfile.email}</span>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Phone Number</span>
+                  <span className="text-slate-350 font-bold flex items-center gap-1.5">
+                    <Phone className="w-3.5 h-3.5 text-cyan-500" />
+                    {selectedProfile.phone || 'N/A'}
+                  </span>
+                </div>
+                <div className="space-y-1 col-span-2">
+                  <span className="text-slate-500 block uppercase tracking-wider text-[9px] border-t border-slate-900/80 pt-2 mt-1">Joined Date</span>
+                  <span className="text-slate-350 font-bold flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-cyan-500" />
+                    {selectedProfile.joinedDate ? new Date(selectedProfile.joinedDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Skills & Certifications</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {selectedProfile.skills && selectedProfile.skills.length > 0 ? (
+                    selectedProfile.skills.map((skill: string, idx: number) => (
+                      <span key={idx} className="px-2.5 py-1 rounded bg-slate-950 border border-slate-900 text-xs text-slate-400 font-semibold flex items-center gap-1">
+                        <Award className="w-3 h-3 text-cyan-500" />
+                        {skill}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-xs text-slate-505 italic">No specialized skills/certifications listed</span>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </motion.div>
