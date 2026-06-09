@@ -219,150 +219,167 @@ export default function TeamControl() {
             className="w-full max-w-2xl glass-card p-6 rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.3)]"
           >
             <h4 className="text-sm font-bold text-slate-100 mb-4">Register Operations Account</h4>
-            <form onSubmit={handleAddUser} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-400 uppercase ml-1 tracking-wider">Full Name</label>
-                  <input 
-                    type="text" 
-                    value={newName}
-                    onChange={(e) => setNewName(e.target.value)}
-                    placeholder="e.g. Rahul Sharma"
-                    required
-                    className="w-full bg-slate-955/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all text-sm shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-400 uppercase ml-1 tracking-wider">Email Address</label>
-                  <input 
-                    type="email" 
-                    value={newEmail}
-                    onChange={(e) => setNewEmail(e.target.value)}
-                    placeholder="e.g. rahul@apecpowersolutions.com"
-                    required
-                    className="w-full bg-slate-955/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all text-sm shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-400 uppercase ml-1 tracking-wider">Role Description</label>
-                  <input 
-                    type="text" 
-                    value={newRole}
-                    onChange={(e) => setNewRole(e.target.value)}
-                    placeholder="e.g. Lead Substation Electrician"
-                    className="w-full bg-slate-955/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all text-sm shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-400 uppercase ml-1 tracking-wider">Specialization / Department</label>
-                  <select
-                    value={newDepartment}
-                    onChange={(e) => setNewDepartment(e.target.value)}
-                    className="w-full bg-slate-955/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all text-sm cursor-pointer shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
-                  >
-                    <option value="Operations Control">Operations Control</option>
-                    <option value="Solar Installation">Solar Installation</option>
-                    <option value="High Voltage Substations">High Voltage Substations</option>
-                    <option value="Grid Automation">Grid Automation</option>
-                    <option value="Safety & Compliance">Safety & Compliance</option>
-                  </select>
+            <form onSubmit={handleAddUser} className="space-y-6">
+              {/* Section 1: Profile Identity */}
+              <div className="space-y-3 p-4 bg-slate-950/20 rounded-xl border border-white/5">
+                <h5 className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest border-b border-slate-900 pb-1.5 mb-3">
+                  1. Profile Identity
+                </h5>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Full Name</label>
+                    <input 
+                      type="text" 
+                      value={newName}
+                      onChange={(e) => setNewName(e.target.value)}
+                      placeholder="e.g. Rahul Sharma"
+                      required
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Email Address</label>
+                    <input 
+                      type="email" 
+                      value={newEmail}
+                      onChange={(e) => setNewEmail(e.target.value)}
+                      placeholder="e.g. rahul@apec.com"
+                      required
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Phone Number</label>
+                    <input 
+                      type="tel" 
+                      value={newPhone}
+                      onChange={(e) => setNewPhone(e.target.value)}
+                      placeholder="e.g. +91 98765 43210"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-400 uppercase ml-1 tracking-wider">Employee ID (Optional)</label>
-                  <input 
-                    type="text" 
-                    value={newEmployeeId}
-                    onChange={(e) => setNewEmployeeId(e.target.value)}
-                    placeholder="e.g. APEC-2026-042 (Auto-generated if empty)"
-                    className="w-full bg-slate-955/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all text-sm shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-400 uppercase ml-1 tracking-wider">Phone Number</label>
-                  <input 
-                    type="tel" 
-                    value={newPhone}
-                    onChange={(e) => setNewPhone(e.target.value)}
-                    placeholder="e.g. +91 98765 43210"
-                    className="w-full bg-slate-955/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all text-sm shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-400 uppercase ml-1 tracking-wider">Joined Date</label>
-                  <input 
-                    type="date" 
-                    value={newJoinedDate}
-                    onChange={(e) => setNewJoinedDate(e.target.value)}
-                    className="w-full bg-slate-955/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all text-sm shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-400 uppercase ml-1 tracking-wider">Skills & Certifications (Comma-separated)</label>
-                  <input 
-                    type="text" 
-                    value={newSkills}
-                    onChange={(e) => setNewSkills(e.target.value)}
-                    placeholder="e.g. HV Licensing, First Aid, Grid Synchronization"
-                    className="w-full bg-slate-955/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all text-sm shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
-                  />
+              {/* Section 2: Role & Department */}
+              <div className="space-y-3 p-4 bg-slate-950/20 rounded-xl border border-white/5">
+                <h5 className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest border-b border-slate-900 pb-1.5 mb-3">
+                  2. Role & Department
+                </h5>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Role Description</label>
+                    <input 
+                      type="text" 
+                      value={newRole}
+                      onChange={(e) => setNewRole(e.target.value)}
+                      placeholder="e.g. Lead Technician"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Department</label>
+                    <select
+                      value={newDepartment}
+                      onChange={(e) => setNewDepartment(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 text-slate-100 rounded-xl py-2.5 px-3 focus:outline-none focus:border-cyan-500 text-xs cursor-pointer"
+                    >
+                      <option value="Operations Control" className="bg-slate-900 text-slate-100">Operations Control</option>
+                      <option value="Solar Installation" className="bg-slate-900 text-slate-100">Solar Installation</option>
+                      <option value="High Voltage Substations" className="bg-slate-900 text-slate-100">High Voltage Substations</option>
+                      <option value="Grid Automation" className="bg-slate-900 text-slate-100">Grid Automation</option>
+                      <option value="Safety & Compliance" className="bg-slate-900 text-slate-100">Safety & Compliance</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Employee ID</label>
+                    <input 
+                      type="text" 
+                      value={newEmployeeId}
+                      onChange={(e) => setNewEmployeeId(e.target.value)}
+                      placeholder="APEC-2026-042 (Optional)"
+                      className="w-full bg-slate-955/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-400 uppercase ml-1 tracking-wider">Access Role (Priority)</label>
-                  <select
-                    value={newAccessRole}
-                    onChange={(e) => setNewAccessRole(e.target.value)}
-                    className="w-full bg-slate-955/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all text-sm cursor-pointer shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
-                  >
-                    <option value="User" className="bg-slate-900 text-slate-100">User (Standard Access)</option>
-                    <option value="Admin" className="bg-slate-900 text-slate-100">Admin (Full Control)</option>
-                  </select>
+              {/* Section 3: Credentials & Skills */}
+              <div className="space-y-3 p-4 bg-slate-950/20 rounded-xl border border-white/5">
+                <h5 className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest border-b border-slate-900 pb-1.5 mb-3">
+                  3. Access Control & Skills
+                </h5>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Joined Date</label>
+                    <input 
+                      type="date" 
+                      value={newJoinedDate}
+                      onChange={(e) => setNewJoinedDate(e.target.value)}
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Skills & Certifications</label>
+                    <input 
+                      type="text" 
+                      value={newSkills}
+                      onChange={(e) => setNewSkills(e.target.value)}
+                      placeholder="e.g. HV Licensing, First Aid"
+                      className="w-full bg-slate-955/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-400 uppercase ml-1 tracking-wider">Status</label>
-                  <select
-                    value={newStatus}
-                    onChange={(e) => setNewStatus(e.target.value)}
-                    className="w-full bg-slate-955/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all text-sm cursor-pointer shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
-                  >
-                    <option value="Active" className="bg-slate-900 text-slate-100">Active</option>
-                    <option value="Site Visit" className="bg-slate-900 text-slate-100">Site Visit</option>
-                    <option value="On Leave" className="bg-slate-900 text-slate-100">On Leave</option>
-                  </select>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-400 uppercase ml-1 tracking-wider">Avatar Color Theme</label>
-                  <select
-                    value={newAvatar}
-                    onChange={(e) => setNewAvatar(e.target.value)}
-                    className="w-full bg-slate-955/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all text-sm cursor-pointer shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
-                  >
-                    <option value="cyan" className="bg-slate-900 text-slate-100">Cyan Operations</option>
-                    <option value="blue" className="bg-slate-900 text-slate-100">Blue Technical</option>
-                    <option value="red" className="bg-slate-900 text-slate-100">Red Emergency</option>
-                    <option value="gold" className="bg-slate-900 text-slate-100">Gold Executive</option>
-                  </select>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Access Role (Priority)</label>
+                    <select
+                      value={newAccessRole}
+                      onChange={(e) => setNewAccessRole(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 text-slate-100 rounded-xl py-2.5 px-3 focus:outline-none focus:border-cyan-500 text-xs cursor-pointer"
+                    >
+                      <option value="User" className="bg-slate-900 text-slate-100">User (Standard Access)</option>
+                      <option value="Admin" className="bg-slate-900 text-slate-100">Admin (Full Control)</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Status</label>
+                    <select
+                      value={newStatus}
+                      onChange={(e) => setNewStatus(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 text-slate-100 rounded-xl py-2.5 px-3 focus:outline-none focus:border-cyan-500 text-xs cursor-pointer"
+                    >
+                      <option value="Active" className="bg-slate-900 text-slate-100">Active</option>
+                      <option value="Site Visit" className="bg-slate-900 text-slate-100">Site Visit</option>
+                      <option value="On Leave" className="bg-slate-900 text-slate-100">On Leave</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Avatar Color Theme</label>
+                    <select
+                      value={newAvatar}
+                      onChange={(e) => setNewAvatar(e.target.value)}
+                      className="w-full bg-slate-955/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 text-sm cursor-pointer shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
+                    >
+                      <option value="cyan" className="bg-slate-900 text-slate-100">Cyan Operations</option>
+                      <option value="blue" className="bg-slate-900 text-slate-100">Blue Technical</option>
+                      <option value="red" className="bg-slate-900 text-slate-100">Red Emergency</option>
+                      <option value="gold" className="bg-slate-900 text-slate-100">Gold Executive</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
-              <button
-                type="submit"
-                disabled={isDbActionLoading}
-                className="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-955 rounded-xl text-xs font-bold uppercase tracking-wider shadow-[0_4px_14px_rgba(6,182,212,0.2)] hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-              >
-                {isDbActionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Register Team Member'}
-              </button>
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={isDbActionLoading}
+                  className="w-full py-3 bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-955 rounded-xl text-xs font-bold uppercase tracking-wider shadow-[0_4px_14px_rgba(6,182,212,0.2)] hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {isDbActionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Register Team Member'}
+                </button>
+              </div>
             </form>
           </motion.div>
         ) : (
