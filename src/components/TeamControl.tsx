@@ -14,7 +14,8 @@ import {
   Briefcase,
   Calendar,
   Award,
-  X
+  X,
+  ChevronDown
 } from 'lucide-react';
 import { collection, onSnapshot, doc, deleteDoc, addDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { useOutletContext } from 'react-router-dom';
@@ -41,6 +42,7 @@ export default function TeamControl() {
   
   const [isAddingUser, setIsAddingUser] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
+  const [openDropdown, setOpenDropdown] = useState<'dept' | 'priority' | 'status' | 'avatar' | null>(null);
 
   // Safety fallback timeout to prevent infinite loading state
   useEffect(() => {
@@ -195,6 +197,9 @@ export default function TeamControl() {
       animate={{ opacity: 1, y: 0 }}
       className="space-y-6"
     >
+      {openDropdown && (
+        <div className="fixed inset-0 z-20 cursor-default" onClick={() => setOpenDropdown(null)} />
+      )}
       <div className="flex justify-between items-center">
         <div>
           <h3 className="text-xl font-bold text-slate-100">Team Control Panel</h3>
@@ -280,19 +285,51 @@ export default function TeamControl() {
                       className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
                     />
                   </div>
-                  <div className="space-y-1">
+                  <div className="space-y-1 relative">
                     <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Department</label>
-                    <select
-                      value={newDepartment}
-                      onChange={(e) => setNewDepartment(e.target.value)}
-                      className="w-full bg-slate-955/60 border border-slate-805 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:border-cyan-500/50 text-xs cursor-pointer shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] focus:ring-1 focus:ring-cyan-500/10"
+                    <button
+                      type="button"
+                      onClick={() => setOpenDropdown(openDropdown === 'dept' ? null : 'dept')}
+                      className="w-full bg-slate-955/60 border border-slate-805 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:border-cyan-500/50 text-xs flex justify-between items-center transition-all shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] focus:ring-1 focus:ring-cyan-500/10 cursor-pointer text-left"
                     >
-                      <option value="Operations Control" className="bg-slate-900 text-slate-100">Operations Control</option>
-                      <option value="Solar Installation" className="bg-slate-900 text-slate-100">Solar Installation</option>
-                      <option value="High Voltage Substations" className="bg-slate-900 text-slate-100">High Voltage Substations</option>
-                      <option value="Grid Automation" className="bg-slate-900 text-slate-100">Grid Automation</option>
-                      <option value="Safety & Compliance" className="bg-slate-900 text-slate-100">Safety & Compliance</option>
-                    </select>
+                      <span>{newDepartment}</span>
+                      <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${openDropdown === 'dept' ? 'rotate-180' : ''}`} />
+                    </button>
+                    <AnimatePresence>
+                      {openDropdown === 'dept' && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 5 }}
+                          className="absolute z-30 w-full mt-1 bg-[#090d16]/95 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl overflow-hidden p-1 space-y-0.5"
+                        >
+                          {[
+                            "Operations Control",
+                            "Solar Installation",
+                            "High Voltage Substations",
+                            "Grid Automation",
+                            "Safety & Compliance"
+                          ].map((dept) => (
+                            <button
+                              key={dept}
+                              type="button"
+                              onClick={() => {
+                                setNewDepartment(dept);
+                                setOpenDropdown(null);
+                              }}
+                              className={`w-full text-left px-3 py-2 text-xs rounded-lg transition-colors flex items-center justify-between ${
+                                newDepartment === dept 
+                                  ? 'bg-cyan-500/10 text-cyan-400 font-semibold' 
+                                  : 'text-slate-300 hover:bg-slate-800/40 hover:text-slate-100'
+                              }`}
+                            >
+                              <span>{dept}</span>
+                              {newDepartment === dept && <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />}
+                            </button>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                   <div className="space-y-1">
                     <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Employee ID</label>
@@ -334,44 +371,134 @@ export default function TeamControl() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
-                  <div className="space-y-1">
+                  <div className="space-y-1 relative">
                     <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Access Priority</label>
-                    <select
-                      value={newAccessRole}
-                      onChange={(e) => setNewAccessRole(e.target.value)}
-                      className="w-full bg-slate-955/60 border border-slate-805 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:border-cyan-500/50 text-xs cursor-pointer shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] focus:ring-1 focus:ring-cyan-500/10"
+                    <button
+                      type="button"
+                      onClick={() => setOpenDropdown(openDropdown === 'priority' ? null : 'priority')}
+                      className="w-full bg-slate-955/60 border border-slate-805 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:border-cyan-500/50 text-xs flex justify-between items-center transition-all shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] focus:ring-1 focus:ring-cyan-500/10 cursor-pointer text-left"
                     >
-                      <option value="User" className="bg-slate-900 text-slate-100">User (Standard)</option>
-                      <option value="Admin" className="bg-slate-900 text-slate-100">Admin (Full)</option>
-                    </select>
+                      <span>{newAccessRole === 'Admin' ? 'Admin (Full)' : 'User (Standard)'}</span>
+                      <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${openDropdown === 'priority' ? 'rotate-180' : ''}`} />
+                    </button>
+                    <AnimatePresence>
+                      {openDropdown === 'priority' && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 5 }}
+                          className="absolute z-30 w-full mt-1 bg-[#090d16]/95 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl overflow-hidden p-1 space-y-0.5"
+                        >
+                          {[
+                            { value: 'User', label: 'User (Standard)' },
+                            { value: 'Admin', label: 'Admin (Full)' }
+                          ].map((role) => (
+                            <button
+                              key={role.value}
+                              type="button"
+                              onClick={() => {
+                                setNewAccessRole(role.value);
+                                setOpenDropdown(null);
+                              }}
+                              className={`w-full text-left px-3 py-2 text-xs rounded-lg transition-colors flex items-center justify-between ${
+                                newAccessRole === role.value 
+                                  ? 'bg-cyan-500/10 text-cyan-400 font-semibold' 
+                                  : 'text-slate-300 hover:bg-slate-800/40 hover:text-slate-100'
+                              }`}
+                            >
+                              <span>{role.label}</span>
+                              {newAccessRole === role.value && <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />}
+                            </button>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
-                  <div className="space-y-1">
+                  <div className="space-y-1 relative">
                     <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Status</label>
-                    <select
-                      value={newStatus}
-                      onChange={(e) => setNewStatus(e.target.value)}
-                      className="w-full bg-slate-955/60 border border-slate-805 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:border-cyan-500/50 text-xs cursor-pointer shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] focus:ring-1 focus:ring-cyan-500/10"
+                    <button
+                      type="button"
+                      onClick={() => setOpenDropdown(openDropdown === 'status' ? null : 'status')}
+                      className="w-full bg-slate-955/60 border border-slate-805 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:border-cyan-500/50 text-xs flex justify-between items-center transition-all shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] focus:ring-1 focus:ring-cyan-500/10 cursor-pointer text-left"
                     >
-                      <option value="Active" className="bg-slate-900 text-slate-100">Active</option>
-                      <option value="Site Visit" className="bg-slate-900 text-slate-100">Site Visit</option>
-                      <option value="On Leave" className="bg-slate-900 text-slate-100">On Leave</option>
-                    </select>
+                      <span>{newStatus}</span>
+                      <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${openDropdown === 'status' ? 'rotate-180' : ''}`} />
+                    </button>
+                    <AnimatePresence>
+                      {openDropdown === 'status' && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 5 }}
+                          className="absolute z-30 w-full mt-1 bg-[#090d16]/95 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl overflow-hidden p-1 space-y-0.5"
+                        >
+                          {["Active", "Site Visit", "On Leave"].map((statusVal) => (
+                            <button
+                              key={statusVal}
+                              type="button"
+                              onClick={() => {
+                                setNewStatus(statusVal);
+                                setOpenDropdown(null);
+                              }}
+                              className={`w-full text-left px-3 py-2 text-xs rounded-lg transition-colors flex items-center justify-between ${
+                                newStatus === statusVal 
+                                  ? 'bg-cyan-500/10 text-cyan-400 font-semibold' 
+                                  : 'text-slate-300 hover:bg-slate-800/40 hover:text-slate-100'
+                              }`}
+                            >
+                              <span>{statusVal}</span>
+                              {newStatus === statusVal && <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />}
+                            </button>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
-                  <div className="space-y-1">
+                  <div className="space-y-1 relative">
                     <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Avatar Theme</label>
-                    <select
-                      value={newAvatar}
-                      onChange={(e) => setNewAvatar(e.target.value)}
-                      className="w-full bg-slate-955/60 border border-slate-805 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:border-cyan-505 text-xs cursor-pointer shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] focus:ring-1 focus:ring-cyan-500/10"
+                    <button
+                      type="button"
+                      onClick={() => setOpenDropdown(openDropdown === 'avatar' ? null : 'avatar')}
+                      className="w-full bg-slate-955/60 border border-slate-805 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:border-cyan-505 text-xs flex justify-between items-center transition-all shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] focus:ring-1 focus:ring-cyan-500/10 cursor-pointer text-left"
                     >
-                      <option value="cyan" className="bg-slate-900 text-slate-100">Cyan Theme</option>
-                      <option value="blue" className="bg-slate-900 text-slate-100">Blue Theme</option>
-                      <option value="red" className="bg-slate-900 text-slate-100">Red Theme</option>
-                      <option value="gold" className="bg-slate-900 text-slate-100">Gold Theme</option>
-                    </select>
+                      <span className="capitalize">{newAvatar} Theme</span>
+                      <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${openDropdown === 'avatar' ? 'rotate-180' : ''}`} />
+                    </button>
+                    <AnimatePresence>
+                      {openDropdown === 'avatar' && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 5 }}
+                          className="absolute z-30 w-full mt-1 bg-[#090d16]/95 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl overflow-hidden p-1 space-y-0.5"
+                        >
+                          {[
+                            { value: 'cyan', label: 'Cyan Theme' },
+                            { value: 'blue', label: 'Blue Theme' },
+                            { value: 'red', label: 'Red Theme' },
+                            { value: 'gold', label: 'Gold Theme' }
+                          ].map((theme) => (
+                            <button
+                              key={theme.value}
+                              type="button"
+                              onClick={() => {
+                                setNewAvatar(theme.value);
+                                setOpenDropdown(null);
+                              }}
+                              className={`w-full text-left px-3 py-2 text-xs rounded-lg transition-colors flex items-center justify-between ${
+                                newAvatar === theme.value 
+                                  ? 'bg-cyan-500/10 text-cyan-400 font-semibold' 
+                                  : 'text-slate-300 hover:bg-slate-800/40 hover:text-slate-100'
+                              }`}
+                            >
+                              <span>{theme.label}</span>
+                              {newAvatar === theme.value && <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />}
+                            </button>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
-                </div>
               </div>
 
               <div className="pt-2">
