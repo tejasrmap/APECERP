@@ -3,7 +3,6 @@ import { useParams, Link } from 'react-router-dom';
 import { collection, query, where, onSnapshot, doc } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  Wifi, 
   Phone, 
   Briefcase, 
   Calendar, 
@@ -12,7 +11,8 @@ import {
   AlertTriangle, 
   Activity,
   ShieldAlert,
-  ArrowLeft
+  ArrowLeft,
+  Shield
 } from 'lucide-react';
 import { db } from '../firebase';
 
@@ -44,8 +44,6 @@ export default function ProfileView() {
           joinedDate: '2025-01-15',
           avatar: 'cyan',
           skills: ['HV Substation Audit', 'LOTO Protocol', 'PLC Systems', 'Transformer Safety'],
-          nfcTagUid: '04:FE:8B:2A',
-          nfcCardStatus: 'Linked',
           emergencyName: 'Priya Sharma (Spouse)',
           emergencyPhone: '+91 94481 87654',
           bloodGroup: 'B+',
@@ -61,10 +59,7 @@ export default function ProfileView() {
       return;
     }
 
-    // We search Firestore in a waterfall manner to be extremely robust:
-    // 1. Query by employeeId
-    // 2. Query by nfcTagUid (in case card serial was tapped)
-    // 3. Fallback to direct document ID lookup
+    // Lookup by employeeId first, then fall back to direct Firestore document ID
     const qEmp = query(collection(db, 'team'), where('employeeId', '==', cleanedId));
     
     const unsub = onSnapshot(qEmp, (snapshot) => {
@@ -73,37 +68,24 @@ export default function ProfileView() {
         setProfile({ id: snapshot.docs[0].id, ...docData });
         setLoading(false);
       } else {
-        // Try looking up by NFC Tag UID
-        const qNfc = query(collection(db, 'team'), where('nfcTagUid', '==', cleanedId.toUpperCase()));
-        onSnapshot(qNfc, (nfcSnapshot) => {
-          if (!nfcSnapshot.empty) {
-            const docData = nfcSnapshot.docs[0].data();
-            setProfile({ id: nfcSnapshot.docs[0].id, ...docData });
-            setLoading(false);
-          } else {
-            // Try looking up by Firestore document ID directly
-            try {
-              const docRef = doc(db, 'team', cleanedId);
-              onSnapshot(docRef, (docSnapshot) => {
-                if (docSnapshot.exists()) {
-                  setProfile({ id: docSnapshot.id, ...docSnapshot.data() });
-                } else {
-                  setProfile(null);
-                }
-                setLoading(false);
-              }, () => {
-                setProfile(null);
-                setLoading(false);
-              });
-            } catch {
+        // Fallback to Firestore document ID lookup
+        try {
+          const docRef = doc(db, 'team', cleanedId);
+          onSnapshot(docRef, (docSnapshot) => {
+            if (docSnapshot.exists()) {
+              setProfile({ id: docSnapshot.id, ...docSnapshot.data() });
+            } else {
               setProfile(null);
-              setLoading(false);
             }
-          }
-        }, () => {
+            setLoading(false);
+          }, () => {
+            setProfile(null);
+            setLoading(false);
+          });
+        } catch {
           setProfile(null);
           setLoading(false);
-        });
+        }
       }
     }, () => {
       setProfile(null);
@@ -133,14 +115,14 @@ export default function ProfileView() {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md bg-slate-955/60 backdrop-blur-md border border-white/10 rounded-3xl p-6 shadow-2xl relative space-y-6 z-10"
       >
-        {/* Verification Header */}
+        {/* Profile Header */}
         <div className="text-center space-y-1">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-[10px] font-mono tracking-wider text-slate-405 uppercase">
-            <Wifi className="w-3.5 h-3.5 text-cyan-405 animate-pulse" />
-            NFC Digital ID Verification
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-[10px] font-mono tracking-wider text-slate-400 uppercase">
+            <Shield className="w-3.5 h-3.5 text-cyan-400" />
+            APEC Company ID
           </div>
           <h2 className="text-xl font-extrabold tracking-tight bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent pt-2">
-            APEC Security Gateway
+            Employee Profile
           </h2>
         </div>
 
@@ -156,33 +138,21 @@ export default function ProfileView() {
           <div className="space-y-6 animate-[fadeIn_0.3s_ease-out]">
             {/* STATUS HEADER BADGE */}
             <div className="text-center">
-              {profile.nfcCardStatus === 'Linked' ? (
-                <div className="inline-flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-green-500/5 border border-green-500/20 text-green-400 w-full shadow-[0_0_15px_rgba(34,197,94,0.05)]">
-                  <CheckCircle2 className="w-8 h-8 text-green-400 animate-pulse" />
-                  <span className="text-xs font-bold font-mono tracking-widest uppercase">✓ VERIFIED OPERATIONS ACCESS</span>
-                  <span className="text-[9px] text-slate-500 font-mono uppercase">RFID Card Active</span>
-                </div>
-              ) : (
-                <div className="inline-flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-rose-500/5 border border-rose-500/20 text-rose-500 w-full">
-                  <ShieldAlert className="w-8 h-8 text-rose-500 animate-bounce" />
-                  <span className="text-xs font-bold font-mono tracking-widest uppercase">✗ ACCESS DENIED / REVOKED</span>
-                  <span className="text-[9px] text-slate-550 font-mono uppercase">Pass credentials inactive</span>
-                </div>
-              )}
+              <div className="inline-flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-green-500/5 border border-green-500/20 text-green-400 w-full shadow-[0_0_15px_rgba(34,197,94,0.05)]">
+                <CheckCircle2 className="w-8 h-8 text-green-400" />
+                <span className="text-xs font-bold font-mono tracking-widest uppercase">✓ VERIFIED EMPLOYEE</span>
+                <span className="text-[9px] text-slate-500 font-mono uppercase">APEC Power Solutions</span>
+              </div>
             </div>
 
-            {/* High-security smart pass graphic */}
+            {/* High-security Company ID card graphic */}
             <div className="relative w-full h-44 rounded-2xl p-4 overflow-hidden border border-cyan-500/20 bg-gradient-to-br from-cyan-950/20 to-slate-900/40 shadow-xl flex flex-col justify-between group">
               <div className="absolute inset-0 cyber-grid opacity-10" />
               <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent pointer-events-none" />
               
-              <div className="absolute top-4 right-4 text-cyan-400/50">
-                <Wifi className="w-5 h-5 animate-pulse" />
-              </div>
-              
               <div className="flex justify-between items-start">
                 <div>
-                  <h5 className="text-[8px] font-extrabold uppercase tracking-widest text-cyan-400 font-mono">APEC Proximity Pass</h5>
+                  <h5 className="text-[8px] font-extrabold uppercase tracking-widest text-cyan-400 font-mono">APEC Company ID</h5>
                   <span className="text-[7px] text-slate-500 uppercase tracking-widest font-mono">Digital Credential</span>
                 </div>
                 <span className="text-[7px] font-extrabold px-1.5 py-0.5 rounded border border-cyan-500/20 bg-cyan-950/30 text-cyan-400 font-mono tracking-wider">
@@ -196,19 +166,19 @@ export default function ProfileView() {
                 </span>
                 <div className="min-w-0">
                   <h4 className="text-xs font-extrabold text-slate-100 truncate leading-snug">{profile.name}</h4>
-                  <p className="text-[9px] text-rose-405 font-bold truncate mt-0.5">{profile.role}</p>
+                  <p className="text-[9px] text-rose-400 font-bold truncate mt-0.5">{profile.role}</p>
                   <p className="text-[8px] text-slate-500 font-mono truncate">{profile.department || 'Operations'}</p>
                 </div>
               </div>
 
               <div className="flex justify-between items-end border-t border-slate-900 pt-2 font-mono text-[8px] text-slate-400">
                 <div>
-                  <span className="text-slate-600 block text-[6.5px] tracking-wider">RFID CARD UID</span>
-                  <span className="font-bold text-cyan-404 text-cyan-400">{profile.nfcTagUid || 'UNASSIGNED'}</span>
+                  <span className="text-slate-600 block text-[6.5px] tracking-wider">EMPLOYEE ID</span>
+                  <span className="font-bold text-cyan-400">{profile.employeeId || 'N/A'}</span>
                 </div>
                 <div>
-                  <span className="text-slate-605 text-slate-600 block text-[6.5px] tracking-wider text-right">EMPLOYEE ID</span>
-                  <span className="font-bold text-slate-300">{profile.employeeId}</span>
+                  <span className="text-slate-600 block text-[6.5px] tracking-wider text-right">STATUS</span>
+                  <span className="font-bold text-green-400">{profile.status || 'Active'}</span>
                 </div>
               </div>
             </div>

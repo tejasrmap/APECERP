@@ -9,7 +9,6 @@ import {
   Briefcase,
   Calendar,
   Award,
-  Wifi,
   Shield,
   X
 } from 'lucide-react';
@@ -95,8 +94,8 @@ export default function Team() {
     const roleMatch = m.role?.toLowerCase().includes(term) || false;
     const deptMatch = m.department?.toLowerCase().includes(term) || false;
     const skillMatch = m.skills?.some((s: string) => s.toLowerCase().includes(term)) || false;
-    const nfcMatch = m.nfcTagUid?.toLowerCase().includes(term) || false;
-    return nameMatch || emailMatch || roleMatch || deptMatch || skillMatch || nfcMatch;
+    const empIdMatch = m.employeeId?.toLowerCase().includes(term) || false;
+    return nameMatch || emailMatch || roleMatch || deptMatch || skillMatch || empIdMatch;
   });
 
   return (
@@ -118,7 +117,7 @@ export default function Team() {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search name, skills, department, NFC..."
+            placeholder="Search name, role, department, skills..."
             className="w-full bg-slate-900/60 border border-slate-800 rounded-xl py-2 pl-10 pr-4 text-xs focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 text-slate-100 placeholder:text-slate-500 transition-all shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
           />
         </div>
@@ -175,12 +174,6 @@ export default function Team() {
                     <span className="text-[9px] text-slate-500 font-mono bg-slate-950 px-2 py-0.5 rounded border border-slate-900">
                       {m.employeeId || 'APEC-MEMBER'}
                     </span>
-                    {m.nfcTagUid && (
-                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-cyan-950/40 text-cyan-405 border border-cyan-500/20 text-[7px] font-mono tracking-widest font-extrabold uppercase shadow-[0_0_8px_rgba(6,182,212,0.1)]" title={`NFC Card Linked: ${m.nfcTagUid}`}>
-                        <Wifi className="w-2.5 h-2.5 animate-pulse" />
-                        RFID ACTIVE
-                      </span>
-                    )}
                   </div>
                 </div>
 
@@ -291,21 +284,16 @@ export default function Team() {
                 </div>
               </div>
 
-              {/* Proximity ID Pass Card Container */}
-              <div className="relative w-full max-w-sm h-48 mx-auto rounded-2xl p-5 overflow-hidden border border-cyan-500/30 bg-gradient-to-br from-cyan-950/20 to-slate-900/40 backdrop-blur-md shadow-2xl flex flex-col justify-between group hover:border-cyan-500/50 transition-all duration-300">
-                {/* Contactless Grid Background */}
+              {/* APEC Company ID Card */}
+              <div className="relative w-full max-w-sm mx-auto rounded-2xl p-5 overflow-hidden border border-cyan-500/30 bg-gradient-to-br from-cyan-950/20 to-slate-900/40 backdrop-blur-md shadow-2xl flex flex-col gap-4 group hover:border-cyan-500/50 transition-all duration-300">
+                {/* Subtle background grid */}
                 <div className="absolute inset-0 cyber-grid opacity-10" />
                 <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent pointer-events-none" />
-                
-                {/* Radio/Chip Symbol */}
-                <div className="absolute top-5 right-5 text-cyan-400/60 group-hover:text-cyan-455 transition-colors">
-                  <Wifi className="w-6 h-6 animate-pulse" />
-                </div>
-                
+
                 {/* Card Header */}
                 <div className="flex justify-between items-start">
                   <div>
-                    <h5 className="text-[9px] font-extrabold uppercase tracking-widest text-cyan-400 font-mono">APEC Proximity Pass</h5>
+                    <h5 className="text-[9px] font-extrabold uppercase tracking-widest text-cyan-400 font-mono">APEC Company ID</h5>
                     <span className="text-[8px] text-slate-500 uppercase tracking-widest font-mono">Operations Security</span>
                   </div>
                   <span className={`text-[8px] font-extrabold px-2 py-0.5 rounded border ${
@@ -313,7 +301,7 @@ export default function Team() {
                       'admin@apecpowersolutions.com',
                       'managingdirector@apecpowersolutions.com'
                     ].includes(selectedProfile.email?.toLowerCase())
-                      ? 'bg-cyan-950/40 text-cyan-405 border-cyan-500/25 shadow-[0_0_8px_rgba(6,182,212,0.1)]'
+                      ? 'bg-cyan-950/40 text-cyan-400 border-cyan-500/25 shadow-[0_0_8px_rgba(6,182,212,0.1)]'
                       : 'bg-slate-800 text-slate-400 border-slate-700'
                   } font-mono`}>
                     {selectedProfile.accessRole === 'Admin' || selectedProfile.roleType === 'Admin' || [
@@ -328,7 +316,7 @@ export default function Team() {
                   <span className={`w-12 h-12 rounded-xl bg-gradient-to-br ${
                     selectedProfile.avatar === 'cyan' ? 'from-cyan-500/20 to-cyan-500/5 text-cyan-400 border-cyan-500/20' :
                     selectedProfile.avatar === 'blue' ? 'from-blue-500/20 to-blue-500/5 text-blue-400 border-blue-500/20' :
-                    selectedProfile.avatar === 'red' ? 'from-rose-500/20 to-rose-550 text-rose-400 border-rose-500/20' :
+                    selectedProfile.avatar === 'red' ? 'from-rose-500/20 to-rose-500/5 text-rose-400 border-rose-500/20' :
                     'from-amber-500/20 to-amber-500/5 text-amber-400 border-amber-500/20'
                   } border flex items-center justify-center text-sm font-extrabold shadow-sm shrink-0`}>
                     {selectedProfile.name.slice(0, 2).toUpperCase()}
@@ -340,23 +328,15 @@ export default function Team() {
                   </div>
                 </div>
 
-                {/* Tag Info */}
-                <div className="flex justify-between items-end border-t border-slate-800/60 pt-2.5 font-mono text-[9px]">
+                {/* Employee ID footer */}
+                <div className="border-t border-slate-800/60 pt-2.5 font-mono text-[9px] flex justify-between items-end">
                   <div>
-                    <span className="text-slate-500 block uppercase text-[7px] tracking-wider">RFID TAG UID</span>
-                    <span className={`font-bold ${selectedProfile.nfcTagUid ? 'text-cyan-405' : 'text-slate-505'}`}>
-                      {selectedProfile.nfcTagUid || 'UNASSIGNED'}
-                    </span>
+                    <span className="text-slate-500 block uppercase text-[7px] tracking-wider">EMPLOYEE ID</span>
+                    <span className="font-bold text-cyan-400">{selectedProfile.employeeId || 'APEC-MEMBER'}</span>
                   </div>
-                  <div>
-                    <span className="text-slate-500 block uppercase text-[7px] tracking-wider text-right">TAG STATUS</span>
-                    <span className={`font-bold uppercase block text-right ${
-                      selectedProfile.nfcCardStatus === 'Linked' ? 'text-green-400' :
-                      selectedProfile.nfcCardStatus === 'Revoked' ? 'text-rose-500' :
-                      'text-amber-500'
-                    }`}>
-                      {selectedProfile.nfcCardStatus || 'INACTIVE'}
-                    </span>
+                  <div className="text-right">
+                    <span className="text-slate-500 block uppercase text-[7px] tracking-wider">PROFILE LINK</span>
+                    <span className="font-bold text-slate-300 text-[8px]">/profile/{selectedProfile.employeeId || selectedProfile.id}</span>
                   </div>
                 </div>
               </div>

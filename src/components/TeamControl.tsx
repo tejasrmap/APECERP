@@ -76,136 +76,7 @@ export default function TeamControl() {
   const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
   const [openDropdown, setOpenDropdown] = useState<'dept' | 'priority' | 'status' | 'avatar' | null>(null);
 
-  // NFC States
-  const [newNfcUid, setNewNfcUid] = useState('');
-  const [isNfcScanning, setIsNfcScanning] = useState(false);
-  const [nfcScanTarget, setNfcScanTarget] = useState<'form' | 'profile' | null>(null);
 
-  const startNfcScan = (target: 'form' | 'profile') => {
-    setIsNfcScanning(true);
-    setNfcScanTarget(target);
-    
-    let scanAborted = false;
-
-    const handleScannedTag = async (finalUid: string) => {
-      if (target === 'form') {
-        setNewNfcUid(finalUid);
-      } else if (target === 'profile' && selectedProfile && db) {
-        try {
-          setIsDbActionLoading(true);
-          await updateDoc(doc(db, 'team', selectedProfile.id), {
-            nfcTagUid: finalUid,
-            nfcCardStatus: 'Linked',
-            nfcIssuedDate: new Date().toISOString()
-          });
-          
-          // Log activity
-          await addDoc(collection(db, 'activities'), {
-            title: 'NFC Pass Linked',
-            desc: `Contactless card "${finalUid}" was linked to profile "${selectedProfile.name}"`,
-            type: 'settings',
-            timestamp: Timestamp.now()
-          });
-
-          setSelectedProfile((prev: any) => ({
-            ...prev,
-            nfcTagUid: finalUid,
-            nfcCardStatus: 'Linked',
-            nfcIssuedDate: new Date().toISOString()
-          }));
-        } catch (err) {
-          console.error('Error linking tag:', err);
-        } finally {
-          setIsDbActionLoading(false);
-        }
-      }
-      setIsNfcScanning(false);
-      setNfcScanTarget(null);
-    };
-
-    // Attempt native physical scanning & NDEF URL write on supported mobile Chrome browsers
-    const startPhysicalScanAndWrite = async () => {
-      if ('NDEFReader' in window) {
-        try {
-          const ndef = new (window as any).NDEFReader();
-          await ndef.scan();
-          ndef.onreading = async ({ serialNumber }: any) => {
-            if (scanAborted) return;
-            scanAborted = true;
-
-            const formatted = serialNumber.includes(':') 
-              ? serialNumber.toUpperCase() 
-              : serialNumber.match(/.{1,2}/g)?.join(':').toUpperCase() || serialNumber;
-            const finalUid = formatted.toUpperCase();
-
-            try {
-              const origin = window.location.origin;
-              const empId = target === 'form' ? (newEmployeeId.trim() || `APEC-${Math.floor(1000 + Math.random() * 9000)}`) : selectedProfile.employeeId;
-              await ndef.write({
-                records: [{ recordType: "url", data: `${origin}/profile/${empId}` }]
-              });
-              console.log("Written APEC verification route to tag:", `${origin}/profile/${empId}`);
-            } catch (writeErr) {
-              console.warn("NFC Tag is write-protected or write failed: ", writeErr);
-            }
-
-            await handleScannedTag(finalUid);
-          };
-        } catch (err) {
-          console.warn("Native NFC initialization failed:", err);
-        }
-      }
-    };
-
-    startPhysicalScanAndWrite();
-
-    // Fallback simulation timer
-    setTimeout(async () => {
-      if (scanAborted) return;
-      scanAborted = true;
-      
-      const generatedUid = Array.from({ length: 4 }, () => 
-        Math.floor(Math.random() * 256).toString(16).padStart(2, '0').toUpperCase()
-      ).join(':');
-      const finalUid = `04:${generatedUid}`;
-
-      await handleScannedTag(finalUid);
-    }, 2500);
-  };
-
-  const handleRevokeNfc = async () => {
-    if (!selectedProfile || !db) return;
-    if (!window.confirm(`Are you sure you want to revoke contactless card access for "${selectedProfile.name}"?`)) return;
-
-    setIsDbActionLoading(true);
-    try {
-      const currentUid = selectedProfile.nfcTagUid;
-      await updateDoc(doc(db, 'team', selectedProfile.id), {
-        nfcTagUid: null,
-        nfcCardStatus: 'Revoked',
-        nfcIssuedDate: null
-      });
-
-      // Log activity
-      await addDoc(collection(db, 'activities'), {
-        title: 'NFC Pass Revoked',
-        desc: `Contactless access credentials for card "${currentUid}" linked to "${selectedProfile.name}" were revoked`,
-        type: 'settings',
-        timestamp: Timestamp.now()
-      });
-
-      setSelectedProfile((prev: any) => ({
-        ...prev,
-        nfcTagUid: null,
-        nfcCardStatus: 'Revoked',
-        nfcIssuedDate: null
-      }));
-    } catch (err) {
-      console.error('Error revoking tag:', err);
-    } finally {
-      setIsDbActionLoading(false);
-    }
-  };
 
   const handleSaveProfileChanges = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -320,9 +191,6 @@ export default function TeamControl() {
         joinedDate: newJoinedDate,
         skills: formattedSkills,
         avatar: newAvatar,
-        nfcTagUid: newNfcUid.trim() || null,
-        nfcCardStatus: newNfcUid.trim() ? 'Linked' : 'Inactive',
-        nfcIssuedDate: newNfcUid.trim() ? new Date().toISOString() : null,
         emergencyName: newEmergencyName.trim() || 'N/A',
         emergencyPhone: newEmergencyPhone.trim() || 'N/A',
         bloodGroup: newBloodGroup || 'N/A',
@@ -349,7 +217,6 @@ export default function TeamControl() {
       setNewJoinedDate(new Date().toISOString().slice(0, 10));
       setNewSkills('');
       setNewAvatar('cyan');
-      setNewNfcUid('');
       setNewEmergencyName('');
       setNewEmergencyPhone('');
       setNewBloodGroup('');
@@ -797,44 +664,6 @@ export default function TeamControl() {
                 </div>
               </div>
 
-              {/* Section 5: Contactless Credentials */}
-              <div className="space-y-3 p-4 bg-slate-955/20 rounded-xl border border-white/5">
-                <h5 className="text-[10px] font-bold text-cyan-405 text-cyan-400 uppercase tracking-widest border-b border-slate-900/60 pb-1.5 mb-3">
-                  5. Contactless Proximity Card (NFC)
-                </h5>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
-                  <div className="space-y-1 md:col-span-2">
-                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">NFC Tag UID</label>
-                    <input 
-                      type="text" 
-                      value={newNfcUid}
-                      onChange={(e) => setNewNfcUid(e.target.value)}
-                      placeholder="No card scanned (e.g. 04:A3:C2:5B)"
-                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] font-mono"
-                    />
-                  </div>
-                  <div>
-                    <button
-                      type="button"
-                      onClick={() => startNfcScan('form')}
-                      disabled={isNfcScanning}
-                      className="w-full py-2.5 bg-slate-900 border border-cyan-500/30 hover:border-cyan-500/60 hover:bg-cyan-950/20 text-cyan-400 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
-                    >
-                      {isNfcScanning && nfcScanTarget === 'form' ? (
-                        <>
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          <span>Scanning...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Wifi className="w-3.5 h-3.5" />
-                          <span>Scan NFC Card</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
-              </div>
 
               <div className="pt-2">
                 <button
@@ -1044,22 +873,22 @@ export default function TeamControl() {
                 </div>
               </div>
 
-              {/* Proximity ID Pass Card Container */}
+              {/* Company ID Pass Card Container */}
               <div className="relative w-full max-w-sm h-48 mx-auto rounded-2xl p-5 overflow-hidden border border-cyan-500/30 bg-gradient-to-br from-cyan-950/20 to-slate-900/40 backdrop-blur-md shadow-2xl flex flex-col justify-between group hover:border-cyan-500/50 transition-all duration-300">
-                {/* Contactless Grid Background */}
+                {/* Grid Background */}
                 <div className="absolute inset-0 cyber-grid opacity-10" />
                 <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent pointer-events-none" />
                 
-                {/* Radio/Chip Symbol */}
-                <div className="absolute top-5 right-5 text-cyan-400/60 group-hover:text-cyan-450 transition-colors">
-                  <Wifi className="w-6 h-6 animate-pulse" />
+                {/* ID Badge Shield Symbol */}
+                <div className="absolute top-5 right-5 text-cyan-400/40">
+                  <Shield className="w-6 h-6" />
                 </div>
                 
                 {/* Card Header */}
                 <div className="flex justify-between items-start">
                   <div>
-                    <h5 className="text-[9px] font-extrabold uppercase tracking-widest text-cyan-400 font-mono">APEC Proximity Pass</h5>
-                    <span className="text-[8px] text-slate-500 uppercase tracking-widest font-mono">Operations Security</span>
+                    <h5 className="text-[9px] font-extrabold uppercase tracking-widest text-cyan-400 font-mono">APEC Company ID</h5>
+                    <span className="text-[8px] text-slate-500 uppercase tracking-widest font-mono">Digital Credential</span>
                   </div>
                   <span className={`text-[8px] font-extrabold px-2 py-0.5 rounded border ${
                     selectedProfile.accessRole === 'Admin' || selectedProfile.roleType === 'Admin' || [
@@ -1093,22 +922,22 @@ export default function TeamControl() {
                   </div>
                 </div>
 
-                {/* Tag Info */}
+                {/* Company ID Info */}
                 <div className="flex justify-between items-end border-t border-slate-800/60 pt-2.5 font-mono text-[9px]">
                   <div>
-                    <span className="text-slate-500 block uppercase text-[7px] tracking-wider">RFID TAG UID</span>
-                    <span className={`font-bold ${selectedProfile.nfcTagUid ? 'text-cyan-400' : 'text-slate-500'}`}>
-                      {selectedProfile.nfcTagUid || 'UNASSIGNED'}
+                    <span className="text-slate-500 block uppercase text-[7px] tracking-wider">EMPLOYEE ID</span>
+                    <span className="font-bold text-cyan-400">
+                      {isEditingProfile ? (editEmployeeId || 'APEC-MEMBER') : (selectedProfile.employeeId || 'APEC-MEMBER')}
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-500 block uppercase text-[7px] tracking-wider text-right">TAG STATUS</span>
+                    <span className="text-slate-500 block uppercase text-[7px] tracking-wider text-right">STATUS</span>
                     <span className={`font-bold uppercase block text-right ${
-                      selectedProfile.nfcCardStatus === 'Linked' ? 'text-green-400' :
-                      selectedProfile.nfcCardStatus === 'Revoked' ? 'text-rose-500' :
-                      'text-amber-500'
+                      (isEditingProfile ? editStatus : selectedProfile.status) === 'Active' ? 'text-green-400' :
+                      (isEditingProfile ? editStatus : selectedProfile.status) === 'Site Visit' ? 'text-cyan-400' :
+                      'text-amber-400'
                     }`}>
-                      {selectedProfile.nfcCardStatus || 'INACTIVE'}
+                      {isEditingProfile ? editStatus : (selectedProfile.status || 'Active')}
                     </span>
                   </div>
                 </div>
@@ -1529,82 +1358,8 @@ export default function TeamControl() {
                       )}
                     </div>
                   </div>
-
-                  {/* NFC Card Management Actions */}
-                  <div className="pt-2 flex gap-3">
-                    {selectedProfile.nfcTagUid ? (
-                      <button
-                        type="button"
-                        onClick={handleRevokeNfc}
-                        disabled={isDbActionLoading}
-                        className="w-full py-2.5 bg-rose-955/20 border border-rose-900/30 hover:border-rose-900/50 hover:bg-rose-950/20 text-rose-500 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        <span>Revoke Contactless Pass</span>
-                      </button>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => startNfcScan('profile')}
-                        disabled={isDbActionLoading || isNfcScanning}
-                        className="w-full py-2.5 bg-cyan-950/40 border border-cyan-500/30 hover:border-cyan-500/50 hover:bg-cyan-950/20 text-cyan-400 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
-                      >
-                        {isNfcScanning && nfcScanTarget === 'profile' ? (
-                          <>
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            <span>Initializing Scanner...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Wifi className="w-3.5 h-3.5" />
-                            <span>Link Contactless Pass</span>
-                          </>
-                        )}
-                      </button>
-                    )}
-                  </div>
                 </>
               )}
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* NFC Proximity Scanning Overlay */}
-      <AnimatePresence>
-        {isNfcScanning && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-slate-955/80 backdrop-blur-md"
-            />
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 15 }}
-              className="relative w-full max-w-sm bg-slate-950 border border-cyan-500/30 p-8 rounded-2xl shadow-2xl z-50 text-center space-y-6"
-            >
-              <div className="relative w-24 h-24 mx-auto flex items-center justify-center">
-                {/* Glowing Radar Rings */}
-                <div className="absolute inset-0 rounded-full bg-cyan-500/5 border border-cyan-500/20 animate-ping opacity-75" />
-                <div className="absolute inset-2 rounded-full bg-cyan-500/10 border border-cyan-500/30 animate-pulse" />
-                <div className="w-16 h-16 rounded-full bg-cyan-950/40 border border-cyan-500/50 flex items-center justify-center text-cyan-450 shadow-[0_0_15px_rgba(6,182,212,0.2)]">
-                  <Wifi className="w-8 h-8 animate-pulse" />
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <h4 className="text-base font-bold text-slate-100 uppercase tracking-wider font-mono">NFC Proximity Reader</h4>
-                <p className="text-xs text-slate-405 max-w-xs leading-relaxed mx-auto">
-                  TAP proximity ID pass or RFID token against your reader terminal now...
-                </p>
-              </div>
-              
-              <div className="text-[10px] text-cyan-500 font-mono tracking-widest uppercase animate-pulse">
-                Awaiting Contactless Signal
-              </div>
             </motion.div>
           </div>
         )}
