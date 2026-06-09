@@ -41,6 +41,12 @@ export default function TeamControl() {
   const [newSkills, setNewSkills] = useState('');
   const [newAvatar, setNewAvatar] = useState('cyan');
   
+  // Emergency & Medical States
+  const [newEmergencyName, setNewEmergencyName] = useState('');
+  const [newEmergencyPhone, setNewEmergencyPhone] = useState('');
+  const [newBloodGroup, setNewBloodGroup] = useState('');
+  const [newMedicalConditions, setNewMedicalConditions] = useState('');
+  
   const [isAddingUser, setIsAddingUser] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
   const [openDropdown, setOpenDropdown] = useState<'dept' | 'priority' | 'status' | 'avatar' | null>(null);
@@ -183,7 +189,11 @@ export default function TeamControl() {
         avatar: newAvatar,
         nfcTagUid: newNfcUid.trim() || null,
         nfcCardStatus: newNfcUid.trim() ? 'Linked' : 'Inactive',
-        nfcIssuedDate: newNfcUid.trim() ? new Date().toISOString() : null
+        nfcIssuedDate: newNfcUid.trim() ? new Date().toISOString() : null,
+        emergencyName: newEmergencyName.trim() || 'N/A',
+        emergencyPhone: newEmergencyPhone.trim() || 'N/A',
+        bloodGroup: newBloodGroup || 'N/A',
+        medicalConditions: newMedicalConditions.trim() || 'None'
       });
 
       // Log activity
@@ -206,6 +216,10 @@ export default function TeamControl() {
       setNewSkills('');
       setNewAvatar('cyan');
       setNewNfcUid('');
+      setNewEmergencyName('');
+      setNewEmergencyPhone('');
+      setNewBloodGroup('');
+      setNewMedicalConditions('');
       setIsAddingUser(false);
     } catch (err) {
       console.error('Error adding user:', err);
@@ -592,10 +606,67 @@ export default function TeamControl() {
                   </div>
               </div>
 
-              {/* Section 4: Contactless Credentials */}
+              {/* Section 4: Health & Emergency Credentials */}
+              <div className="space-y-3 p-4 bg-slate-955/20 rounded-xl border border-white/5">
+                <h5 className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest border-b border-slate-900/60 pb-1.5 mb-3">
+                  4. Health & Emergency Credentials
+                </h5>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Emergency Contact Name</label>
+                    <input 
+                      type="text" 
+                      value={newEmergencyName}
+                      onChange={(e) => setNewEmergencyName(e.target.value)}
+                      placeholder="e.g. Jane Doe (Spouse)"
+                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Emergency Contact Phone</label>
+                    <input 
+                      type="text" 
+                      value={newEmergencyPhone}
+                      onChange={(e) => setNewEmergencyPhone(e.target.value)}
+                      placeholder="e.g. +91 98765 43210"
+                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Blood Group</label>
+                    <select
+                      value={newBloodGroup}
+                      onChange={(e) => setNewBloodGroup(e.target.value)}
+                      className="w-full bg-slate-955/60 border border-slate-805 text-slate-100 rounded-xl py-2.5 px-3.5 text-slate-150 focus:outline-none focus:border-cyan-500/50 text-xs cursor-pointer shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                    >
+                      <option value="">Select Blood Group...</option>
+                      <option value="A+">A+</option>
+                      <option value="A-">A-</option>
+                      <option value="B+">B+</option>
+                      <option value="B-">B-</option>
+                      <option value="AB+">AB+</option>
+                      <option value="AB-">AB-</option>
+                      <option value="O+">O+</option>
+                      <option value="O-">O-</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Medical Conditions / Notes</label>
+                    <input 
+                      type="text" 
+                      value={newMedicalConditions}
+                      onChange={(e) => setNewMedicalConditions(e.target.value)}
+                      placeholder="e.g. Peanut allergy, Asthma, None"
+                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 5: Contactless Credentials */}
               <div className="space-y-3 p-4 bg-slate-955/20 rounded-xl border border-white/5">
                 <h5 className="text-[10px] font-bold text-cyan-405 text-cyan-400 uppercase tracking-widest border-b border-slate-900/60 pb-1.5 mb-3">
-                  4. Contactless Proximity Card (NFC)
+                  5. Contactless Proximity Card (NFC)
                 </h5>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
                   <div className="space-y-1 md:col-span-2">
@@ -879,7 +950,7 @@ export default function TeamControl() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 text-xs bg-slate-950/45 p-4 rounded-xl border border-slate-900/60 font-mono">
+              <div className="grid grid-cols-2 gap-4 text-xs bg-slate-955/45 p-4 rounded-xl border border-slate-900/60 font-mono">
                 <div className="space-y-1">
                   <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Department</span>
                   <span className="text-slate-350 font-bold flex items-center gap-1.5">
@@ -914,6 +985,35 @@ export default function TeamControl() {
                     <Calendar className="w-3.5 h-3.5 text-cyan-500" />
                     {selectedProfile.joinedDate ? new Date(selectedProfile.joinedDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}
                   </span>
+                </div>
+              </div>
+
+              {/* Emergency & Medical Credentials */}
+              <div className="space-y-2">
+                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Emergency & Medical Info</span>
+                <div className="grid grid-cols-2 gap-4 text-xs bg-rose-950/5 p-4 rounded-xl border border-rose-500/10 font-mono">
+                  <div className="space-y-1">
+                    <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Emergency Contact</span>
+                    <span className="text-slate-200 font-bold block truncate">{selectedProfile.emergencyName || 'N/A'}</span>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Contact Phone</span>
+                    <span className="text-slate-200 font-bold block truncate">{selectedProfile.emergencyPhone || 'N/A'}</span>
+                  </div>
+                  <div className="space-y-1 col-span-2 border-t border-slate-900/60 pt-2 mt-1 flex justify-between gap-6">
+                    <div className="space-y-1">
+                      <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Blood Group</span>
+                      <span className="text-rose-450 font-bold flex items-center gap-1 text-rose-400">
+                        <span className="text-[10px]">🩸</span> {selectedProfile.bloodGroup || 'N/A'}
+                      </span>
+                    </div>
+                    <div className="space-y-1 flex-1">
+                      <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Medical Notes</span>
+                      <span className="text-slate-350 font-medium block truncate" title={selectedProfile.medicalConditions}>
+                        {selectedProfile.medicalConditions || 'None'}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
 

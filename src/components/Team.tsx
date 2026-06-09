@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   Users, 
   Trash2, 
@@ -9,7 +9,9 @@ import {
   Briefcase,
   Calendar,
   Award,
-  Wifi
+  Wifi,
+  Shield,
+  X
 } from 'lucide-react';
 import { collection, onSnapshot, doc, deleteDoc, addDoc, Timestamp } from 'firebase/firestore';
 import { useOutletContext } from 'react-router-dom';
@@ -21,6 +23,7 @@ export default function Team() {
   const [teamList, setTeamList] = useState<any[]>([]);
   const [isTeamLoading, setIsTeamLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
 
   // Safety fallback timeout to prevent infinite loading state
   useEffect(() => {
@@ -144,10 +147,13 @@ export default function Team() {
             const avatarClass = avatarColors[m.avatar || 'cyan'] || avatarColors.cyan;
 
             return (
-              <div key={m.id} className="p-6 rounded-2xl glass-card flex flex-col relative group hover:border-white/15 shadow-[0_8px_30px_rgba(0,0,0,0.3)] hover:-translate-y-0.5 transition-all duration-300">
+              <div key={m.id} onClick={() => setSelectedProfile(m)} className="p-6 rounded-2xl glass-card flex flex-col relative group hover:border-cyan-500/30 hover:shadow-[0_0_20px_rgba(6,182,212,0.1)] hover:-translate-y-0.5 transition-all duration-300 cursor-pointer">
                 {isAdmin && (
                   <button
-                    onClick={() => handleDeleteDocument('team', m.id, m.name)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteDocument('team', m.id, m.name);
+                    }}
                     disabled={isDbActionLoading}
                     className="absolute top-4 right-4 p-1.5 text-slate-500 hover:text-rose-500 transition-colors rounded hover:bg-rose-955/20 opacity-0 group-hover:opacity-100 disabled:opacity-50"
                   >
@@ -234,6 +240,208 @@ export default function Team() {
           })}
         </div>
       )}
+
+      {/* Profile Detail Drawer Modal */}
+      <AnimatePresence>
+        {selectedProfile && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-[#070a13]/70 backdrop-blur-sm"
+              onClick={() => setSelectedProfile(null)}
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="relative w-full max-w-lg bg-[#070a13] border border-white/10 p-6 rounded-2xl shadow-2xl z-10 space-y-6 max-h-[90vh] overflow-y-auto"
+            >
+              <button 
+                onClick={() => setSelectedProfile(null)}
+                className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-800/60 transition-all cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="flex items-center gap-4">
+                <span className={`w-12 h-12 rounded-full bg-gradient-to-br ${
+                  selectedProfile.avatar === 'cyan' ? 'from-cyan-500/20 to-cyan-500/5 text-cyan-400 border-cyan-500/25' :
+                  selectedProfile.avatar === 'blue' ? 'from-blue-500/20 to-blue-500/5 text-blue-400 border-blue-500/25' :
+                  selectedProfile.avatar === 'red' ? 'from-rose-500/20 to-rose-500/5 text-rose-455 border-rose-500/25' :
+                  'from-amber-500/20 to-amber-500/5 text-amber-400 border-amber-500/25'
+                } border flex items-center justify-center text-sm font-bold shadow-sm shrink-0`}>
+                  {selectedProfile.name.slice(0, 2).toUpperCase()}
+                </span>
+                <div>
+                  <h4 className="text-lg font-bold text-slate-100">{selectedProfile.name}</h4>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-xs text-rose-500 font-bold">{selectedProfile.role}</span>
+                    <span className="text-[10px] bg-slate-950 px-2 py-0.5 rounded border border-slate-900 text-slate-400 font-mono">
+                      {selectedProfile.employeeId || 'APEC-MEMBER'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Proximity ID Pass Card Container */}
+              <div className="relative w-full max-w-sm h-48 mx-auto rounded-2xl p-5 overflow-hidden border border-cyan-500/30 bg-gradient-to-br from-cyan-950/20 to-slate-900/40 backdrop-blur-md shadow-2xl flex flex-col justify-between group hover:border-cyan-500/50 transition-all duration-300">
+                {/* Contactless Grid Background */}
+                <div className="absolute inset-0 cyber-grid opacity-10" />
+                <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent pointer-events-none" />
+                
+                {/* Radio/Chip Symbol */}
+                <div className="absolute top-5 right-5 text-cyan-400/60 group-hover:text-cyan-455 transition-colors">
+                  <Wifi className="w-6 h-6 animate-pulse" />
+                </div>
+                
+                {/* Card Header */}
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h5 className="text-[9px] font-extrabold uppercase tracking-widest text-cyan-400 font-mono">APEC Proximity Pass</h5>
+                    <span className="text-[8px] text-slate-500 uppercase tracking-widest font-mono">Operations Security</span>
+                  </div>
+                  <span className={`text-[8px] font-extrabold px-2 py-0.5 rounded border ${
+                    selectedProfile.accessRole === 'Admin' || selectedProfile.roleType === 'Admin' || [
+                      'admin@apecpowersolutions.com',
+                      'managingdirector@apecpowersolutions.com'
+                    ].includes(selectedProfile.email?.toLowerCase())
+                      ? 'bg-cyan-950/40 text-cyan-405 border-cyan-500/25 shadow-[0_0_8px_rgba(6,182,212,0.1)]'
+                      : 'bg-slate-800 text-slate-400 border-slate-700'
+                  } font-mono`}>
+                    {selectedProfile.accessRole === 'Admin' || selectedProfile.roleType === 'Admin' || [
+                      'admin@apecpowersolutions.com',
+                      'managingdirector@apecpowersolutions.com'
+                    ].includes(selectedProfile.email?.toLowerCase()) ? 'ADMIN ACCESS' : 'STAFF ACCESS'}
+                  </span>
+                </div>
+
+                {/* Profile Avatar / Info */}
+                <div className="flex items-center gap-3">
+                  <span className={`w-12 h-12 rounded-xl bg-gradient-to-br ${
+                    selectedProfile.avatar === 'cyan' ? 'from-cyan-500/20 to-cyan-500/5 text-cyan-400 border-cyan-500/20' :
+                    selectedProfile.avatar === 'blue' ? 'from-blue-500/20 to-blue-500/5 text-blue-400 border-blue-500/20' :
+                    selectedProfile.avatar === 'red' ? 'from-rose-500/20 to-rose-550 text-rose-400 border-rose-500/20' :
+                    'from-amber-500/20 to-amber-500/5 text-amber-400 border-amber-500/20'
+                  } border flex items-center justify-center text-sm font-extrabold shadow-sm shrink-0`}>
+                    {selectedProfile.name.slice(0, 2).toUpperCase()}
+                  </span>
+                  <div className="min-w-0">
+                    <h4 className="text-sm font-bold text-slate-100 truncate">{selectedProfile.name}</h4>
+                    <p className="text-[10px] text-rose-500 font-bold truncate leading-tight">{selectedProfile.role}</p>
+                    <p className="text-[9px] text-slate-500 font-mono truncate mt-0.5">{selectedProfile.department || 'Operations'}</p>
+                  </div>
+                </div>
+
+                {/* Tag Info */}
+                <div className="flex justify-between items-end border-t border-slate-800/60 pt-2.5 font-mono text-[9px]">
+                  <div>
+                    <span className="text-slate-500 block uppercase text-[7px] tracking-wider">RFID TAG UID</span>
+                    <span className={`font-bold ${selectedProfile.nfcTagUid ? 'text-cyan-405' : 'text-slate-505'}`}>
+                      {selectedProfile.nfcTagUid || 'UNASSIGNED'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block uppercase text-[7px] tracking-wider text-right">TAG STATUS</span>
+                    <span className={`font-bold uppercase block text-right ${
+                      selectedProfile.nfcCardStatus === 'Linked' ? 'text-green-400' :
+                      selectedProfile.nfcCardStatus === 'Revoked' ? 'text-rose-500' :
+                      'text-amber-500'
+                    }`}>
+                      {selectedProfile.nfcCardStatus || 'INACTIVE'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* General details */}
+              <div className="grid grid-cols-2 gap-4 text-xs bg-slate-950/40 p-4 rounded-xl border border-slate-900/60 font-mono">
+                <div className="space-y-1">
+                  <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Department</span>
+                  <span className="text-slate-355 font-bold flex items-center gap-1.5">
+                    <Briefcase className="w-3.5 h-3.5 text-cyan-500" />
+                    {selectedProfile.department || 'Operations'}
+                  </span>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Status</span>
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                    selectedProfile.status === 'Active' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
+                    selectedProfile.status === 'Site Visit' ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' :
+                    'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                  } border`}>
+                    {selectedProfile.status || 'Active'}
+                  </span>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Email Address</span>
+                  <span className="text-slate-350 font-bold block truncate">{selectedProfile.email}</span>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Phone Number</span>
+                  <span className="text-slate-350 font-bold flex items-center gap-1.5">
+                    <Phone className="w-3.5 h-3.5 text-cyan-500" />
+                    {selectedProfile.phone || 'N/A'}
+                  </span>
+                </div>
+                <div className="space-y-1 col-span-2">
+                  <span className="text-slate-500 block uppercase tracking-wider text-[9px] border-t border-slate-900/80 pt-2 mt-1">Joined Date</span>
+                  <span className="text-slate-350 font-bold flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-cyan-500" />
+                    {selectedProfile.joinedDate ? new Date(selectedProfile.joinedDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Emergency & Medical Info */}
+              <div className="space-y-2">
+                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Emergency & Medical Info</span>
+                <div className="grid grid-cols-2 gap-4 text-xs bg-rose-955/5 p-4 rounded-xl border border-rose-500/10 font-mono">
+                  <div className="space-y-1">
+                    <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Emergency Contact</span>
+                    <span className="text-slate-200 font-bold block truncate">{selectedProfile.emergencyName || 'N/A'}</span>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Contact Phone</span>
+                    <span className="text-slate-200 font-bold block truncate">{selectedProfile.emergencyPhone || 'N/A'}</span>
+                  </div>
+                  <div className="space-y-1 col-span-2 border-t border-slate-900/60 pt-2 mt-1 flex justify-between gap-6">
+                    <div className="space-y-1">
+                      <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Blood Group</span>
+                      <span className="text-rose-405 font-bold flex items-center gap-1 text-rose-400">
+                        <span className="text-[10px]">🩸</span> {selectedProfile.bloodGroup || 'N/A'}
+                      </span>
+                    </div>
+                    <div className="space-y-1 flex-1">
+                      <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Medical Notes</span>
+                      <span className="text-slate-350 font-medium block truncate" title={selectedProfile.medicalConditions}>
+                        {selectedProfile.medicalConditions || 'None'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Skills & Certifications</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {selectedProfile.skills && selectedProfile.skills.length > 0 ? (
+                    selectedProfile.skills.map((skill: string, idx: number) => (
+                      <span key={idx} className="px-2.5 py-1 rounded bg-slate-950 border border-slate-900 text-xs text-slate-400 font-semibold flex items-center gap-1">
+                        <Award className="w-3 h-3 text-cyan-500" />
+                        {skill}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-xs text-slate-505 italic">No specialized skills/certifications listed</span>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

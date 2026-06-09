@@ -172,7 +172,10 @@ export default function Scheduling() {
           memberName: employee.name,
           projectName: dayShifts[0].projectName,
           avatar: employee.avatar || 'cyan',
-          date: currentSelectedDateStr
+          date: currentSelectedDateStr,
+          emergencyName: employee.emergencyName || 'N/A',
+          emergencyPhone: employee.emergencyPhone || 'N/A',
+          bloodGroup: employee.bloodGroup || 'N/A'
         });
         setManualTagUid('');
 
@@ -560,9 +563,27 @@ export default function Scheduling() {
                   } border flex items-center justify-center text-[10px] font-extrabold shadow-sm shrink-0`}>
                     {nfcSuccess.memberName.slice(0, 2).toUpperCase()}
                   </span>
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <h6 className="text-[10.5px] font-bold text-slate-100 truncate leading-snug">{nfcSuccess.memberName}</h6>
                     <p className="text-[8.5px] text-slate-400 truncate leading-tight mt-0.5">{nfcSuccess.projectName}</p>
+                  </div>
+                </div>
+
+                {/* Quick Safety Info overlay */}
+                <div className="grid grid-cols-2 gap-2 text-[8.5px] bg-[#12080a]/30 p-2 rounded-lg border border-rose-500/10 font-mono text-slate-450">
+                  <div>
+                    <span className="text-[7.5px] text-slate-500 block uppercase">EMERGENCY CONTACT</span>
+                    <span className="font-bold text-slate-205 block truncate text-slate-200">{nfcSuccess.emergencyName || 'N/A'}</span>
+                  </div>
+                  <div>
+                    <span className="text-[7.5px] text-slate-505 block uppercase text-right">CONTACT PHONE</span>
+                    <span className="font-bold text-slate-205 block text-right truncate text-slate-200">{nfcSuccess.emergencyPhone || 'N/A'}</span>
+                  </div>
+                  <div className="col-span-2 border-t border-slate-900/60 pt-1 mt-0.5 flex justify-between items-center">
+                    <span>BLOOD GROUP:</span>
+                    <span className="text-rose-405 font-extrabold flex items-center gap-0.5 text-rose-400">
+                      🩸 {nfcSuccess.bloodGroup || 'N/A'}
+                    </span>
                   </div>
                 </div>
               </div>
