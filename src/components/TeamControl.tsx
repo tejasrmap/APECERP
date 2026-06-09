@@ -60,13 +60,9 @@ export default function TeamControl() {
     setIsNfcScanning(true);
     setNfcScanTarget(target);
     
-    // Simulate RFID/NFC scan after 2 seconds
-    setTimeout(async () => {
-      const generatedUid = Array.from({ length: 4 }, () => 
-        Math.floor(Math.random() * 256).toString(16).padStart(2, '0').toUpperCase()
-      ).join(':');
-      const finalUid = `04:${generatedUid}`;
+    let scanAborted = false;
 
+    const handleScannedTag = async (finalUid: string) => {
       if (target === 'form') {
         setNewNfcUid(finalUid);
       } else if (target === 'profile' && selectedProfile && db) {
@@ -100,7 +96,55 @@ export default function TeamControl() {
       }
       setIsNfcScanning(false);
       setNfcScanTarget(null);
-    }, 2000);
+    };
+
+    // Attempt native physical scanning & NDEF URL write on supported mobile Chrome browsers
+    const startPhysicalScanAndWrite = async () => {
+      if ('NDEFReader' in window) {
+        try {
+          const ndef = new (window as any).NDEFReader();
+          await ndef.scan();
+          ndef.onreading = async ({ serialNumber }: any) => {
+            if (scanAborted) return;
+            scanAborted = true;
+
+            const formatted = serialNumber.includes(':') 
+              ? serialNumber.toUpperCase() 
+              : serialNumber.match(/.{1,2}/g)?.join(':').toUpperCase() || serialNumber;
+            const finalUid = formatted.toUpperCase();
+
+            try {
+              const origin = window.location.origin;
+              await ndef.write({
+                records: [{ recordType: "url", data: `${origin}/verify-tag/${finalUid}` }]
+              });
+              console.log("Written APEC verification route to tag:", `${origin}/verify-tag/${finalUid}`);
+            } catch (writeErr) {
+              console.warn("NFC Tag is write-protected or write failed: ", writeErr);
+            }
+
+            await handleScannedTag(finalUid);
+          };
+        } catch (err) {
+          console.warn("Native NFC initialization failed:", err);
+        }
+      }
+    };
+
+    startPhysicalScanAndWrite();
+
+    // Fallback simulation timer
+    setTimeout(async () => {
+      if (scanAborted) return;
+      scanAborted = true;
+      
+      const generatedUid = Array.from({ length: 4 }, () => 
+        Math.floor(Math.random() * 256).toString(16).padStart(2, '0').toUpperCase()
+      ).join(':');
+      const finalUid = `04:${generatedUid}`;
+
+      await handleScannedTag(finalUid);
+    }, 2500);
   };
 
   const handleRevokeNfc = async () => {

@@ -12,11 +12,13 @@ import TeamControl from './components/TeamControl';
 import ProtectedRoute from './components/ProtectedRoute';
 import Scheduling from './components/Scheduling';
 import Safety from './components/Safety';
+import VerifyTag from './components/VerifyTag';
 
 export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Login />} />
+      <Route path="/verify-tag/:tagUid" element={<VerifyTag />} />
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<Dashboard />}>
           <Route index element={<Overview />} />
