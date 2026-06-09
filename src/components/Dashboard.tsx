@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   LayoutDashboard, 
   Users, 
@@ -13,7 +13,9 @@ import {
   AlertTriangle,
   X,
   MessageSquare,
-  Shield
+  Shield,
+  Calendar,
+  ShieldAlert
 } from 'lucide-react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { auth, db } from '../firebase';
@@ -29,6 +31,33 @@ export default function Dashboard() {
 
   const [isAdmin, setIsAdmin] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
+
+  // Notifications State
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!db) {
+      setNotifications([
+        { id: '1', title: 'High Voltage Alert', desc: 'Transformer 3 temperature is high at Site Alpha', type: 'alert', timestamp: new Date() },
+        { id: '2', title: 'New Permit Pending', desc: 'Rahul Sharma submitted electrical safety permit', type: 'permit', timestamp: new Date(Date.now() - 3600000) },
+        { id: '3', title: 'Schedule Updated', desc: 'Your dispatch shift for Site Gamma is confirmed', type: 'schedule', timestamp: new Date(Date.now() - 7200000) }
+      ]);
+      return;
+    }
+    const unsubNotifications = onSnapshot(collection(db, 'notifications'), (snapshot) => {
+      const list = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      list.sort((a: any, b: any) => {
+        const tA = a.timestamp?.seconds || (a.timestamp instanceof Date ? a.timestamp.getTime() : 0) || 0;
+        const tB = b.timestamp?.seconds || (b.timestamp instanceof Date ? b.timestamp.getTime() : 0) || 0;
+        return tB - tA;
+      });
+      setNotifications(list.slice(0, 8)); // Keep top 8
+    }, (err) => {
+      console.error('Notifications listener error:', err);
+    });
+    return () => unsubNotifications();
+  }, []);
 
   useEffect(() => {
     if (!auth) {
@@ -98,6 +127,8 @@ export default function Dashboard() {
     { name: 'Dashboard', icon: LayoutDashboard },
     { name: 'Inventory', icon: Package },
     { name: 'Projects', icon: Activity },
+    { name: 'Scheduling', icon: Calendar },
+    { name: 'Safety', icon: ShieldAlert },
     { name: 'Workforce', icon: Users },
     { name: 'Settings', icon: Settings },
     ...(isAdmin ? [{ name: 'Team Control', icon: Shield }] : [])
@@ -108,6 +139,8 @@ export default function Dashboard() {
     const path = location.pathname;
     if (path === '/dashboard/inventory') return 'Inventory';
     if (path === '/dashboard/projects') return 'Projects';
+    if (path === '/dashboard/scheduling') return 'Scheduling';
+    if (path === '/dashboard/safety') return 'Safety';
     if (path === '/dashboard/workforce') return 'Workforce';
     if (path === '/dashboard/settings') return 'Settings';
     if (path === '/dashboard/team-control') return 'Team Control';
@@ -239,10 +272,64 @@ export default function Dashboard() {
                 className="bg-slate-900/80 border border-slate-800 rounded-full py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 w-48 lg:w-64 placeholder:text-slate-500 transition-all text-slate-100 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
               />
             </div>
-            <button className="relative p-2 rounded-full hover:bg-slate-800 transition-colors border border-transparent hover:border-slate-700">
-              <Bell className="w-5 h-5 text-slate-400 hover:text-slate-250" />
-              <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-rose-500 border-2 border-slate-900"></span>
-            </button>
+            <div className="relative">
+              <button 
+                onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                className={`relative p-2 rounded-full transition-colors border ${isNotificationsOpen ? 'bg-slate-800/80 border-slate-705 text-cyan-400' : 'hover:bg-slate-800 border-transparent hover:border-slate-700 text-slate-400 hover:text-slate-250'}`}
+              >
+                <Bell className="w-5 h-5" />
+                {notifications.length > 0 && (
+                  <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-rose-500 border-2 border-slate-900"></span>
+                )}
+              </button>
+              
+              <AnimatePresence>
+                {isNotificationsOpen && (
+                  <>
+                    <div className="fixed inset-0 z-30" onClick={() => setIsNotificationsOpen(false)} />
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 mt-2 w-80 glass-card p-4 rounded-2xl shadow-2xl z-40 border border-white/10 space-y-3 max-h-96 overflow-y-auto"
+                    >
+                      <div className="flex justify-between items-center pb-2 border-b border-slate-800">
+                        <span className="text-xs font-bold text-slate-100 uppercase tracking-wider">Control Room Alerts</span>
+                        <button 
+                          onClick={() => setNotifications([])}
+                          className="text-[10px] text-slate-500 hover:text-rose-450 transition-colors"
+                        >
+                          Clear All
+                        </button>
+                      </div>
+                      
+                      {notifications.length === 0 ? (
+                        <div className="py-8 text-center text-slate-550 text-xs">
+                          No active notifications.
+                        </div>
+                      ) : (
+                        <div className="space-y-2.5">
+                          {notifications.map((n) => (
+                            <div key={n.id} className="p-2.5 rounded-xl bg-slate-955/40 border border-slate-900/60 hover:border-slate-800 transition-all text-xs flex gap-2">
+                              <span className={`w-2 h-2 rounded-full shrink-0 mt-1.5 ${
+                                n.type === 'alert' ? 'bg-rose-500 animate-pulse' :
+                                n.type === 'permit' ? 'bg-cyan-500' :
+                                'bg-green-500'
+                              }`} />
+                              <div>
+                                <h5 className="font-bold text-slate-200">{n.title}</h5>
+                                <p className="text-slate-400 mt-0.5 text-[11px] leading-relaxed">{n.desc}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </header>
 

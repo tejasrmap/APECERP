@@ -10,6 +10,8 @@ import Chat from './components/Chat';
 import Settings from './components/Settings';
 import TeamControl from './components/TeamControl';
 import ProtectedRoute from './components/ProtectedRoute';
+import Scheduling from './components/Scheduling';
+import Safety from './components/Safety';
 
 export default function App() {
   return (
@@ -24,6 +26,8 @@ export default function App() {
           <Route path="workforce" element={<Chat />} />
           <Route path="settings" element={<Settings />} />
           <Route path="team-control" element={<TeamControl />} />
+          <Route path="scheduling" element={<Scheduling />} />
+          <Route path="safety" element={<Safety />} />
         </Route>
       </Route>
     </Routes>

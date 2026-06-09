@@ -7,7 +7,9 @@ import {
   TrendingUp, 
   Package, 
   Settings,
-  Loader2
+  Loader2,
+  Download,
+  FileText
 } from 'lucide-react';
 import { collection, onSnapshot, query, Timestamp } from 'firebase/firestore';
 import { useOutletContext } from 'react-router-dom';
@@ -23,6 +25,64 @@ export default function Overview() {
 
   const [activeProjectsCount, setActiveProjectsCount] = useState(0);
   const [pendingAlertsCount, setPendingAlertsCount] = useState(0);
+
+  // IoT Telemetry State
+  const [telemetry, setTelemetry] = useState({
+    voltage: 415.2,
+    current: 124.8,
+    frequency: 50.02,
+    solarOutput: 45.6,
+    batteryTemp: 28.4,
+    gridEfficiency: 94.2
+  });
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTelemetry(prev => ({
+        voltage: parseFloat((415 + Math.random() * 3).toFixed(1)),
+        current: parseFloat((120 + Math.random() * 10).toFixed(1)),
+        frequency: parseFloat((50 + Math.random() * 0.1 - 0.05).toFixed(2)),
+        solarOutput: parseFloat((40 + Math.random() * 12).toFixed(1)),
+        batteryTemp: parseFloat((27 + Math.random() * 3).toFixed(1)),
+        gridEfficiency: parseFloat((93 + Math.random() * 2).toFixed(1))
+      }));
+    }, 2500);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Reports Exporter logic
+  const handleExport = (format: 'pdf' | 'csv') => {
+    if (format === 'csv') {
+      let csvContent = "data:text/csv;charset=utf-8,";
+      csvContent += "Type,Name/Title,Detail,Status\n";
+      
+      // Projects
+      projectsList.forEach(p => {
+        csvContent += `Project,"${p.name}","Site: ${p.site} | Manager: ${p.manager}",${p.status}\n`;
+      });
+      
+      // Tasks
+      tasksList.forEach(t => {
+        csvContent += `Task,"${t.title}","${t.desc || ''}",${t.status}\n`;
+      });
+      
+      // Activities
+      activitiesList.forEach(a => {
+        csvContent += `Activity,"${a.title}","${a.desc}",${a.time}\n`;
+      });
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `APEC_Operations_Report_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      // PDF print view trigger
+      window.print();
+    }
+  };
   const [completedTasksCount, setCompletedTasksCount] = useState(0);
 
   const [loadedCollections, setLoadedCollections] = useState<{ [key: string]: boolean }>({
@@ -182,31 +242,55 @@ export default function Overview() {
     <motion.div 
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="space-y-6 lg:space-y-8 pb-10"
+      className="space-y-6 lg:space-y-8 pb-10 print:p-0"
     >
+      {/* Overview Top Header & Report Exporter controls */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 lg:p-6 rounded-2xl glass-card border border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.3)] print:border-none print:shadow-none print:bg-transparent">
+        <div>
+          <h2 className="text-xl font-bold text-slate-100 print:text-slate-900">APEC Operations Terminal</h2>
+          <p className="text-xs text-slate-400 mt-0.5 print:text-slate-600">Operational overview and analytics control dashboard</p>
+        </div>
+        <div className="flex items-center gap-2 self-stretch sm:self-auto print:hidden">
+          <button 
+            onClick={() => handleExport('csv')}
+            className="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-slate-100 hover:border-slate-700 text-xs font-semibold transition-all flex items-center justify-center gap-1.5"
+          >
+            <Download className="w-4 h-4" />
+            Export CSV
+          </button>
+          <button 
+            onClick={() => handleExport('pdf')}
+            className="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-955 text-xs font-bold transition-all shadow-[0_4px_12px_rgba(6,182,212,0.15)] hover:shadow-lg flex items-center justify-center gap-1.5"
+          >
+            <FileText className="w-4 h-4" />
+            Generate PDF Report
+          </button>
+        </div>
+      </div>
+
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 print:grid-cols-4">
         {stats.map((stat, idx) => (
-          <div key={idx} className="p-5 lg:p-6 rounded-2xl glass-card flex items-center justify-between group hover:border-white/15 hover:-translate-y-0.5 transition-all duration-300">
+          <div key={idx} className="p-5 lg:p-6 rounded-2xl glass-card flex items-center justify-between group hover:border-white/15 hover:-translate-y-0.5 transition-all duration-300 print:border-slate-200 print:bg-slate-50 print:text-slate-900">
             <div>
-              <p className="text-xs lg:text-sm font-medium text-slate-400 mb-1">{stat.title}</p>
-              <h3 className="text-2xl lg:text-3xl font-bold text-slate-100 tracking-tight">{stat.value}</h3>
+              <p className="text-xs lg:text-sm font-medium text-slate-400 mb-1 print:text-slate-500">{stat.title}</p>
+              <h3 className="text-2xl lg:text-3xl font-bold text-slate-100 tracking-tight print:text-slate-900">{stat.value}</h3>
             </div>
-            <div className={`w-12 h-12 rounded-xl ${stat.bg} ${stat.border} border flex items-center justify-center transition-transform group-hover:scale-110 shadow-sm`}>
-              <stat.icon className={`w-6 h-6 ${stat.color}`} />
+            <div className={`w-12 h-12 rounded-xl ${stat.bg} ${stat.border} border flex items-center justify-center transition-transform group-hover:scale-110 shadow-sm print:bg-slate-100 print:border-slate-200`}>
+              <stat.icon className={`w-6 h-6 ${stat.color} print:text-slate-700`} />
             </div>
           </div>
         ))}
       </div>
 
       {/* Split layouts */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 print:grid-cols-3">
         {/* Chart */}
-        <div className="xl:col-span-2 p-5 lg:p-6 rounded-2xl glass-card flex flex-col min-h-[350px] lg:min-h-[400px]">
+        <div className="xl:col-span-2 p-5 lg:p-6 rounded-2xl glass-card flex flex-col min-h-[350px] lg:min-h-[400px] print:border-slate-200 print:bg-slate-50">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h3 className="text-lg font-semibold text-slate-100">Project Analytics</h3>
-              <p className="text-xs text-slate-400 mt-0.5">Monthly workflow distribution</p>
+              <h3 className="text-lg font-semibold text-slate-100 print:text-slate-900">Project Analytics</h3>
+              <p className="text-xs text-slate-400 mt-0.5 print:text-slate-500">Monthly workflow distribution</p>
             </div>
           </div>
           {projectsList.length === 0 ? (
@@ -216,21 +300,21 @@ export default function Overview() {
               <p className="text-xs text-slate-500 mt-1">Please populate database in Settings or Projects tab.</p>
             </div>
           ) : (
-            <div className="flex-1 overflow-x-auto pb-2">
-              <div className="flex items-end gap-1.5 sm:gap-2 pb-6 pt-4 px-1 lg:px-4 h-full min-w-[480px] sm:min-w-0 border-b border-slate-800 relative">
+            <div className="flex-1 overflow-x-auto pb-2 print:overflow-visible">
+              <div className="flex items-end gap-1.5 sm:gap-2 pb-6 pt-4 px-1 lg:px-4 h-full min-w-[480px] sm:min-w-0 border-b border-slate-800 relative print:border-slate-200 print:min-w-0">
                 <div className="absolute inset-0 flex flex-col justify-between pointer-events-none pb-6">
                   {[100, 75, 50, 25, 0].map(val => (
-                     <div key={val} className="w-full border-t border-slate-800/40 flex items-center" />
+                     <div key={val} className="w-full border-t border-slate-800/40 print:border-slate-200/50 flex items-center" />
                   ))}
                 </div>
                 {[40, 70, 45, 90, 65, 85, 100, 50, 75, 60, 30, 80].map((h, i) => (
                   <div key={i} className="flex-1 flex flex-col justify-end group h-full relative z-10">
                     <div 
-                      className="w-full bg-gradient-to-t from-cyan-500/20 to-cyan-500 group-hover:from-cyan-500/40 group-hover:to-cyan-405 rounded-t-lg transition-all duration-300 shadow-[0_0_15px_rgba(6,182,212,0.15)] relative border border-white/10"
+                      className="w-full bg-gradient-to-t from-cyan-500/20 to-cyan-500 group-hover:from-cyan-500/40 group-hover:to-cyan-405 rounded-t-lg transition-all duration-300 shadow-[0_0_15px_rgba(6,182,212,0.15)] relative border border-white/10 print:bg-slate-300 print:border-slate-400 print:shadow-none"
                       style={{ height: `${h}%` }}
                     >
                     </div>
-                    <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[9px] text-slate-500 uppercase font-mono">{['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][i]}</span>
+                    <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[9px] text-slate-500 uppercase font-mono print:text-slate-700">{['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][i]}</span>
                   </div>
                 ))}
               </div>
@@ -239,8 +323,8 @@ export default function Overview() {
         </div>
 
         {/* Recent Activity */}
-        <div className="p-5 lg:p-6 rounded-2xl glass-card flex flex-col min-h-[350px]">
-          <h3 className="text-lg font-semibold text-slate-100 mb-6">Recent Activity</h3>
+        <div className="p-5 lg:p-6 rounded-2xl glass-card flex flex-col min-h-[350px] print:border-slate-200 print:bg-slate-50">
+          <h3 className="text-lg font-semibold text-slate-100 print:text-slate-900 mb-6">Recent Activity</h3>
           {activitiesList.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center">
               <Package className="w-12 h-12 text-slate-700 mb-2" />
@@ -248,25 +332,62 @@ export default function Overview() {
               <p className="text-xs text-slate-500 mt-1">Actions on database will be logged here.</p>
             </div>
           ) : (
-            <div className="space-y-6 flex-1 overflow-y-auto max-h-[300px] pr-1 scrollbar-thin">
+            <div className="space-y-6 flex-1 overflow-y-auto max-h-[300px] pr-1 scrollbar-thin print:max-h-none print:overflow-visible">
               {activitiesList.slice(0, 5).map((item, i) => {
                 const iconData = getActivityIcon(item.type);
                 const Icon = iconData.icon;
                 return (
-                  <div key={item.id || i} className="flex items-start gap-4 group">
-                    <div className={`w-10 h-10 rounded-full ${iconData.bg} border ${iconData.border} flex items-center justify-center shrink-0 shadow-sm`}>
-                      <Icon className={`w-4 h-4 ${iconData.color}`} />
+                  <div key={item.id || i} className="flex items-start gap-4 group print:text-slate-900">
+                    <div className={`w-10 h-10 rounded-full ${iconData.bg} border ${iconData.border} flex items-center justify-center shrink-0 shadow-sm print:bg-slate-100 print:border-slate-200`}>
+                      <Icon className={`w-4 h-4 ${iconData.color} print:text-slate-700`} />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-slate-200 group-hover:text-slate-50 truncate transition-colors">{item.title}</p>
-                      <p className="text-xs text-slate-400 truncate mt-0.5">{item.desc}</p>
-                      <p className="text-[10px] text-slate-500 mt-1 font-medium">{item.time}</p>
+                      <p className="text-sm font-semibold text-slate-200 group-hover:text-slate-50 truncate transition-colors print:text-slate-900">{item.title}</p>
+                      <p className="text-xs text-slate-400 truncate mt-0.5 print:text-slate-600">{item.desc}</p>
+                      <p className="text-[10px] text-slate-500 mt-1 font-medium print:text-slate-500">{item.time}</p>
                     </div>
                   </div>
                 );
               })}
             </div>
           )}
+        </div>
+      </div>
+
+      {/* IoT Telemetry Grid */}
+      <div className="p-5 lg:p-6 rounded-2xl glass-card relative overflow-hidden border border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.3)] print:border-slate-200 print:bg-slate-50">
+        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 to-transparent pointer-events-none print:hidden" />
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h3 className="text-lg font-semibold text-slate-100 flex items-center gap-2 print:text-slate-900">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping print:hidden" />
+              Live Telemetry Grid (APEC Power Assets)
+            </h3>
+            <p className="text-xs text-slate-400 mt-0.5 print:text-slate-500">Real-time substation and inverter performance metrics</p>
+          </div>
+          <span className="text-[10px] bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2 py-0.5 rounded font-mono uppercase tracking-wider print:hidden">
+            Active Feed
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 print:grid-cols-3">
+          {[
+            { label: 'Substation Voltage', value: `${telemetry.voltage} V`, change: 'Normal Range', color: 'text-cyan-400' },
+            { label: 'Substation Load', value: `${telemetry.current} A`, change: 'Optimal Peak', color: 'text-amber-400' },
+            { label: 'Grid Frequency', value: `${telemetry.frequency} Hz`, change: 'Stable', color: 'text-emerald-400' },
+            { label: 'Solar Output', value: `${telemetry.solarOutput} kW`, change: 'Peak Sun', color: 'text-yellow-400' },
+            { label: 'Battery Core Temp', value: `${telemetry.batteryTemp} °C`, change: 'Nominal', color: 'text-teal-400' },
+            { label: 'Inverter Efficiency', value: `${telemetry.gridEfficiency} %`, change: '+0.4% Dev', color: 'text-cyan-400' },
+          ].map((item, idx) => (
+            <div key={idx} className="p-4 bg-slate-950/45 rounded-xl border border-slate-900/60 flex flex-col justify-between hover:border-slate-800 transition-colors print:border-slate-200 print:bg-white">
+              <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">{item.label}</span>
+              <span className={`text-xl font-bold my-1 tracking-tight ${item.color} print:text-slate-900`}>{item.value}</span>
+              <span className="text-[9px] text-slate-400 font-mono flex items-center gap-1 print:text-slate-550">
+                <span className="w-1 h-1 rounded-full bg-slate-450" />
+                {item.change}
+              </span>
+            </div>
+          ))}
         </div>
       </div>
     </motion.div>
