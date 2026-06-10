@@ -25,6 +25,7 @@ export default function ProfileView() {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'pass' | 'contact' | 'medical'>('pass');
 
   useEffect(() => {
     if (!id) { setLoading(false); return; }
@@ -196,12 +197,33 @@ export default function ProfileView() {
 
       {/* ─── PROFILE ─── */}
       {!loading && profile && (
-        <div className="relative z-10 max-w-4xl mx-auto px-4 py-12">
+        <div className="relative z-10 max-w-5xl mx-auto px-4 py-12">
           
+          {/* Mobile Segmented Navigation */}
+          <div className="flex md:hidden p-1 bg-slate-900/80 border border-slate-800 rounded-xl mb-6 select-none">
+            {[
+              { id: 'pass', label: 'Pass' },
+              { id: 'contact', label: 'Contact Info' },
+              { id: 'medical', label: 'Medical & Skills' },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`flex-1 text-center py-2.5 rounded-lg text-xs font-bold transition-all ${
+                  activeTab === tab.id
+                    ? 'bg-[#DC2626] text-white shadow-sm'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
             
             {/* ── LEFT COLUMN (ID Card & Direct Actions) ── */}
-            <div className="md:col-span-5 space-y-6">
+            <div className={`md:col-span-5 space-y-6 ${activeTab === 'pass' ? 'block' : 'hidden md:block'}`}>
               
               {/* HERO ID CARD */}
               <motion.div
@@ -230,58 +252,79 @@ export default function ProfileView() {
                 </div>
 
                 {/* Profile info area */}
-                <div className="px-8 pb-8 pt-8">
-                  {/* Avatar — overlapping the banner */}
-                  <div className="flex items-center gap-6 mb-6">
-                    <div className="relative shrink-0 -mt-14">
-                      {profile.photoUrl ? (
-                        <img
-                          src={profile.photoUrl}
-                          alt={profile.name}
-                          className="w-28 h-28 rounded-2xl object-cover border-4 border-[#1E293B] shadow-md"
-                        />
-                      ) : (
-                        <div className={`w-28 h-28 rounded-2xl bg-gradient-to-br ${avatarGrad} border-4 border-[#1E293B] flex items-center justify-center text-3xl font-bold text-white shadow-md`}>
-                          {profile.name.slice(0, 2).toUpperCase()}
-                        </div>
-                      )}
-                      {/* Status dot */}
-                      <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[#1E293B] ${profile.status === 'Active' ? 'bg-emerald-500' : profile.status === 'Site Visit' ? 'bg-cyan-500' : 'bg-amber-500'}`} />
-                    </div>
-                    
-                    <div className="mb-0.5 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h1 className="text-lg font-bold text-slate-100 leading-tight">{profile.name}</h1>
-                        {isAdmin && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-slate-400 text-[9px] font-bold uppercase tracking-wider">
-                            Admin
-                          </span>
-                        )}
+                <div className="px-8 pb-8 pt-8 flex flex-col items-center text-center">
+                  {/* Avatar — centered and overlapping the banner */}
+                  <div className="relative shrink-0 -mt-20 inline-block">
+                    {profile.photoUrl ? (
+                      <img
+                        src={profile.photoUrl}
+                        alt={profile.name}
+                        className="w-32 h-32 rounded-2xl object-cover border-4 border-[#1E293B] shadow-md"
+                      />
+                    ) : (
+                      <div className={`w-32 h-32 rounded-2xl bg-gradient-to-br ${avatarGrad} border-4 border-[#1E293B] flex items-center justify-center text-3xl font-bold text-white shadow-md`}>
+                        {profile.name.slice(0, 2).toUpperCase()}
                       </div>
-                      <p className="text-xs text-[#DC2626] font-bold mt-0.5 uppercase tracking-wide">{profile.role || 'Staff Member'}</p>
-                      <div className="flex items-center gap-1.5 mt-1 text-slate-400">
-                        <Briefcase className="w-3.5 h-3.5 shrink-0" />
-                        <span className="text-xs font-medium">{profile.department || 'Operations'}</span>
-                      </div>
-                    </div>
+                    )}
+                    {/* Status dot */}
+                    <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[#1E293B] ${profile.status === 'Active' ? 'bg-emerald-500' : profile.status === 'Site Visit' ? 'bg-cyan-500' : 'bg-amber-500'}`} />
+                  </div>
+                  
+                  <div className="h-4" />
+                  <h1 className="text-xl font-bold text-slate-100 leading-tight mt-1">{profile.name}</h1>
+                  
+                  <div className="flex flex-col items-center mt-1.5 gap-1.5">
+                    <p className="text-xs text-[#DC2626] font-bold uppercase tracking-wider">{profile.role || 'Staff Member'}</p>
+                    {isAdmin && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-400 text-[9px] font-bold uppercase tracking-wider">
+                        Admin
+                      </span>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center gap-1.5 mt-2.5 text-slate-400">
+                    <Briefcase className="w-3.5 h-3.5 shrink-0" />
+                    <span className="text-xs font-medium">{profile.department || 'Operations'}</span>
                   </div>
 
-                  <hr className="border-slate-800 my-6" />
+                  <hr className="border-slate-800 w-full my-6" />
 
                   {/* Employee ID + Status row */}
-                  <div className="flex items-center justify-between flex-wrap gap-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Employee ID:</span>
-                      <span className="font-mono text-xs font-bold text-slate-300 bg-slate-900/50 border border-slate-800 px-2.5 py-0.5 rounded-lg">{profile.employeeId || 'APEC-MEMBER'}</span>
+                  <div className="grid grid-cols-2 gap-4 w-full text-left">
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold block">Employee ID</span>
+                      <span className="font-mono text-xs font-bold text-slate-350 bg-slate-950/80 border border-slate-800 px-2.5 py-1.5 rounded-lg block text-center select-all">{profile.employeeId || 'APEC-MEMBER'}</span>
                     </div>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
-                      profile.status === 'Active' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                      profile.status === 'Site Visit' ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' :
-                      'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                    }`}>
-                      {profile.status || 'Active'}
-                    </span>
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold block">Registry Status</span>
+                      <span className={`inline-flex w-full justify-center items-center py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${
+                        profile.status === 'Active' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                        profile.status === 'Site Visit' ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' :
+                        'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                      }`}>
+                        {profile.status || 'Active'}
+                      </span>
+                    </div>
                   </div>
+
+                  <hr className="border-slate-800 w-full my-6" />
+
+                  {/* Mock Barcode Visual */}
+                  <div className="flex flex-col items-center gap-1.5 select-none opacity-80 hover:opacity-100 transition-opacity w-full">
+                    <div className="flex items-center gap-[1.5px] h-8 bg-white/5 p-1 rounded w-full justify-center">
+                      {[
+                        1, 3, 1, 2, 4, 1, 2, 1, 3, 2, 1, 4, 1, 2, 3, 1, 2, 1, 4, 2, 1, 3, 1, 2, 1
+                      ].map((width, idx) => (
+                        <div
+                          key={idx}
+                          className="bg-slate-400 h-full rounded-[0.5px]"
+                          style={{ width: `${width}px` }}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-[8px] font-mono text-slate-500 tracking-[0.25em]">APEC-{profile.employeeId || 'MEMBER'}-SECURE</span>
+                  </div>
+
                 </div>
               </motion.div>
 
@@ -306,21 +349,21 @@ export default function ProfileView() {
                 transition={{ duration: 0.4, delay: 0.15 }}
                 className="bg-[#1E293B]/40 border border-slate-800/60 rounded-xl p-4 flex items-center justify-center gap-2.5 text-slate-400 font-mono text-[9px] uppercase tracking-widest"
               >
-                <Shield className="w-4 h-4 text-slate-500 shrink-0" />
+                <Shield className="w-4 h-4 text-slate-505 shrink-0" />
                 <span>Secure Record · APEC Registry Verified</span>
               </motion.div>
 
             </div>
 
             {/* ── RIGHT COLUMN (Credentials & Detailed Information) ── */}
-            <div className="md:col-span-7 space-y-6">
+            <div className={`md:col-span-7 space-y-6 ${activeTab !== 'pass' ? 'block' : 'hidden md:block'}`}>
               
               {/* INFO GRID */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, delay: 0.05 }}
-                className="grid grid-cols-2 gap-4"
+                className={`grid grid-cols-2 gap-4 ${activeTab === 'contact' ? 'grid' : 'hidden md:grid'}`}
               >
                 {[
                   { icon: Phone, label: 'Contact Phone', value: profile.phone || 'N/A' },
@@ -346,7 +389,7 @@ export default function ProfileView() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.35, delay: 0.1 }}
-                  className="bg-[#1E293B] border border-slate-800 rounded-xl p-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300"
+                  className={`bg-[#1E293B] border border-slate-800 rounded-xl p-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300 ${activeTab === 'contact' ? 'block' : 'hidden md:block'}`}
                 >
                   <div className="flex items-center gap-2 border-b border-slate-805 pb-2.5">
                     <Award className="w-4 h-4 text-[#DC2626]" />
@@ -368,7 +411,7 @@ export default function ProfileView() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, delay: 0.15 }}
-                className="bg-[#1E293B] rounded-xl overflow-hidden border border-red-950/40 shadow-sm hover:shadow-md transition-all duration-300"
+                className={`bg-[#1E293B] rounded-xl overflow-hidden border border-red-950/40 shadow-sm hover:shadow-md transition-all duration-300 ${activeTab === 'medical' ? 'block' : 'hidden md:block'}`}
               >
                 {/* Header */}
                 <div className="flex items-center gap-2 px-5 py-3.5 bg-red-950/20 border-b border-red-950/40">
@@ -411,7 +454,6 @@ export default function ProfileView() {
               <span className="text-[10px] font-medium uppercase tracking-wider">APEC Power Solutions Pvt. Ltd. · Employee Registry</span>
             </div>
           </motion.div>
-
         </div>
       )}
     </div>
