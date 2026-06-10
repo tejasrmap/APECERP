@@ -152,20 +152,7 @@ export default function ProfileView() {
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80vw] h-[40vh] rounded-full bg-cyan-500/5 blur-[140px] pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-[50vw] h-[40vh] rounded-full bg-rose-500/4 blur-[120px] pointer-events-none" />
 
-      {/* Top bar */}
-      <div className="relative z-10 flex items-center justify-between px-6 py-4 border-b border-white/5 backdrop-blur-sm bg-black/20">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center shadow-[0_0_12px_rgba(6,182,212,0.4)]">
-            <Shield className="w-4 h-4 text-white" />
-          </div>
-          <span className="text-sm font-extrabold tracking-tight text-slate-100">APEC <span className="text-cyan-400">ERP</span></span>
-        </div>
-        <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Employee Identity Portal</span>
-        <Link to="/" className="inline-flex items-center gap-1.5 text-[10px] text-slate-500 hover:text-cyan-400 transition-colors font-mono uppercase tracking-wider">
-          <ArrowLeft className="w-3.5 h-3.5" />
-          Portal
-        </Link>
-      </div>
+
 
       {/* ─── LOADING STATE ─── */}
       {loading && (
@@ -392,15 +379,12 @@ export default function ProfileView() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.4, delay: 0.3 }}
-            className="flex items-center justify-between pt-2 pb-4"
+            className="flex items-center justify-center pt-2 pb-4"
           >
             <div className="flex items-center gap-1.5">
               <User className="w-3 h-3 text-slate-600" />
               <span className="text-[9px] text-slate-600 font-mono uppercase tracking-wider">APEC Company ID · {profile.employeeId}</span>
             </div>
-            <Link to="/" className="inline-flex items-center gap-1 text-[9px] text-slate-600 hover:text-cyan-400 transition-colors font-mono uppercase tracking-wider">
-              <ArrowLeft className="w-3 h-3" /> Portal
-            </Link>
           </motion.div>
 
         </div>
