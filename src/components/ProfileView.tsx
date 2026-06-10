@@ -19,6 +19,7 @@ import {
   BadgeCheck
 } from 'lucide-react';
 import { db } from '../firebase';
+import ImageViewerModal from './ImageViewerModal';
 
 export default function ProfileView() {
   const { id } = useParams<{ id: string }>();
@@ -26,6 +27,7 @@ export default function ProfileView() {
   const [profile, setProfile] = useState<any | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'pass' | 'contact' | 'medical'>('pass');
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
   useEffect(() => {
     if (!id) { setLoading(false); return; }
@@ -259,7 +261,9 @@ export default function ProfileView() {
                       <img
                         src={profile.photoUrl}
                         alt={profile.name}
-                        className="w-32 h-32 rounded-2xl object-cover border-4 border-[#1E293B] shadow-md"
+                        className="w-32 h-32 rounded-2xl object-cover border-4 border-[#1E293B] shadow-md cursor-pointer hover:ring-2 hover:ring-[#DC2626] transition-all hover:scale-[1.03] active:scale-[0.98]"
+                        onClick={() => setIsImageModalOpen(true)}
+                        title="Click to view full photo"
                       />
                     ) : (
                       <div className={`w-32 h-32 rounded-2xl bg-gradient-to-br ${avatarGrad} border-4 border-[#1E293B] flex items-center justify-center text-3xl font-bold text-white shadow-md`}>
@@ -454,6 +458,17 @@ export default function ProfileView() {
               <span className="text-[10px] font-medium uppercase tracking-wider">APEC Power Solutions Pvt. Ltd. · Employee Registry</span>
             </div>
           </motion.div>
+
+          {/* Image Zoom Modal */}
+          {profile.photoUrl && (
+            <ImageViewerModal
+              isOpen={isImageModalOpen}
+              onClose={() => setIsImageModalOpen(false)}
+              imageUrl={profile.photoUrl}
+              imageName={`${profile.name}'s Profile Photo`}
+            />
+          )}
+
         </div>
       )}
     </div>
