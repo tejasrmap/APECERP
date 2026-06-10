@@ -141,16 +141,22 @@ export default function ProfileView() {
   const avatarGrad = profile ? (avatarGradients[profile.avatar || 'cyan'] || avatarGradients.cyan) : avatarGradients.cyan;
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] text-slate-800 relative overflow-hidden font-sans pb-12">
-      {/* Abstract clean grid background with fading mask */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:3rem_3rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-[0.5] pointer-events-none" />
-
-      {/* Faint, elegant corporate gradient washes (soft studio back-lighting) */}
-      <div className="absolute top-0 right-[-10%] w-[50vw] h-[50vh] rounded-full bg-[#DC2626]/3 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-10%] left-[-10%] w-[50vw] h-[50vh] rounded-full bg-[#070C16]/5 blur-[150px] pointer-events-none" />
-      
-      {/* Minimalist fine border divider overlay in background */}
-      <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-[1px] bg-slate-200/40 pointer-events-none hidden md:block" />
+    <div className="min-h-screen bg-[#070C16] text-slate-800 relative overflow-hidden font-sans pb-12">
+      {/* Real Power Grid background overlay matching the company's branding */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <img 
+          src="https://images.unsplash.com/photo-1473625247510-8ceb1760e4ec?auto=format&fit=crop&q=80" 
+          alt="Power Grid" 
+          className="w-full h-full object-cover opacity-[0.05] mix-blend-luminosity grayscale"
+          referrerPolicy="no-referrer"
+        />
+        {/* Soft, professional brand color washes */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(220,38,38,0.04),transparent_60%)]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#070C16]/60 to-[#070C16]" />
+        
+        {/* Subtle architectural lines for a professional structure */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.015)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.015)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-70" />
+      </div>
 
       {/* ─── LOADING STATE ─── */}
       {loading && (
