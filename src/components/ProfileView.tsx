@@ -235,7 +235,7 @@ export default function ProfileView() {
                 className="bg-[#1E293B] rounded-2xl border border-slate-805 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300"
               >
                 {/* Solid corporate header banner */}
-                <div className="h-24 bg-[#070C16] relative flex items-center justify-between px-6">
+                <div className="h-32 bg-[#070C16] relative flex items-center justify-between px-6">
                   {/* Left branding logo */}
                   <div className="flex items-center gap-2.5">
                     <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center p-0.5 overflow-hidden border border-slate-800 shrink-0">
@@ -256,7 +256,7 @@ export default function ProfileView() {
                 {/* Profile info area */}
                 <div className="px-8 pb-8 pt-8 flex flex-col items-center text-center">
                   {/* Avatar — centered and overlapping the banner */}
-                  <div className="relative shrink-0 -mt-20 inline-block">
+                  <div className="relative shrink-0 -mt-16 inline-block">
                     {profile.photoUrl ? (
                       <img
                         src={profile.photoUrl}
