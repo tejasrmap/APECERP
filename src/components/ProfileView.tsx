@@ -24,6 +24,7 @@ export default function ProfileView() {
   const { id } = useParams<{ id: string }>();
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) { setLoading(false); return; }
@@ -54,25 +55,76 @@ export default function ProfileView() {
       return;
     }
 
-    if (!db) { setLoading(false); return; }
+    if (!db) {
+      setError("Firebase Firestore is not initialized. Please verify that your environment variables (VITE_FIREBASE_*) are configured correctly.");
+      setLoading(false);
+      return;
+    }
 
+    setError(null);
+    let unsubDoc: (() => void) | null = null;
+
+    // Fetch via employeeId query first
     const qEmp = query(collection(db, 'team'), where('employeeId', '==', cleanedId));
-    const unsub = onSnapshot(qEmp, (snapshot) => {
+    const unsubQuery = onSnapshot(qEmp, (snapshot) => {
       if (!snapshot.empty) {
         setProfile({ id: snapshot.docs[0].id, ...snapshot.docs[0].data() });
         setLoading(false);
       } else {
+        // Fallback to doc ID lookup
         try {
           const docRef = doc(db, 'team', cleanedId);
-          onSnapshot(docRef, (docSnapshot) => {
-            setProfile(docSnapshot.exists() ? { id: docSnapshot.id, ...docSnapshot.data() } : null);
+          unsubDoc = onSnapshot(docRef, (docSnapshot) => {
+            if (docSnapshot.exists()) {
+              setProfile({ id: docSnapshot.id, ...docSnapshot.data() });
+            } else {
+              setProfile(null);
+            }
             setLoading(false);
-          }, () => { setProfile(null); setLoading(false); });
-        } catch { setProfile(null); setLoading(false); }
+          }, (docErr) => {
+            console.error("Direct doc ID fetch error:", docErr);
+            setProfile(null);
+            setLoading(false);
+          });
+        } catch (err) {
+          console.error("Direct doc ID fetch catch block error:", err);
+          setProfile(null);
+          setLoading(false);
+        }
       }
-    }, () => { setProfile(null); setLoading(false); });
+    }, (queryErr) => {
+      console.error("Query by employeeId failed:", queryErr);
+      setError(`Firestore Query Error: ${queryErr.message || queryErr.code || queryErr}`);
+      
+      // Fallback to direct doc ID lookup in case of query permission-denied
+      try {
+        console.log("Attempting direct doc ID lookup fallback for ID:", cleanedId);
+        const docRef = doc(db, 'team', cleanedId);
+        unsubDoc = onSnapshot(docRef, (docSnapshot) => {
+          if (docSnapshot.exists()) {
+            setProfile({ id: docSnapshot.id, ...docSnapshot.data() });
+            setError(null); // Clear query error since fallback succeeded
+          } else {
+            setProfile(null);
+          }
+          setLoading(false);
+        }, (docErr) => {
+          console.error("Fallback direct doc ID fetch error:", docErr);
+          setError(`Query failed: ${queryErr.message}. Fallback doc fetch failed: ${docErr.message}`);
+          setProfile(null);
+          setLoading(false);
+        });
+      } catch (err: any) {
+        console.error("Fallback direct doc ID fetch catch block error:", err);
+        setProfile(null);
+        setLoading(false);
+      }
+    });
 
-    return () => unsub();
+    return () => {
+      unsubQuery();
+      if (unsubDoc) unsubDoc();
+    };
   }, [id]);
 
   const isAdmin = profile?.accessRole === 'Admin' || profile?.roleType === 'Admin' || [
@@ -129,7 +181,7 @@ export default function ProfileView() {
 
       {/* ─── NOT FOUND ─── */}
       {!loading && !profile && (
-        <div className="flex flex-col items-center justify-center min-h-[80vh] gap-6 px-4">
+        <div className="flex flex-col items-center justify-center min-h-[80vh] gap-6 px-4 py-8">
           <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center gap-4 text-center">
             <div className="w-20 h-20 rounded-3xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center shadow-[0_0_30px_rgba(239,68,68,0.1)]">
               <AlertTriangle className="w-10 h-10 text-rose-500" />
@@ -141,6 +193,25 @@ export default function ProfileView() {
               </p>
               <span className="inline-block mt-2 font-mono text-cyan-400 text-xs bg-slate-900/80 border border-slate-800 rounded-lg px-3 py-1.5 break-all">{id}</span>
             </div>
+
+            {error && (
+              <div className="mt-2 p-4 rounded-2xl bg-rose-500/5 border border-rose-500/15 text-left max-w-md">
+                <span className="text-[10px] font-mono text-rose-400 uppercase tracking-wider font-bold block mb-1">Database Diagnostic Alert</span>
+                <p className="text-[11px] text-slate-400 leading-normal mb-3 font-mono break-words">
+                  {error}
+                </p>
+                <div className="text-[10px] text-slate-400 leading-relaxed border-t border-rose-500/10 pt-2.5 font-sans">
+                  💡 <span className="font-semibold text-slate-200">Tip for Administrator:</span> If this is a <code>permission-denied</code> error, ensure your Firestore Security Rules allow public read access on the <code>team</code> collection. Example rule:
+                  <pre className="mt-1.5 p-2 bg-black/40 border border-white/5 rounded text-[9px] font-mono text-cyan-400 overflow-x-auto select-all">
+{`match /team/{memberId} {
+  allow read: if true;
+  allow write: if request.auth != null;
+}`}
+                  </pre>
+                </div>
+              </div>
+            )}
+
             <Link to="/" className="mt-2 px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500/30 text-slate-400 hover:text-cyan-400 text-xs font-bold transition-all flex items-center gap-1.5">
               <ArrowLeft className="w-3.5 h-3.5" /> Return to Portal
             </Link>
