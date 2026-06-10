@@ -5,13 +5,12 @@ import {
   Clock, 
   UserPlus, 
   MapPin, 
-  CheckCircle2, 
   AlertTriangle, 
   X, 
   Loader2, 
   ChevronLeft, 
   ChevronRight,
-  Wifi
+  ChevronDown
 } from 'lucide-react';
 import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, Timestamp } from 'firebase/firestore';
 import { useOutletContext } from 'react-router-dom';
@@ -46,188 +45,11 @@ export default function Scheduling() {
   const [selectedProjectId, setSelectedProjectId] = useState('');
   const [shiftTime, setShiftTime] = useState('08:00 - 17:00');
 
-  // NFC Proximity Terminal States
-  const [isNfcScanning, setIsNfcScanning] = useState(false);
-  const [nfcError, setNfcError] = useState<string | null>(null);
-  const [nfcSuccess, setNfcSuccess] = useState<{ memberName: string; projectName: string; avatar: string; date: string } | null>(null);
-  const [manualTagUid, setManualTagUid] = useState('');
+  // Custom Dropdown Open States
+  const [isTechDropdownOpen, setIsTechDropdownOpen] = useState(false);
+  const [isProjectDropdownOpen, setIsProjectDropdownOpen] = useState(false);
 
-  // Refs to avoid stale closures in physical NFC listener
-  const teamListRef = React.useRef(teamList);
-  const schedulesRef = React.useRef(schedules);
-  const selectedDateStrRef = React.useRef(selectedDateStr);
 
-  useEffect(() => {
-    teamListRef.current = teamList;
-  }, [teamList]);
-
-  useEffect(() => {
-    schedulesRef.current = schedules;
-  }, [schedules]);
-
-  useEffect(() => {
-    selectedDateStrRef.current = selectedDateStr;
-  }, [selectedDateStr]);
-
-  const playBeep = (type: 'success' | 'error') => {
-    try {
-      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      
-      if (type === 'success') {
-        osc.frequency.setValueAtTime(880, ctx.currentTime);
-        gain.gain.setValueAtTime(0.05, ctx.currentTime);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.1);
-        
-        setTimeout(() => {
-          const osc2 = ctx.createOscillator();
-          const gain2 = ctx.createGain();
-          osc2.connect(gain2);
-          gain2.connect(ctx.destination);
-          osc2.frequency.setValueAtTime(1320, ctx.currentTime);
-          gain2.gain.setValueAtTime(0.05, ctx.currentTime);
-          osc2.start();
-          osc2.stop(ctx.currentTime + 0.2);
-        }, 100);
-      } else {
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(180, ctx.currentTime);
-        gain.gain.setValueAtTime(0.05, ctx.currentTime);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.25);
-      }
-    } catch (e) {
-      console.warn("Audio feedback not supported or blocked by browser policy", e);
-    }
-  };
-
-  const handleNfcTap = async (tagUid: string) => {
-    const currentTeamList = teamListRef.current;
-    const currentSchedules = schedulesRef.current;
-    const currentSelectedDateStr = selectedDateStrRef.current;
-    
-    setNfcError(null);
-    setNfcSuccess(null);
-    setIsNfcScanning(true);
-    
-    setTimeout(async () => {
-      const cleanedUid = tagUid.trim().toUpperCase();
-      const employee = currentTeamList.find(t => t.nfcTagUid && t.nfcTagUid.trim().toUpperCase() === cleanedUid);
-
-      if (!employee) {
-        setNfcError(`No user profile is linked to NFC Tag ID: ${cleanedUid}`);
-        playBeep('error');
-        setIsNfcScanning(false);
-        return;
-      }
-
-      if (employee.nfcCardStatus !== 'Linked') {
-        setNfcError(`NFC Pass is inactive or revoked for ${employee.name}`);
-        playBeep('error');
-        setIsNfcScanning(false);
-        return;
-      }
-
-      const dayShifts = currentSchedules.filter(s => s.technicianId === employee.id && s.date === currentSelectedDateStr);
-
-      if (dayShifts.length === 0) {
-        setNfcError(`No shifts scheduled for ${employee.name} on ${currentSelectedDateStr}`);
-        playBeep('error');
-        setIsNfcScanning(false);
-        return;
-      }
-
-      setIsDbActionLoading(true);
-      try {
-        for (const shift of dayShifts) {
-          if (db) {
-            await updateDoc(doc(db, 'schedules', shift.id), { status: 'On Time' });
-          } else {
-            setSchedules(prev => prev.map(s => s.id === shift.id ? { ...s, status: 'On Time' } : s));
-          }
-          
-          if (db) {
-            await addDoc(collection(db, 'activities'), {
-              title: 'Proximity Check-In',
-              desc: `${employee.name} checked in via Proximity Card Tap-In for ${shift.projectName}`,
-              type: 'schedule',
-              timestamp: Timestamp.now()
-            });
-
-            await addDoc(collection(db, 'notifications'), {
-              title: 'Proximity Check-In Success',
-              desc: `${employee.name} clocked in at ${shift.projectName} via NFC tap`,
-              type: 'schedule',
-              timestamp: Timestamp.now()
-            });
-          }
-        }
-
-        playBeep('success');
-        setNfcSuccess({
-          memberName: employee.name,
-          projectName: dayShifts[0].projectName,
-          avatar: employee.avatar || 'cyan',
-          date: currentSelectedDateStr,
-          emergencyName: employee.emergencyName || 'N/A',
-          emergencyPhone: employee.emergencyPhone || 'N/A',
-          bloodGroup: employee.bloodGroup || 'N/A'
-        });
-        setManualTagUid('');
-
-        // Auto-clear success state after 4 seconds
-        setTimeout(() => {
-          setNfcSuccess(prev => {
-            if (prev && prev.memberName === employee.name && prev.date === currentSelectedDateStr) {
-              return null;
-            }
-            return prev;
-          });
-        }, 4000);
-      } catch (err: any) {
-        console.error('Error during NFC check-in:', err);
-        setNfcError('Failed to record check-in to operations database.');
-        playBeep('error');
-      } finally {
-        setIsDbActionLoading(false);
-        setIsNfcScanning(false);
-      }
-    }, 1200);
-  };
-
-  // Web NFC API integration for physical readers
-  useEffect(() => {
-    let reader: any = null;
-    let isActive = true;
-
-    const startWebNfcReader = async () => {
-      if ('NDEFReader' in window) {
-        try {
-          reader = new (window as any).NDEFReader();
-          await reader.scan();
-          reader.onreading = ({ serialNumber }: any) => {
-            if (!isActive) return;
-            const formatted = serialNumber.includes(':') 
-              ? serialNumber.toUpperCase() 
-              : serialNumber.match(/.{1,2}/g)?.join(':').toUpperCase() || serialNumber;
-            handleNfcTap(formatted);
-          };
-        } catch (err) {
-          console.warn("NFC hardware scanner initialization failed:", err);
-        }
-      }
-    };
-
-    startWebNfcReader();
-
-    return () => {
-      isActive = false;
-    };
-  }, []);
 
   // Fetch collections
   useEffect(() => {
@@ -501,185 +323,8 @@ export default function Scheduling() {
               );
             })}
           </div>
-        </div>
-
-        {/* Sidebar Panel */}
+        </div>        {/* Sidebar Panel */}
         <div className="space-y-6 flex flex-col">
-          {/* Proximity Check-in Terminal Card */}
-          <div className="p-5 lg:p-6 rounded-2xl glass-card border border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.3)] space-y-4 relative overflow-hidden">
-            <div className="flex items-center justify-between border-b border-slate-800/80 pb-2 mb-3">
-              <div className="flex items-center gap-2">
-                <Wifi className={`w-4 h-4 text-cyan-400 ${isNfcScanning ? 'animate-pulse' : ''}`} />
-                <h4 className="text-xs font-bold text-slate-200 uppercase tracking-widest font-mono">Proximity check-in</h4>
-              </div>
-              <span className="text-[8px] bg-cyan-950/40 border border-cyan-500/20 text-cyan-400 font-mono px-2 py-0.5 rounded uppercase tracking-wider font-extrabold shadow-[0_0_10px_rgba(6,182,212,0.1)]">
-                RFID READER
-              </span>
-            </div>
-
-            {/* SCANNING ACTIVE STATE */}
-            {isNfcScanning && (
-              <div className="flex flex-col items-center justify-center py-6 text-center space-y-4">
-                <div className="relative w-16 h-16 flex items-center justify-center">
-                  <div className="absolute inset-0 rounded-full bg-cyan-500/5 border border-cyan-500/20 animate-ping" />
-                  <div className="w-10 h-10 rounded-full bg-cyan-950/40 border border-cyan-500/40 flex items-center justify-center text-cyan-400 animate-pulse">
-                    <Wifi className="w-5 h-5 animate-pulse" />
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <h5 className="text-[10px] font-bold text-slate-200 uppercase tracking-widest font-mono animate-pulse">Scanning Tag...</h5>
-                  <p className="text-[9px] text-slate-400 leading-normal max-w-[180px] mx-auto">
-                    Hold contactless RFID card near terminal reader...
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* SUCCESS STATE */}
-            {nfcSuccess && (
-              <div className="bg-green-500/5 border border-green-500/10 rounded-xl p-4 space-y-3 relative overflow-hidden">
-                <button 
-                  onClick={() => setNfcSuccess(null)}
-                  className="absolute top-2.5 right-2.5 p-0.5 text-slate-500 hover:text-slate-300 rounded transition-colors cursor-pointer"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center text-green-400 shadow-[0_0_10px_rgba(34,197,94,0.1)]">
-                    <CheckCircle2 className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h5 className="text-[10px] font-extrabold text-green-400 uppercase tracking-wider font-mono">Access Authorized</h5>
-                    <p className="text-[8px] text-slate-500 font-mono">Check-in confirmed</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-2.5 bg-slate-950/45 p-2 rounded-lg border border-slate-900/60">
-                  <span className={`w-8 h-8 rounded-lg bg-gradient-to-br ${
-                    nfcSuccess.avatar === 'cyan' ? 'from-cyan-500/20 to-cyan-500/5 text-cyan-405 border-cyan-500/20' :
-                    nfcSuccess.avatar === 'blue' ? 'from-blue-500/20 to-blue-505 border-blue-500/20' :
-                    nfcSuccess.avatar === 'red' ? 'from-rose-500/20 to-rose-505 border-rose-500/20' :
-                    'from-amber-500/20 to-amber-500/5 text-amber-400 border-amber-500/20'
-                  } border flex items-center justify-center text-[10px] font-extrabold shadow-sm shrink-0`}>
-                    {nfcSuccess.memberName.slice(0, 2).toUpperCase()}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <h6 className="text-[10.5px] font-bold text-slate-100 truncate leading-snug">{nfcSuccess.memberName}</h6>
-                    <p className="text-[8.5px] text-slate-400 truncate leading-tight mt-0.5">{nfcSuccess.projectName}</p>
-                  </div>
-                </div>
-
-                {/* Quick Safety Info overlay */}
-                <div className="grid grid-cols-2 gap-2 text-[8.5px] bg-[#12080a]/30 p-2 rounded-lg border border-rose-500/10 font-mono text-slate-450">
-                  <div>
-                    <span className="text-[7.5px] text-slate-500 block uppercase">EMERGENCY CONTACT</span>
-                    <span className="font-bold text-slate-205 block truncate text-slate-200">{nfcSuccess.emergencyName || 'N/A'}</span>
-                  </div>
-                  <div>
-                    <span className="text-[7.5px] text-slate-505 block uppercase text-right">CONTACT PHONE</span>
-                    <span className="font-bold text-slate-205 block text-right truncate text-slate-200">{nfcSuccess.emergencyPhone || 'N/A'}</span>
-                  </div>
-                  <div className="col-span-2 border-t border-slate-900/60 pt-1 mt-0.5 flex justify-between items-center">
-                    <span>BLOOD GROUP:</span>
-                    <span className="text-rose-405 font-extrabold flex items-center gap-0.5 text-rose-400">
-                      🩸 {nfcSuccess.bloodGroup || 'N/A'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* ERROR STATE */}
-            {nfcError && (
-              <div className="bg-rose-500/5 border border-rose-500/10 rounded-xl p-4 space-y-2.5 relative overflow-hidden">
-                <button 
-                  onClick={() => setNfcError(null)}
-                  className="absolute top-2.5 right-2.5 p-0.5 text-slate-500 hover:text-slate-300 rounded transition-colors cursor-pointer"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 shadow-[0_0_10px_rgba(239,68,68,0.1)]">
-                    <AlertTriangle className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h5 className="text-[10px] font-extrabold text-rose-400 uppercase tracking-wider font-mono">Access Rejected</h5>
-                    <p className="text-[8px] text-slate-500 font-mono">RFID Reader Error</p>
-                  </div>
-                </div>
-                <p className="text-[9.5px] text-rose-300 font-medium leading-relaxed bg-slate-950/40 p-2 rounded-lg border border-rose-955/10 font-mono">
-                  {nfcError}
-                </p>
-              </div>
-            )}
-
-            {/* IDLE STATE */}
-            {!isNfcScanning && !nfcSuccess && !nfcError && (
-              <div className="space-y-4">
-                <div 
-                  onClick={() => setIsNfcScanning(true)}
-                  className="flex flex-col items-center justify-center py-4 border border-dashed border-slate-800 hover:border-cyan-500/30 rounded-xl bg-slate-955/10 hover:bg-cyan-950/5 transition-all cursor-pointer group shadow-[inset_0_2px_4px_rgba(0,0,0,0.15)]"
-                >
-                  <div className="w-9 h-9 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-500 group-hover:text-cyan-405 group-hover:border-cyan-505/30 transition-all shadow-sm">
-                    <Wifi className="w-4 h-4" />
-                  </div>
-                  <span className="text-[9px] font-bold text-slate-400 group-hover:text-cyan-400 mt-2 transition-colors uppercase tracking-wider font-mono">
-                    Scan Proximity Card
-                  </span>
-                </div>
-
-                {/* Simulated Taps list */}
-                {teamList.filter(t => t.nfcTagUid && t.nfcCardStatus === 'Linked').length > 0 ? (
-                  <div className="space-y-1.5 pt-1">
-                    <span className="text-[8.5px] text-slate-500 font-mono uppercase tracking-wider block font-semibold">Simulate Proximity Tap:</span>
-                    <div className="grid grid-cols-2 gap-1.5 max-h-24 overflow-y-auto pr-1">
-                      {teamList.filter(t => t.nfcTagUid && t.nfcCardStatus === 'Linked').map(t => (
-                        <button
-                          key={t.id}
-                          type="button"
-                          onClick={() => handleNfcTap(t.nfcTagUid)}
-                          className="px-2 py-1.5 bg-slate-955/40 border border-slate-900 hover:border-cyan-500/30 hover:bg-cyan-950/10 text-slate-350 hover:text-cyan-400 rounded-lg text-[9.5px] font-medium transition-all text-left truncate flex items-center gap-1.5 cursor-pointer"
-                          title={`Simulate tap of ${t.name}'s card: ${t.nfcTagUid}`}
-                        >
-                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                            t.avatar === 'cyan' ? 'bg-cyan-400 shadow-[0_0_6px_rgba(6,182,212,0.4)]' :
-                            t.avatar === 'blue' ? 'bg-blue-400 shadow-[0_0_6px_rgba(59,130,246,0.4)]' :
-                            t.avatar === 'red' ? 'bg-rose-400 shadow-[0_0_6px_rgba(244,63,94,0.4)]' :
-                            'bg-amber-400 shadow-[0_0_6px_rgba(245,158,11,0.4)]'
-                          }`} />
-                          <span className="truncate">{t.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-[9px] text-slate-550 font-mono italic text-slate-500">
-                    No active NFC proximity cards linked. Use Team Control to link smart passes.
-                  </p>
-                )}
-
-                {/* Manual entry */}
-                <div className="flex gap-1.5 pt-2.5 border-t border-slate-900/40">
-                  <input
-                    type="text"
-                    placeholder="Enter Card UID (e.g. 04:A5:FF:89)"
-                    value={manualTagUid}
-                    onChange={(e) => setManualTagUid(e.target.value)}
-                    className="flex-1 bg-slate-955/60 border border-slate-850 text-slate-100 rounded-lg py-1.5 px-2.5 focus:outline-none focus:border-cyan-500/40 text-[9.5px] font-mono shadow-[inset_0_1.5px_3px_rgba(0,0,0,0.1)] placeholder:text-slate-600"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => manualTagUid.trim() && handleNfcTap(manualTagUid)}
-                    disabled={!manualTagUid.trim()}
-                    className="px-3 py-1.5 bg-cyan-950/40 border border-cyan-500/30 hover:border-cyan-500/50 text-cyan-400 hover:bg-cyan-950/20 disabled:opacity-30 disabled:border-slate-900 disabled:text-slate-600 rounded-lg text-[9.5px] font-bold uppercase transition-all cursor-pointer font-mono shrink-0 shadow-sm"
-                  >
-                    Tap
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-
           {/* Selected Day Shifts Panel */}
           <div className="p-5 lg:p-6 rounded-2xl glass-card border border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.3)] flex flex-col min-h-[350px]">
             <div className="pb-3 border-b border-slate-800 mb-4 flex justify-between items-center">
@@ -808,32 +453,102 @@ export default function Scheduling() {
 
                 <div className="space-y-1">
                   <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider ml-1">Dispatch Technician</label>
-                  <select
-                    value={selectedTechId}
-                    onChange={(e) => setSelectedTechId(e.target.value)}
-                    required
-                    className="w-full bg-slate-950 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-505 text-sm cursor-pointer"
-                  >
-                    <option value="">Select Technician...</option>
-                    {teamList.map(t => (
-                      <option key={t.id} value={t.id}>{t.name} ({t.role})</option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setIsTechDropdownOpen(!isTechDropdownOpen)}
+                      className="w-full bg-slate-950 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 text-sm cursor-pointer flex justify-between items-center text-left"
+                    >
+                      <span className={selectedTechId ? 'text-slate-100' : 'text-slate-500'}>
+                        {selectedTechId 
+                          ? teamList.find(t => t.id === selectedTechId)?.name + ` (${teamList.find(t => t.id === selectedTechId)?.role})`
+                          : 'Select Technician...'}
+                      </span>
+                      <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${isTechDropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    <AnimatePresence>
+                      {isTechDropdownOpen && (
+                        <>
+                          <div className="fixed inset-0 z-10" onClick={() => setIsTechDropdownOpen(false)} />
+                          <motion.div
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -4 }}
+                            className="absolute z-20 w-full mt-1.5 bg-slate-955 border border-slate-850 rounded-xl max-h-48 overflow-y-auto shadow-2xl p-1.5 space-y-0.5"
+                          >
+                            {teamList.map(t => (
+                              <button
+                                key={t.id}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedTechId(t.id);
+                                  setIsTechDropdownOpen(false);
+                                }}
+                                className={`w-full text-left px-3.5 py-2.5 rounded-lg text-xs font-semibold transition-colors flex items-center justify-between ${
+                                  selectedTechId === t.id 
+                                    ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' 
+                                    : 'text-slate-350 hover:bg-slate-900 border border-transparent'
+                                }`}
+                              >
+                                <span>{t.name}</span>
+                                <span className="text-[10px] opacity-65 font-medium font-mono">{t.role}</span>
+                              </button>
+                            ))}
+                          </motion.div>
+                        </>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </div>
 
                 <div className="space-y-1">
                   <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider ml-1">Project Site Hub</label>
-                  <select
-                    value={selectedProjectId}
-                    onChange={(e) => setSelectedProjectId(e.target.value)}
-                    required
-                    className="w-full bg-slate-950 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-505 text-sm cursor-pointer"
-                  >
-                    <option value="">Select Substation Site...</option>
-                    {projectsList.map(p => (
-                      <option key={p.id} value={p.id}>{p.name} ({p.site})</option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setIsProjectDropdownOpen(!isProjectDropdownOpen)}
+                      className="w-full bg-slate-950 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 text-sm cursor-pointer flex justify-between items-center text-left"
+                    >
+                      <span className={selectedProjectId ? 'text-slate-100' : 'text-slate-500'}>
+                        {selectedProjectId 
+                          ? projectsList.find(p => p.id === selectedProjectId)?.name + ` (${projectsList.find(p => p.id === selectedProjectId)?.site})`
+                          : 'Select Substation Site...'}
+                      </span>
+                      <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${isProjectDropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    <AnimatePresence>
+                      {isProjectDropdownOpen && (
+                        <>
+                          <div className="fixed inset-0 z-10" onClick={() => setIsProjectDropdownOpen(false)} />
+                          <motion.div
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -4 }}
+                            className="absolute z-20 w-full mt-1.5 bg-slate-955 border border-slate-850 rounded-xl max-h-48 overflow-y-auto shadow-2xl p-1.5 space-y-0.5"
+                          >
+                            {projectsList.map(p => (
+                              <button
+                                key={p.id}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedProjectId(p.id);
+                                  setIsProjectDropdownOpen(false);
+                                }}
+                                className={`w-full text-left px-3.5 py-2.5 rounded-lg text-xs font-semibold transition-colors flex items-center justify-between ${
+                                  selectedProjectId === p.id 
+                                    ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' 
+                                    : 'text-slate-350 hover:bg-slate-900 border border-transparent'
+                                }`}
+                              >
+                                <span>{p.name}</span>
+                                <span className="text-[10px] opacity-65 font-medium font-mono">{p.site}</span>
+                              </button>
+                            ))}
+                          </motion.div>
+                        </>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </div>
 
                 <div className="space-y-1">
