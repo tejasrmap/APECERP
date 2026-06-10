@@ -198,7 +198,7 @@ export default function ProfileView() {
 
       {/* ─── PROFILE ─── */}
       {!loading && profile && (
-        <div className="relative z-10 max-w-xl mx-auto px-4 py-12 space-y-6">
+        <div className="relative z-10 max-w-xl mx-auto px-4 py-12 space-y-8">
 
           {/* ── HERO CARD ── */}
           <motion.div
@@ -227,9 +227,9 @@ export default function ProfileView() {
             </div>
 
             {/* Profile info area */}
-            <div className="px-6 pb-6 pt-2">
+            <div className="px-8 pb-8 pt-8">
               {/* Avatar — overlapping the banner */}
-              <div className="flex items-center gap-5 mb-4">
+              <div className="flex items-center gap-6 mb-6">
                 <div className="relative shrink-0 -mt-14">
                   {profile.photoUrl ? (
                     <img
@@ -263,7 +263,7 @@ export default function ProfileView() {
                 </div>
               </div>
 
-              <hr className="border-slate-100 my-4" />
+              <hr className="border-slate-100 my-6" />
 
               {/* Employee ID + Status row */}
               <div className="flex items-center justify-between flex-wrap gap-3">
@@ -287,7 +287,7 @@ export default function ProfileView() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, delay: 0.05 }}
-            className="grid grid-cols-2 gap-3"
+            className="grid grid-cols-2 gap-4"
           >
             {[
               { icon: Phone, label: 'Contact Phone', value: profile.phone || 'N/A', color: 'text-slate-800' },
@@ -295,7 +295,7 @@ export default function ProfileView() {
               { icon: Briefcase, label: 'Department', value: profile.department || 'Operations', color: 'text-slate-800' },
               { icon: Calendar, label: 'Joined Date', value: profile.joinedDate ? new Date(profile.joinedDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A', color: 'text-slate-800' },
             ].map(({ icon: Icon, label, value, color, truncate }) => (
-              <div key={label} className="bg-white border border-slate-200 rounded-xl p-4 space-y-1 hover:border-slate-300 transition-colors shadow-sm">
+              <div key={label} className="bg-white border border-slate-200 rounded-xl p-5 space-y-1.5 hover:border-slate-300 transition-colors shadow-sm">
                 <div className="flex items-center gap-1.5">
                   <Icon className="w-3.5 h-3.5 text-slate-400" />
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{label}</span>
@@ -311,15 +311,15 @@ export default function ProfileView() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35, delay: 0.1 }}
-              className="bg-white border border-slate-200 rounded-xl p-4 space-y-3 shadow-sm"
+              className="bg-white border border-slate-200 rounded-xl p-6 space-y-4 shadow-sm"
             >
-              <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
+              <div className="flex items-center gap-2 border-b border-slate-100 pb-2.5">
                 <Award className="w-4 h-4 text-[#DC2626]" />
                 <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">Skills & Certifications</span>
               </div>
               <div className="flex flex-wrap gap-2">
                 {profile.skills.map((skill: string, idx: number) => (
-                  <span key={idx} className="px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 text-[11px] text-slate-650 font-medium flex items-center gap-1.5 hover:border-slate-300 transition-colors">
+                  <span key={idx} className="px-2.5 py-1 rounded-lg bg-slate-55 border border-slate-200 text-[11px] text-slate-650 font-medium flex items-center gap-1.5 hover:border-slate-300 transition-colors">
                     <span className="w-1.5 h-1.5 rounded-full bg-[#DC2626] shrink-0" />
                     {skill}
                   </span>
@@ -336,11 +336,11 @@ export default function ProfileView() {
             className="bg-white rounded-xl overflow-hidden border border-red-100 shadow-sm"
           >
             {/* Header */}
-            <div className="flex items-center gap-2 px-4 py-3 bg-red-50/60 border-b border-red-100">
+            <div className="flex items-center gap-2 px-5 py-3.5 bg-red-50/60 border-b border-red-100">
               <HeartPulse className="w-4 h-4 text-[#DC2626]" />
               <span className="text-xs font-bold text-slate-850 uppercase tracking-wider">Emergency & Medical Information</span>
             </div>
-            <div className="p-4 grid grid-cols-2 gap-4">
+            <div className="p-6 grid grid-cols-2 gap-6">
               <div className="space-y-0.5">
                 <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold block">Emergency Contact</span>
                 <span className="text-xs font-bold text-slate-800">{profile.emergencyName || 'N/A'}</span>
@@ -367,7 +367,7 @@ export default function ProfileView() {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.35, delay: 0.2 }}
               href={`tel:${profile.emergencyPhone}`}
-              className="flex w-full items-center justify-center gap-2.5 py-3.5 rounded-xl bg-[#DC2626] hover:bg-[#B91C1C] text-white font-bold text-sm transition-all shadow-sm active:scale-[0.99] uppercase tracking-wider font-sans"
+              className="flex w-full items-center justify-center gap-2.5 py-4 rounded-xl bg-[#DC2626] hover:bg-[#B91C1C] text-white font-bold text-sm transition-all shadow-sm active:scale-[0.99] uppercase tracking-wider font-sans"
             >
               <Phone className="w-4 h-4 animate-pulse" />
               Call Emergency Contact
@@ -379,7 +379,7 @@ export default function ProfileView() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.35, delay: 0.25 }}
-            className="flex items-center justify-center pt-4"
+            className="flex items-center justify-center pt-8"
           >
             <div className="flex items-center gap-1.5 text-slate-400">
               <User className="w-3.5 h-3.5" />
