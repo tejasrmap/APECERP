@@ -141,9 +141,16 @@ export default function ProfileView() {
   const avatarGrad = profile ? (avatarGradients[profile.avatar || 'cyan'] || avatarGradients.cyan) : avatarGradients.cyan;
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 relative overflow-hidden font-sans pb-12">
-      {/* Background decoration - very clean, subtle light-gray grid */}
-      <div className="absolute inset-0 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:16px_16px] opacity-60 pointer-events-none" />
+    <div className="min-h-screen bg-[#f8fafc] text-slate-800 relative overflow-hidden font-sans pb-12">
+      {/* Abstract clean grid background with fading mask */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:3rem_3rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-[0.5] pointer-events-none" />
+
+      {/* Faint, elegant corporate gradient washes (soft studio back-lighting) */}
+      <div className="absolute top-0 right-[-10%] w-[50vw] h-[50vh] rounded-full bg-[#DC2626]/3 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[50vw] h-[50vh] rounded-full bg-[#070C16]/5 blur-[150px] pointer-events-none" />
+      
+      {/* Minimalist fine border divider overlay in background */}
+      <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-[1px] bg-slate-200/40 pointer-events-none hidden md:block" />
 
       {/* ─── LOADING STATE ─── */}
       {loading && (
