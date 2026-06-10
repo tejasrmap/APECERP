@@ -474,7 +474,8 @@ export default function Scheduling() {
                             initial={{ opacity: 0, y: -4 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -4 }}
-                            className="absolute z-20 w-full mt-1.5 bg-slate-955 border border-slate-850 rounded-xl max-h-48 overflow-y-auto shadow-2xl p-1.5 space-y-0.5"
+                            className="absolute z-20 w-full mt-1.5 bg-slate-900 border border-slate-800 rounded-xl max-h-48 overflow-y-auto shadow-2xl p-1.5 space-y-0.5"
+                            style={{ contentVisibility: 'auto' }}
                           >
                             {teamList.map(t => (
                               <button
@@ -524,7 +525,8 @@ export default function Scheduling() {
                             initial={{ opacity: 0, y: -4 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -4 }}
-                            className="absolute z-20 w-full mt-1.5 bg-slate-955 border border-slate-850 rounded-xl max-h-48 overflow-y-auto shadow-2xl p-1.5 space-y-0.5"
+                            className="absolute z-20 w-full mt-1.5 bg-slate-900 border border-slate-800 rounded-xl max-h-48 overflow-y-auto shadow-2xl p-1.5 space-y-0.5"
+                            style={{ contentVisibility: 'auto' }}
                           >
                             {projectsList.map(p => (
                               <button
