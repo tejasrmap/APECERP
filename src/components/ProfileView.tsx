@@ -141,43 +141,43 @@ export default function ProfileView() {
   const avatarGrad = profile ? (avatarGradients[profile.avatar || 'cyan'] || avatarGradients.cyan) : avatarGradients.cyan;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white via-slate-50 to-slate-100 text-slate-800 relative overflow-hidden font-sans pb-12">
+    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100 relative overflow-hidden font-sans pb-12">
 
       {/* ─── LOADING STATE ─── */}
       {loading && (
         <div className="flex flex-col items-center justify-center min-h-[80vh] gap-4">
           <div className="relative w-12 h-12">
-            <div className="absolute inset-0 rounded-full border-2 border-slate-200 animate-spin border-t-[#DC2626]" />
+            <div className="absolute inset-0 rounded-full border-2 border-slate-850 animate-spin border-t-[#DC2626]" />
             <Activity className="absolute inset-0 m-auto w-5 h-5 text-[#DC2626] animate-pulse" />
           </div>
-          <p className="text-xs font-mono text-slate-400 tracking-wider uppercase">Loading Employee Record...</p>
+          <p className="text-xs font-mono text-slate-500 tracking-wider uppercase">Loading Employee Record...</p>
         </div>
       )}
 
       {/* ─── NOT FOUND ─── */}
       {!loading && !profile && (
         <div className="flex flex-col items-center justify-center min-h-[80vh] gap-6 px-4 py-8">
-          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center gap-4 text-center max-w-md bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
-            <div className="w-16 h-16 rounded-full bg-red-50 border border-red-100 flex items-center justify-center">
+          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center gap-4 text-center max-w-md bg-[#1E293B] border border-slate-800 rounded-2xl p-8 shadow-sm">
+            <div className="w-16 h-16 rounded-full bg-red-950/20 border border-red-900/30 flex items-center justify-center">
               <AlertTriangle className="w-8 h-8 text-[#DC2626]" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-slate-800 uppercase tracking-wide">Record Not Found</h3>
-              <p className="text-xs text-slate-505 mt-2 leading-relaxed">
+              <h3 className="text-lg font-bold text-slate-100 uppercase tracking-wide">Record Not Found</h3>
+              <p className="text-xs text-slate-400 mt-2 leading-relaxed">
                 No active employee record in the APEC Power Solutions database matches the provided ID:
               </p>
-              <span className="inline-block mt-3 font-mono text-slate-705 text-xs bg-slate-100 border border-slate-200 rounded-lg px-3 py-1.5 break-all font-semibold">{id}</span>
+              <span className="inline-block mt-3 font-mono text-slate-300 text-xs bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 break-all font-semibold">{id}</span>
             </div>
 
             {error && (
-              <div className="mt-4 p-4 rounded-xl bg-red-50/50 border border-red-100 text-left w-full">
+              <div className="mt-4 p-4 rounded-xl bg-red-950/10 border border-red-950/30 text-left w-full">
                 <span className="text-[10px] font-mono text-[#DC2626] uppercase tracking-wider font-bold block mb-1">Database Diagnostic Alert</span>
-                <p className="text-[11px] text-slate-650 leading-normal mb-3 font-mono break-words">
+                <p className="text-[11px] text-slate-400 leading-normal mb-3 font-mono break-words">
                   {error}
                 </p>
-                <div className="text-[10px] text-slate-500 leading-relaxed border-t border-red-100/60 pt-2.5 font-sans">
-                  💡 <span className="font-semibold text-slate-700">Tip for Administrator:</span> If this is a <code>permission-denied</code> error, ensure your Firestore Security Rules allow public read access on the <code>team</code> collection. Example rule:
-                  <pre className="mt-1.5 p-2 bg-slate-800 border border-slate-700 rounded text-[9px] font-mono text-cyan-400 overflow-x-auto select-all">
+                <div className="text-[10px] text-slate-500 leading-relaxed border-t border-slate-800 pt-2.5 font-sans">
+                  💡 <span className="font-semibold text-slate-300">Tip for Administrator:</span> If this is a <code>permission-denied</code> error, ensure your Firestore Security Rules allow public read access on the <code>team</code> collection. Example rule:
+                  <pre className="mt-1.5 p-2 bg-slate-950 border border-slate-900 rounded text-[9px] font-mono text-cyan-400 overflow-x-auto select-all">
 {`match /team/{memberId} {
   allow read: if true;
   allow write: if request.auth != null;
@@ -187,7 +187,7 @@ export default function ProfileView() {
               </div>
             )}
 
-            <Link to="/" className="mt-4 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-805 text-white text-xs font-semibold transition-all flex items-center gap-1.5 shadow-sm">
+            <Link to="/" className="mt-4 px-5 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-900 text-xs font-semibold transition-all flex items-center gap-1.5 shadow-sm">
               <ArrowLeft className="w-4 h-4" /> Return to Portal
             </Link>
           </motion.div>
@@ -208,13 +208,13 @@ export default function ProfileView() {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35 }}
-                className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300"
+                className="bg-[#1E293B] rounded-2xl border border-slate-805 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300"
               >
                 {/* Solid corporate header banner */}
                 <div className="h-24 bg-[#070C16] relative flex items-center justify-between px-6">
                   {/* Left branding logo */}
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center p-0.5 overflow-hidden border border-white/10 shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center p-0.5 overflow-hidden border border-slate-800 shrink-0">
                       <img src="/logo.png" alt="APEC Logo" className="w-full h-full object-contain" />
                     </div>
                     <div className="flex flex-col">
@@ -238,46 +238,46 @@ export default function ProfileView() {
                         <img
                           src={profile.photoUrl}
                           alt={profile.name}
-                          className="w-28 h-28 rounded-2xl object-cover border-4 border-white shadow-md"
+                          className="w-28 h-28 rounded-2xl object-cover border-4 border-[#1E293B] shadow-md"
                         />
                       ) : (
-                        <div className={`w-28 h-28 rounded-2xl bg-gradient-to-br ${avatarGrad} border-4 border-white flex items-center justify-center text-3xl font-bold text-white shadow-md`}>
+                        <div className={`w-28 h-28 rounded-2xl bg-gradient-to-br ${avatarGrad} border-4 border-[#1E293B] flex items-center justify-center text-3xl font-bold text-white shadow-md`}>
                           {profile.name.slice(0, 2).toUpperCase()}
                         </div>
                       )}
                       {/* Status dot */}
-                      <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${profile.status === 'Active' ? 'bg-emerald-500' : profile.status === 'Site Visit' ? 'bg-cyan-500' : 'bg-amber-500'}`} />
+                      <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[#1E293B] ${profile.status === 'Active' ? 'bg-emerald-500' : profile.status === 'Site Visit' ? 'bg-cyan-500' : 'bg-amber-500'}`} />
                     </div>
                     
                     <div className="mb-0.5 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h1 className="text-lg font-bold text-[#070C16] leading-tight" style={{ color: '#070C16' }}>{profile.name}</h1>
+                        <h1 className="text-lg font-bold text-slate-100 leading-tight">{profile.name}</h1>
                         {isAdmin && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-600 text-[9px] font-bold uppercase tracking-wider">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-slate-400 text-[9px] font-bold uppercase tracking-wider">
                             Admin
                           </span>
                         )}
                       </div>
                       <p className="text-xs text-[#DC2626] font-bold mt-0.5 uppercase tracking-wide">{profile.role || 'Staff Member'}</p>
-                      <div className="flex items-center gap-1.5 mt-1 text-slate-500">
+                      <div className="flex items-center gap-1.5 mt-1 text-slate-400">
                         <Briefcase className="w-3.5 h-3.5 shrink-0" />
                         <span className="text-xs font-medium">{profile.department || 'Operations'}</span>
                       </div>
                     </div>
                   </div>
 
-                  <hr className="border-slate-100 my-6" />
+                  <hr className="border-slate-800 my-6" />
 
                   {/* Employee ID + Status row */}
                   <div className="flex items-center justify-between flex-wrap gap-3">
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Employee ID:</span>
-                      <span className="font-mono text-xs font-bold text-slate-700 bg-slate-50 border border-slate-200 px-2.5 py-0.5 rounded-lg">{profile.employeeId || 'APEC-MEMBER'}</span>
+                      <span className="font-mono text-xs font-bold text-slate-300 bg-slate-900/50 border border-slate-800 px-2.5 py-0.5 rounded-lg">{profile.employeeId || 'APEC-MEMBER'}</span>
                     </div>
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
-                      profile.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                      profile.status === 'Site Visit' ? 'bg-cyan-50 text-cyan-700 border-cyan-200' :
-                      'bg-amber-50 text-amber-700 border-amber-200'
+                      profile.status === 'Active' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                      profile.status === 'Site Visit' ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' :
+                      'bg-amber-500/10 text-amber-400 border-amber-500/20'
                     }`}>
                       {profile.status || 'Active'}
                     </span>
@@ -304,9 +304,9 @@ export default function ProfileView() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.4, delay: 0.15 }}
-                className="bg-slate-105 border border-slate-200/60 rounded-xl p-4 flex items-center justify-center gap-2.5 text-slate-500 font-mono text-[9px] uppercase tracking-widest"
+                className="bg-[#1E293B]/40 border border-slate-800/60 rounded-xl p-4 flex items-center justify-center gap-2.5 text-slate-400 font-mono text-[9px] uppercase tracking-widest"
               >
-                <Shield className="w-4 h-4 text-slate-400 shrink-0" />
+                <Shield className="w-4 h-4 text-slate-500 shrink-0" />
                 <span>Secure Record · APEC Registry Verified</span>
               </motion.div>
 
@@ -328,14 +328,14 @@ export default function ProfileView() {
                   { icon: Briefcase, label: 'Department', value: profile.department || 'Operations' },
                   { icon: Calendar, label: 'Joined Date', value: profile.joinedDate ? new Date(profile.joinedDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A' },
                 ].map(({ icon: Icon, label, value, truncate }: any) => (
-                  <div key={label} className="bg-white border border-slate-200 rounded-xl p-5 space-y-2 hover:border-slate-300 transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between">
+                  <div key={label} className="bg-[#1E293B] border border-slate-800 rounded-xl p-5 space-y-2 hover:border-slate-700 transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-lg bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">
+                      <div className="w-7 h-7 rounded-lg bg-slate-900/50 border border-slate-800/80 flex items-center justify-center shrink-0">
                         <Icon className="w-4 h-4 text-slate-400" />
                       </div>
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{label}</span>
                     </div>
-                    <p className={`text-xs font-semibold text-slate-800 ${truncate ? 'truncate' : ''} mt-1`} title={value}>{value}</p>
+                    <p className={`text-xs font-semibold text-slate-100 ${truncate ? 'truncate' : ''} mt-1`} title={value}>{value}</p>
                   </div>
                 ))}
               </motion.div>
@@ -346,15 +346,15 @@ export default function ProfileView() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.35, delay: 0.1 }}
-                  className="bg-white border border-slate-200 rounded-xl p-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300"
+                  className="bg-[#1E293B] border border-slate-800 rounded-xl p-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300"
                 >
-                  <div className="flex items-center gap-2 border-b border-slate-100 pb-2.5">
+                  <div className="flex items-center gap-2 border-b border-slate-805 pb-2.5">
                     <Award className="w-4 h-4 text-[#DC2626]" />
-                    <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">Skills & Certifications</span>
+                    <span className="text-xs font-bold text-slate-100 uppercase tracking-wider">Skills & Certifications</span>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {profile.skills.map((skill: string, idx: number) => (
-                      <span key={idx} className="px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 text-[11px] text-slate-655 font-medium flex items-center gap-1.5 hover:border-slate-300 transition-colors">
+                      <span key={idx} className="px-2.5 py-1 rounded-lg bg-slate-900/50 border border-slate-800 text-[11px] text-slate-300 font-medium flex items-center gap-1.5 hover:border-slate-705 transition-colors">
                         <span className="w-1.5 h-1.5 rounded-full bg-[#DC2626] shrink-0" />
                         {skill}
                       </span>
@@ -368,21 +368,21 @@ export default function ProfileView() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, delay: 0.15 }}
-                className="bg-white rounded-xl overflow-hidden border border-red-100 shadow-sm hover:shadow-md transition-all duration-300"
+                className="bg-[#1E293B] rounded-xl overflow-hidden border border-red-950/40 shadow-sm hover:shadow-md transition-all duration-300"
               >
                 {/* Header */}
-                <div className="flex items-center gap-2 px-5 py-3.5 bg-red-50/60 border-b border-red-100">
+                <div className="flex items-center gap-2 px-5 py-3.5 bg-red-950/20 border-b border-red-950/40">
                   <HeartPulse className="w-4 h-4 text-[#DC2626]" />
-                  <span className="text-xs font-bold text-slate-850 uppercase tracking-wider">Emergency & Medical Information</span>
+                  <span className="text-xs font-bold text-slate-200 uppercase tracking-wider">Emergency & Medical Information</span>
                 </div>
                 <div className="p-6 grid grid-cols-2 gap-6">
                   <div className="space-y-0.5">
                     <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold block">Emergency Contact</span>
-                    <span className="text-xs font-bold text-slate-800">{profile.emergencyName || 'N/A'}</span>
+                    <span className="text-xs font-bold text-slate-200">{profile.emergencyName || 'N/A'}</span>
                   </div>
                   <div className="space-y-0.5">
                     <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold block">Emergency Phone</span>
-                    <span className="text-xs font-bold text-slate-800">{profile.emergencyPhone || 'N/A'}</span>
+                    <span className="text-xs font-bold text-slate-200">{profile.emergencyPhone || 'N/A'}</span>
                   </div>
                   <div className="space-y-0.5">
                     <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold block">Blood Group</span>
@@ -390,7 +390,7 @@ export default function ProfileView() {
                   </div>
                   <div className="space-y-0.5">
                     <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold block">Medical Notes</span>
-                    <span className="text-xs font-medium text-slate-600 leading-snug">{profile.medicalConditions || 'None'}</span>
+                    <span className="text-xs font-medium text-slate-300 leading-snug">{profile.medicalConditions || 'None'}</span>
                   </div>
                 </div>
               </motion.div>
@@ -406,7 +406,7 @@ export default function ProfileView() {
             transition={{ duration: 0.35, delay: 0.25 }}
             className="flex items-center justify-center pt-8"
           >
-            <div className="flex items-center gap-1.5 text-slate-400">
+            <div className="flex items-center gap-1.5 text-slate-500">
               <User className="w-3.5 h-3.5" />
               <span className="text-[10px] font-medium uppercase tracking-wider">APEC Power Solutions Pvt. Ltd. · Employee Registry</span>
             </div>
