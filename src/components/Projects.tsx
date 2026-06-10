@@ -5,7 +5,8 @@ import {
   Plus, 
   ArrowLeft, 
   Trash2, 
-  Loader2
+  Loader2,
+  ChevronDown
 } from 'lucide-react';
 import { collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { useOutletContext } from 'react-router-dom';
@@ -15,10 +16,12 @@ export default function Projects() {
   const { setFirestoreError, isDbActionLoading, setIsDbActionLoading } = useOutletContext<any>();
 
   const [projectsList, setProjectsList] = useState<any[]>([]);
+  const [teamList, setTeamList] = useState<any[]>([]);
   const [isProjectsLoading, setIsProjectsLoading] = useState(true);
 
   // Gantt / Milestones States
   const [expandedProjectId, setExpandedProjectId] = useState<string | null>(null);
+  const [isManagerDropdownOpen, setIsManagerDropdownOpen] = useState(false);
 
   const milestonesList = [
     'Site Audit & Clearance',
@@ -70,6 +73,11 @@ export default function Projects() {
   // Real-time Firestore Listeners
   useEffect(() => {
     if (!db) {
+      setTeamList([
+        { id: '1', name: 'Pradeep Moses Mathi', role: 'Managing Director' },
+        { id: '2', name: 'Teja Ganugula', role: 'Team Member' },
+        { id: '3', name: 'GT InnoX LLP', role: 'Technical Partner' }
+      ]);
       setIsProjectsLoading(false);
       return;
     }
@@ -84,7 +92,16 @@ export default function Projects() {
       setIsProjectsLoading(false);
     });
 
-    return () => unsubProjects();
+    const unsubTeam = onSnapshot(collection(db, 'team'), (snapshot) => {
+      setTeamList(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+    }, (err) => {
+      console.error('Team load error in Projects:', err);
+    });
+
+    return () => {
+      unsubProjects();
+      unsubTeam();
+    };
   }, [setFirestoreError]);
 
   const handleAddProject = async (e: React.FormEvent) => {
@@ -214,13 +231,51 @@ export default function Projects() {
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-slate-400 uppercase ml-1 tracking-wider">Project Manager</label>
-                <input 
-                  type="text" 
-                  value={newProjectManager}
-                  onChange={(e) => setNewProjectManager(e.target.value)}
-                  placeholder="e.g. John Doe"
-                  className="w-full bg-slate-950/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all text-sm shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
-                />
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsManagerDropdownOpen(!isManagerDropdownOpen)}
+                    className="w-full bg-slate-950/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 text-sm cursor-pointer flex justify-between items-center text-left transition-all"
+                  >
+                    <span className={newProjectManager ? 'text-slate-100' : 'text-slate-505'}>
+                      {newProjectManager || 'Select Project Manager...'}
+                    </span>
+                    <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${isManagerDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  <AnimatePresence>
+                    {isManagerDropdownOpen && (
+                      <>
+                        <div className="fixed inset-0 z-10" onClick={() => setIsManagerDropdownOpen(false)} />
+                        <motion.div
+                          initial={{ opacity: 0, y: -4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -4 }}
+                          className="absolute z-20 w-full mt-1.5 bg-slate-900 border border-slate-800 rounded-xl max-h-48 overflow-y-auto shadow-2xl p-1.5 space-y-0.5"
+                          style={{ contentVisibility: 'auto' }}
+                        >
+                          {teamList.map(t => (
+                            <button
+                              key={t.id}
+                              type="button"
+                              onClick={() => {
+                                setNewProjectManager(t.name);
+                                setIsManagerDropdownOpen(false);
+                              }}
+                              className={`w-full text-left px-3.5 py-2.5 rounded-lg text-xs font-semibold transition-colors flex items-center justify-between ${
+                                newProjectManager === t.name 
+                                  ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' 
+                                  : 'text-slate-350 hover:bg-slate-800 border border-transparent'
+                              }`}
+                            >
+                              <span>{t.name}</span>
+                              <span className="text-[10px] opacity-65 font-medium font-mono">{t.role}</span>
+                            </button>
+                          ))}
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
               <button
                 type="submit"
