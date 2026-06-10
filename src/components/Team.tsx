@@ -431,17 +431,33 @@ export default function Team() {
                   <div className="space-y-1 col-span-2 border-t border-slate-900/60 pt-2 mt-1 flex justify-between gap-6">
                     <div className="space-y-1">
                       <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Blood Group</span>
-                      <span className="text-rose-405 font-bold flex items-center gap-1 text-rose-400">
+                      <span className="text-rose-455 font-bold flex items-center gap-1 text-rose-400">
                         <span className="text-[10px]">🩸</span> {selectedProfile.bloodGroup || 'N/A'}
                       </span>
                     </div>
                     <div className="space-y-1 flex-1">
                       <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Medical Notes</span>
-                      <span className="text-slate-350 font-medium block truncate" title={selectedProfile.medicalConditions}>
+                      <span className="text-slate-355 font-medium block truncate" title={selectedProfile.medicalConditions}>
                         {selectedProfile.medicalConditions || 'None'}
                       </span>
                     </div>
                   </div>
+                </div>
+
+                {/* Call Emergency Contact & Secure Record details */}
+                {selectedProfile.emergencyPhone && selectedProfile.emergencyPhone !== 'N/A' && (
+                  <a
+                    href={`tel:${selectedProfile.emergencyPhone}`}
+                    className="flex w-full items-center justify-center gap-2 py-3.5 rounded-xl bg-[#DC2626] hover:bg-[#B91C1C] text-white font-bold text-xs transition-all shadow-sm hover:shadow active:scale-[0.99] uppercase tracking-wider font-sans"
+                  >
+                    <Phone className="w-3.5 h-3.5 animate-pulse" />
+                    Call Emergency Contact
+                  </a>
+                )}
+
+                <div className="bg-slate-950/40 border border-slate-900 rounded-xl p-3 flex items-center justify-center gap-2 text-slate-400 font-mono text-[9px] uppercase tracking-widest">
+                  <Shield className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                  <span>Secure Record · APEC Registry Verified</span>
                 </div>
               </div>
 

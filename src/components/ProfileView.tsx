@@ -332,30 +332,6 @@ export default function ProfileView() {
                 </div>
               </motion.div>
 
-              {/* EMERGENCY CALL BUTTON */}
-              {profile.emergencyPhone && profile.emergencyPhone !== 'N/A' && (
-                <motion.a
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.35, delay: 0.1 }}
-                  href={`tel:${profile.emergencyPhone}`}
-                  className="flex w-full items-center justify-center gap-2.5 py-4 rounded-xl bg-[#DC2626] hover:bg-[#B91C1C] text-white font-bold text-sm transition-all shadow-sm hover:shadow active:scale-[0.99] uppercase tracking-wider font-sans"
-                >
-                  <Phone className="w-4 h-4 animate-pulse" />
-                  Call Emergency Contact
-                </motion.a>
-              )}
-
-              {/* SECURE RECORD VERIFICATION SEAL */}
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.4, delay: 0.15 }}
-                className="bg-[#1E293B]/40 border border-slate-800/60 rounded-xl p-4 flex items-center justify-center gap-2.5 text-slate-400 font-mono text-[9px] uppercase tracking-widest"
-              >
-                <Shield className="w-4 h-4 text-slate-505 shrink-0" />
-                <span>Secure Record · APEC Registry Verified</span>
-              </motion.div>
 
             </div>
 
@@ -441,6 +417,32 @@ export default function ProfileView() {
                   </div>
                 </div>
               </motion.div>
+
+              {/* EMERGENCY ACTIONS & VERIFICATION BADGE */}
+              <div className={`space-y-4 ${activeTab === 'medical' ? 'block' : 'hidden md:block'}`}>
+                {profile.emergencyPhone && profile.emergencyPhone !== 'N/A' && (
+                  <motion.a
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.35, delay: 0.2 }}
+                    href={`tel:${profile.emergencyPhone}`}
+                    className="flex w-full items-center justify-center gap-2.5 py-4 rounded-xl bg-[#DC2626] hover:bg-[#B91C1C] text-white font-bold text-sm transition-all shadow-sm hover:shadow active:scale-[0.99] uppercase tracking-wider font-sans"
+                  >
+                    <Phone className="w-4 h-4 animate-pulse" />
+                    Call Emergency Contact
+                  </motion.a>
+                )}
+
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.4, delay: 0.25 }}
+                  className="bg-[#1E293B]/40 border border-slate-800/60 rounded-xl p-4 flex items-center justify-center gap-2.5 text-slate-400 font-mono text-[9px] uppercase tracking-widest"
+                >
+                  <Shield className="w-4 h-4 text-slate-400 shrink-0" />
+                  <span>Secure Record · APEC Registry Verified</span>
+                </motion.div>
+              </div>
 
             </div>
 
