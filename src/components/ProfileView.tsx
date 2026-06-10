@@ -140,56 +140,46 @@ export default function ProfileView() {
   };
   const avatarGrad = profile ? (avatarGradients[profile.avatar || 'cyan'] || avatarGradients.cyan) : avatarGradients.cyan;
 
-  const statusColor =
-    profile?.status === 'Active' ? 'bg-green-500/15 text-green-400 border-green-500/30' :
-    profile?.status === 'Site Visit' ? 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30' :
-    'bg-amber-500/15 text-amber-400 border-amber-500/30';
-
   return (
-    <div className="min-h-screen bg-[#04060b] text-slate-100 relative overflow-hidden font-sans">
-      {/* Background */}
-      <div className="absolute inset-0 cyber-grid opacity-[0.04] pointer-events-none" />
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80vw] h-[40vh] rounded-full bg-cyan-500/5 blur-[140px] pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-[50vw] h-[40vh] rounded-full bg-rose-500/4 blur-[120px] pointer-events-none" />
-
-
+    <div className="min-h-screen bg-slate-50 text-slate-800 relative overflow-hidden font-sans pb-12">
+      {/* Background decoration - very clean, subtle light-gray grid */}
+      <div className="absolute inset-0 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:16px_16px] opacity-60 pointer-events-none" />
 
       {/* ─── LOADING STATE ─── */}
       {loading && (
         <div className="flex flex-col items-center justify-center min-h-[80vh] gap-4">
-          <div className="relative w-14 h-14">
-            <div className="absolute inset-0 rounded-full border border-cyan-500/30 animate-ping" />
-            <div className="absolute inset-2 rounded-full border border-cyan-500/50 animate-ping" style={{ animationDelay: '0.2s' }} />
-            <Activity className="absolute inset-0 m-auto w-6 h-6 text-cyan-400 animate-pulse" />
+          <div className="relative w-12 h-12">
+            <div className="absolute inset-0 rounded-full border-2 border-slate-200 animate-spin border-t-[#DC2626]" />
+            <Activity className="absolute inset-0 m-auto w-5 h-5 text-[#DC2626] animate-pulse" />
           </div>
-          <p className="text-xs font-mono text-slate-500 tracking-widest uppercase">Querying Registry...</p>
+          <p className="text-xs font-mono text-slate-400 tracking-wider uppercase">Loading Employee Record...</p>
         </div>
       )}
 
       {/* ─── NOT FOUND ─── */}
       {!loading && !profile && (
         <div className="flex flex-col items-center justify-center min-h-[80vh] gap-6 px-4 py-8">
-          <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center gap-4 text-center">
-            <div className="w-20 h-20 rounded-3xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center shadow-[0_0_30px_rgba(239,68,68,0.1)]">
-              <AlertTriangle className="w-10 h-10 text-rose-500" />
+          <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col items-center gap-4 text-center max-w-md bg-white border border-slate-200 rounded-2xl p-8 shadow-sm">
+            <div className="w-16 h-16 rounded-full bg-red-50 border border-red-100 flex items-center justify-center">
+              <AlertTriangle className="w-8 h-8 text-[#DC2626]" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-rose-400 uppercase tracking-widest font-mono">Profile Not Found</h3>
-              <p className="text-xs text-slate-400 mt-2 max-w-xs leading-relaxed">
-                No employee record matches ID:
+              <h3 className="text-lg font-bold text-slate-800 uppercase tracking-wide">Record Not Found</h3>
+              <p className="text-xs text-slate-505 mt-2 leading-relaxed">
+                No active employee record in the APEC Power Solutions database matches the provided ID:
               </p>
-              <span className="inline-block mt-2 font-mono text-cyan-400 text-xs bg-slate-900/80 border border-slate-800 rounded-lg px-3 py-1.5 break-all">{id}</span>
+              <span className="inline-block mt-3 font-mono text-slate-705 text-xs bg-slate-100 border border-slate-200 rounded-lg px-3 py-1.5 break-all font-semibold">{id}</span>
             </div>
 
             {error && (
-              <div className="mt-2 p-4 rounded-2xl bg-rose-500/5 border border-rose-500/15 text-left max-w-md">
-                <span className="text-[10px] font-mono text-rose-400 uppercase tracking-wider font-bold block mb-1">Database Diagnostic Alert</span>
-                <p className="text-[11px] text-slate-400 leading-normal mb-3 font-mono break-words">
+              <div className="mt-4 p-4 rounded-xl bg-red-50/50 border border-red-100 text-left w-full">
+                <span className="text-[10px] font-mono text-[#DC2626] uppercase tracking-wider font-bold block mb-1">Database Diagnostic Alert</span>
+                <p className="text-[11px] text-slate-650 leading-normal mb-3 font-mono break-words">
                   {error}
                 </p>
-                <div className="text-[10px] text-slate-400 leading-relaxed border-t border-rose-500/10 pt-2.5 font-sans">
-                  💡 <span className="font-semibold text-slate-200">Tip for Administrator:</span> If this is a <code>permission-denied</code> error, ensure your Firestore Security Rules allow public read access on the <code>team</code> collection. Example rule:
-                  <pre className="mt-1.5 p-2 bg-black/40 border border-white/5 rounded text-[9px] font-mono text-cyan-400 overflow-x-auto select-all">
+                <div className="text-[10px] text-slate-500 leading-relaxed border-t border-red-100/60 pt-2.5 font-sans">
+                  💡 <span className="font-semibold text-slate-700">Tip for Administrator:</span> If this is a <code>permission-denied</code> error, ensure your Firestore Security Rules allow public read access on the <code>team</code> collection. Example rule:
+                  <pre className="mt-1.5 p-2 bg-slate-800 border border-slate-700 rounded text-[9px] font-mono text-cyan-400 overflow-x-auto select-all">
 {`match /team/{memberId} {
   allow read: if true;
   allow write: if request.auth != null;
@@ -199,8 +189,8 @@ export default function ProfileView() {
               </div>
             )}
 
-            <Link to="/" className="mt-2 px-4 py-2 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500/30 text-slate-400 hover:text-cyan-400 text-xs font-bold transition-all flex items-center gap-1.5">
-              <ArrowLeft className="w-3.5 h-3.5" /> Return to Portal
+            <Link to="/" className="mt-4 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-805 text-white text-xs font-semibold transition-all flex items-center gap-1.5 shadow-sm">
+              <ArrowLeft className="w-4 h-4" /> Return to Portal
             </Link>
           </motion.div>
         </div>
@@ -208,74 +198,81 @@ export default function ProfileView() {
 
       {/* ─── PROFILE ─── */}
       {!loading && profile && (
-        <div className="relative z-10 max-w-2xl mx-auto px-4 py-8 space-y-5">
+        <div className="relative z-10 max-w-xl mx-auto px-4 py-12 space-y-6">
 
           {/* ── HERO CARD ── */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="relative rounded-3xl overflow-hidden border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.5)]"
+            transition={{ duration: 0.35 }}
+            className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm"
           >
-            {/* Hero gradient banner */}
-            <div className="h-28 bg-gradient-to-r from-slate-900 via-cyan-950/40 to-slate-900 relative">
-              <div className="absolute inset-0 cyber-grid opacity-10" />
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#06090f]" />
-              {/* Verified badge top right */}
-              <div className="absolute top-4 right-4 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-500/10 border border-green-500/25 backdrop-blur-sm">
-                <CheckCircle2 className="w-3.5 h-3.5 text-green-400" />
-                <span className="text-[9px] font-extrabold text-green-400 uppercase tracking-widest font-mono">Verified</span>
+            {/* Solid corporate header banner */}
+            <div className="h-24 bg-[#070C16] relative flex items-center justify-between px-6">
+              {/* Left branding logo */}
+              <div className="flex items-center gap-2">
+                <Shield className="w-4 h-4 text-[#DC2626]" />
+                <span className="text-xs font-bold tracking-wider text-white uppercase font-sans">
+                  APEC Power <span className="text-[#DC2626]">Solutions</span>
+                </span>
               </div>
-              {/* Company label top left */}
-              <div className="absolute top-4 left-4 flex items-center gap-1.5">
-                <Shield className="w-3.5 h-3.5 text-cyan-400" />
-                <span className="text-[9px] font-mono text-cyan-400 uppercase tracking-widest">APEC Power Solutions</span>
+              {/* Right verification badge */}
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider font-sans">Verified Pass</span>
               </div>
             </div>
 
             {/* Profile info area */}
-            <div className="bg-[#06090f] px-6 pb-6">
+            <div className="px-6 pb-6 pt-2">
               {/* Avatar — overlapping the banner */}
-              <div className="flex items-end gap-5 -mt-12 mb-4">
+              <div className="flex items-end gap-5 -mt-10 mb-4">
                 <div className="relative shrink-0">
                   {profile.photoUrl ? (
                     <img
                       src={profile.photoUrl}
                       alt={profile.name}
-                      className="w-24 h-24 rounded-2xl object-cover border-4 border-[#06090f] shadow-[0_8px_30px_rgba(0,0,0,0.6)]"
+                      className="w-20 h-20 rounded-xl object-cover border-4 border-white shadow-md"
                     />
                   ) : (
-                    <div className={`w-24 h-24 rounded-2xl bg-gradient-to-br ${avatarGrad} border-4 border-[#06090f] flex items-center justify-center text-2xl font-extrabold text-white shadow-[0_8px_30px_rgba(0,0,0,0.6)]`}>
+                    <div className={`w-20 h-20 rounded-xl bg-gradient-to-br ${avatarGrad} border-4 border-white flex items-center justify-center text-xl font-bold text-white shadow-md`}>
                       {profile.name.slice(0, 2).toUpperCase()}
                     </div>
                   )}
-                  {/* Online dot */}
-                  <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[#06090f] ${profile.status === 'Active' ? 'bg-green-400' : profile.status === 'Site Visit' ? 'bg-cyan-400' : 'bg-amber-400'}`} />
+                  {/* Status dot */}
+                  <span className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-white ${profile.status === 'Active' ? 'bg-emerald-500' : profile.status === 'Site Visit' ? 'bg-cyan-500' : 'bg-amber-500'}`} />
                 </div>
-                <div className="mb-1 min-w-0">
+                
+                <div className="mb-0.5 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h1 className="text-xl font-extrabold text-white leading-tight" style={{ color: '#ffffff' }}>{profile.name}</h1>
+                    <h1 className="text-lg font-bold text-[#070C16] leading-tight" style={{ color: '#070C16' }}>{profile.name}</h1>
                     {isAdmin && (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/25 text-cyan-400 text-[9px] font-extrabold uppercase tracking-widest">
-                        <BadgeCheck className="w-3 h-3" /> Admin
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-600 text-[9px] font-bold uppercase tracking-wider">
+                        Admin
                       </span>
                     )}
                   </div>
-                  <p className="text-sm text-rose-400 font-bold mt-0.5">{profile.role || 'Staff Member'}</p>
-                  <div className="flex items-center gap-1.5 mt-1">
-                    <Briefcase className="w-3 h-3 text-slate-400" />
-                    <span className="text-xs text-slate-400 font-mono">{profile.department || 'Operations'}</span>
+                  <p className="text-xs text-[#DC2626] font-bold mt-0.5 uppercase tracking-wide">{profile.role || 'Staff Member'}</p>
+                  <div className="flex items-center gap-1.5 mt-1 text-slate-500">
+                    <Briefcase className="w-3.5 h-3.5 shrink-0" />
+                    <span className="text-xs font-medium">{profile.department || 'Operations'}</span>
                   </div>
                 </div>
               </div>
 
+              <hr className="border-slate-100 my-4" />
+
               {/* Employee ID + Status row */}
-              <div className="flex items-center justify-between flex-wrap gap-3 mt-2">
+              <div className="flex items-center justify-between flex-wrap gap-3">
                 <div className="flex items-center gap-2">
-                  <span className="text-[9px] text-slate-500 uppercase tracking-wider font-mono">Employee ID</span>
-                  <span className="font-mono text-xs font-extrabold text-cyan-400 bg-cyan-950/30 border border-cyan-500/20 px-2 py-0.5 rounded-lg">{profile.employeeId || 'APEC-MEMBER'}</span>
+                  <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Employee ID:</span>
+                  <span className="font-mono text-xs font-bold text-slate-700 bg-slate-50 border border-slate-200 px-2.5 py-0.5 rounded-lg">{profile.employeeId || 'APEC-MEMBER'}</span>
                 </div>
-                <span className={`inline-flex items-center px-3 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-widest border ${statusColor}`}>
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+                  profile.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                  profile.status === 'Site Visit' ? 'bg-cyan-50 text-cyan-700 border-cyan-200' :
+                  'bg-amber-50 text-amber-700 border-amber-200'
+                }`}>
                   {profile.status || 'Active'}
                 </span>
               </div>
@@ -284,23 +281,23 @@ export default function ProfileView() {
 
           {/* ── INFO GRID ── */}
           <motion.div
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.1 }}
+            transition={{ duration: 0.35, delay: 0.05 }}
             className="grid grid-cols-2 gap-3"
           >
             {[
-              { icon: Phone, label: 'Phone', value: profile.phone || 'N/A', color: 'text-cyan-400' },
-              { icon: Mail, label: 'Email', value: profile.email || 'N/A', color: 'text-cyan-400', truncate: true },
-              { icon: Briefcase, label: 'Department', value: profile.department || 'Operations', color: 'text-slate-300' },
-              { icon: Calendar, label: 'Joined', value: profile.joinedDate ? new Date(profile.joinedDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A', color: 'text-slate-300' },
+              { icon: Phone, label: 'Contact Phone', value: profile.phone || 'N/A', color: 'text-slate-800' },
+              { icon: Mail, label: 'Official Email', value: profile.email || 'N/A', color: 'text-slate-800', truncate: true },
+              { icon: Briefcase, label: 'Department', value: profile.department || 'Operations', color: 'text-slate-800' },
+              { icon: Calendar, label: 'Joined Date', value: profile.joinedDate ? new Date(profile.joinedDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A', color: 'text-slate-800' },
             ].map(({ icon: Icon, label, value, color, truncate }) => (
-              <div key={label} className="bg-slate-950/60 border border-white/5 rounded-2xl p-4 space-y-1.5 hover:border-cyan-500/15 transition-colors">
+              <div key={label} className="bg-white border border-slate-200 rounded-xl p-4 space-y-1 hover:border-slate-300 transition-colors shadow-sm">
                 <div className="flex items-center gap-1.5">
-                  <Icon className="w-3.5 h-3.5 text-slate-500" />
-                  <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">{label}</span>
+                  <Icon className="w-3.5 h-3.5 text-slate-400" />
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{label}</span>
                 </div>
-                <p className={`text-xs font-bold ${color} ${truncate ? 'truncate' : ''}`} title={value}>{value}</p>
+                <p className={`text-xs font-semibold ${color} ${truncate ? 'truncate' : ''}`} title={value}>{value}</p>
               </div>
             ))}
           </motion.div>
@@ -308,19 +305,19 @@ export default function ProfileView() {
           {/* ── SKILLS ── */}
           {profile.skills && profile.skills.length > 0 && (
             <motion.div
-              initial={{ opacity: 0, y: 16 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.15 }}
-              className="bg-slate-950/60 border border-white/5 rounded-2xl p-4 space-y-3"
+              transition={{ duration: 0.35, delay: 0.1 }}
+              className="bg-white border border-slate-200 rounded-xl p-4 space-y-3 shadow-sm"
             >
-              <div className="flex items-center gap-2">
-                <Award className="w-4 h-4 text-cyan-400" />
-                <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Skills & Certifications</span>
+              <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
+                <Award className="w-4 h-4 text-[#DC2626]" />
+                <span className="text-xs font-bold text-slate-800 uppercase tracking-wider">Skills & Certifications</span>
               </div>
               <div className="flex flex-wrap gap-2">
                 {profile.skills.map((skill: string, idx: number) => (
-                  <span key={idx} className="px-2.5 py-1 rounded-xl bg-slate-900 border border-slate-800 text-[10px] text-slate-300 font-semibold flex items-center gap-1.5 hover:border-cyan-500/25 hover:text-cyan-400 transition-colors">
-                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0" />
+                  <span key={idx} className="px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200 text-[11px] text-slate-650 font-medium flex items-center gap-1.5 hover:border-slate-300 transition-colors">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#DC2626] shrink-0" />
                     {skill}
                   </span>
                 ))}
@@ -330,32 +327,32 @@ export default function ProfileView() {
 
           {/* ── EMERGENCY CARD ── */}
           <motion.div
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-            className="rounded-2xl overflow-hidden border border-rose-500/15 shadow-[0_0_30px_rgba(239,68,68,0.04)]"
+            transition={{ duration: 0.35, delay: 0.15 }}
+            className="bg-white rounded-xl overflow-hidden border border-red-100 shadow-sm"
           >
             {/* Header */}
-            <div className="flex items-center gap-2 px-4 py-3 bg-rose-500/5 border-b border-rose-500/10">
-              <HeartPulse className="w-4 h-4 text-rose-400" />
-              <span className="text-[10px] font-extrabold text-rose-400 uppercase tracking-widest">Emergency & Medical</span>
+            <div className="flex items-center gap-2 px-4 py-3 bg-red-50/60 border-b border-red-100">
+              <HeartPulse className="w-4 h-4 text-[#DC2626]" />
+              <span className="text-xs font-bold text-slate-850 uppercase tracking-wider">Emergency & Medical Information</span>
             </div>
-            <div className="bg-slate-950/60 p-4 grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <span className="text-[9px] text-slate-500 uppercase tracking-wider font-mono block">Emergency Contact</span>
-                <span className="text-sm font-bold text-slate-100">{profile.emergencyName || 'N/A'}</span>
+            <div className="p-4 grid grid-cols-2 gap-4">
+              <div className="space-y-0.5">
+                <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold block">Emergency Contact</span>
+                <span className="text-xs font-bold text-slate-800">{profile.emergencyName || 'N/A'}</span>
               </div>
-              <div className="space-y-1">
-                <span className="text-[9px] text-slate-500 uppercase tracking-wider font-mono block">Emergency Phone</span>
-                <span className="text-sm font-bold text-slate-100">{profile.emergencyPhone || 'N/A'}</span>
+              <div className="space-y-0.5">
+                <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold block">Emergency Phone</span>
+                <span className="text-xs font-bold text-slate-800">{profile.emergencyPhone || 'N/A'}</span>
               </div>
-              <div className="space-y-1">
-                <span className="text-[9px] text-slate-500 uppercase tracking-wider font-mono block">Blood Group</span>
-                <span className="text-sm font-extrabold text-rose-400 flex items-center gap-1">🩸 {profile.bloodGroup || 'N/A'}</span>
+              <div className="space-y-0.5">
+                <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold block">Blood Group</span>
+                <span className="text-xs font-extrabold text-[#DC2626] flex items-center gap-1">🩸 {profile.bloodGroup || 'N/A'}</span>
               </div>
-              <div className="space-y-1">
-                <span className="text-[9px] text-slate-500 uppercase tracking-wider font-mono block">Medical Notes</span>
-                <span className="text-xs font-medium text-slate-300 leading-snug">{profile.medicalConditions || 'None'}</span>
+              <div className="space-y-0.5">
+                <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold block">Medical Notes</span>
+                <span className="text-xs font-medium text-slate-600 leading-snug">{profile.medicalConditions || 'None'}</span>
               </div>
             </div>
           </motion.div>
@@ -363,11 +360,11 @@ export default function ProfileView() {
           {/* ── EMERGENCY CALL BUTTON ── */}
           {profile.emergencyPhone && profile.emergencyPhone !== 'N/A' && (
             <motion.a
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.25 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.35, delay: 0.2 }}
               href={`tel:${profile.emergencyPhone}`}
-              className="flex w-full items-center justify-center gap-2.5 py-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/25 hover:bg-rose-500/20 hover:border-rose-500/50 text-rose-400 hover:text-rose-300 font-bold text-sm transition-all shadow-[0_4px_20px_rgba(239,68,68,0.08)] hover:shadow-[0_4px_20px_rgba(239,68,68,0.18)] active:scale-[0.98]"
+              className="flex w-full items-center justify-center gap-2.5 py-3.5 rounded-xl bg-[#DC2626] hover:bg-[#B91C1C] text-white font-bold text-sm transition-all shadow-sm active:scale-[0.99] uppercase tracking-wider font-sans"
             >
               <Phone className="w-4 h-4 animate-pulse" />
               Call Emergency Contact
@@ -378,12 +375,12 @@ export default function ProfileView() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.3 }}
-            className="flex items-center justify-center pt-2 pb-4"
+            transition={{ duration: 0.35, delay: 0.25 }}
+            className="flex items-center justify-center pt-4"
           >
-            <div className="flex items-center gap-1.5">
-              <User className="w-3 h-3 text-slate-600" />
-              <span className="text-[9px] text-slate-600 font-mono uppercase tracking-wider">APEC Company ID · {profile.employeeId}</span>
+            <div className="flex items-center gap-1.5 text-slate-400">
+              <User className="w-3.5 h-3.5" />
+              <span className="text-[10px] font-medium uppercase tracking-wider">APEC Power Solutions Pvt. Ltd. · Employee Registry</span>
             </div>
           </motion.div>
 
