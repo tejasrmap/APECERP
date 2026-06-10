@@ -210,11 +210,14 @@ export default function ProfileView() {
             {/* Solid corporate header banner */}
             <div className="h-24 bg-[#070C16] relative flex items-center justify-between px-6">
               {/* Left branding logo */}
-              <div className="flex items-center gap-2">
-                <Shield className="w-4 h-4 text-[#DC2626]" />
-                <span className="text-xs font-bold tracking-wider text-white uppercase font-sans">
-                  APEC Power <span className="text-[#DC2626]">Solutions</span>
-                </span>
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center p-0.5 overflow-hidden border border-white/10 shrink-0">
+                  <img src="/logo.png" alt="APEC Logo" className="w-full h-full object-contain" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold tracking-wider text-white uppercase leading-none">APEC Power</span>
+                  <span className="text-[#DC2626] text-[8px] font-bold tracking-widest uppercase mt-0.5">Solutions</span>
+                </div>
               </div>
               {/* Right verification badge */}
               <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25">
@@ -227,20 +230,20 @@ export default function ProfileView() {
             <div className="px-6 pb-6 pt-2">
               {/* Avatar — overlapping the banner */}
               <div className="flex items-center gap-5 mb-4">
-                <div className="relative shrink-0 -mt-10">
+                <div className="relative shrink-0 -mt-14">
                   {profile.photoUrl ? (
                     <img
                       src={profile.photoUrl}
                       alt={profile.name}
-                      className="w-20 h-20 rounded-xl object-cover border-4 border-white shadow-md"
+                      className="w-28 h-28 rounded-2xl object-cover border-4 border-white shadow-md"
                     />
                   ) : (
-                    <div className={`w-20 h-20 rounded-xl bg-gradient-to-br ${avatarGrad} border-4 border-white flex items-center justify-center text-xl font-bold text-white shadow-md`}>
+                    <div className={`w-28 h-28 rounded-2xl bg-gradient-to-br ${avatarGrad} border-4 border-white flex items-center justify-center text-3xl font-bold text-white shadow-md`}>
                       {profile.name.slice(0, 2).toUpperCase()}
                     </div>
                   )}
                   {/* Status dot */}
-                  <span className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-white ${profile.status === 'Active' ? 'bg-emerald-500' : profile.status === 'Site Visit' ? 'bg-cyan-500' : 'bg-amber-500'}`} />
+                  <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${profile.status === 'Active' ? 'bg-emerald-500' : profile.status === 'Site Visit' ? 'bg-cyan-500' : 'bg-amber-500'}`} />
                 </div>
                 
                 <div className="mb-0.5 min-w-0">
