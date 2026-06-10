@@ -226,8 +226,8 @@ export default function ProfileView() {
             {/* Profile info area */}
             <div className="px-6 pb-6 pt-2">
               {/* Avatar — overlapping the banner */}
-              <div className="flex items-end gap-5 -mt-10 mb-4">
-                <div className="relative shrink-0">
+              <div className="flex items-center gap-5 mb-4">
+                <div className="relative shrink-0 -mt-10">
                   {profile.photoUrl ? (
                     <img
                       src={profile.photoUrl}
