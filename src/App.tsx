@@ -14,6 +14,7 @@ import Scheduling from './components/Scheduling';
 import Safety from './components/Safety';
 import ProfileView from './components/ProfileView';
 import Attendance from './components/Attendance';
+import Reports from './components/Reports';
 
 export default function App() {
   return (
@@ -32,6 +33,7 @@ export default function App() {
           <Route path="scheduling" element={<Scheduling />} />
           <Route path="safety" element={<Safety />} />
           <Route path="attendance" element={<Attendance />} />
+          <Route path="reports" element={<Reports />} />
         </Route>
       </Route>
     </Routes>

@@ -16,7 +16,8 @@ import {
   Shield,
   Calendar,
   ShieldAlert,
-  Clock
+  Clock,
+  FileText
 } from 'lucide-react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { auth, db } from '../firebase';
@@ -133,7 +134,10 @@ export default function Dashboard() {
     { name: 'Workforce', icon: Users },
     { name: 'Attendance', icon: Clock },
     { name: 'Settings', icon: Settings },
-    ...(isAdmin ? [{ name: 'Team Control', icon: Shield }] : [])
+    ...(isAdmin ? [
+      { name: 'Team Control', icon: Shield },
+      { name: 'Reports', icon: FileText }
+    ] : [])
   ];
 
   // Helper to resolve active tab based on router pathname
@@ -147,6 +151,7 @@ export default function Dashboard() {
     if (path === '/dashboard/settings') return 'Settings';
     if (path === '/dashboard/team-control') return 'Team Control';
     if (path === '/dashboard/attendance') return 'Attendance';
+    if (path === '/dashboard/reports') return 'Reports';
     return 'Dashboard';
   };
   const activeTab = getActiveTab();
