@@ -26,6 +26,11 @@ import ImageViewerModal from './ImageViewerModal';
 export default function Attendance() {
   const { setFirestoreError, isDbActionLoading, setIsDbActionLoading, isAdmin, userProfile } = useOutletContext<any>();
 
+  const activeEmail = userProfile?.email || auth?.currentUser?.email || 'admin@apecpowersolutions.com';
+  const isUserAdmin = isAdmin || 
+    activeEmail.toLowerCase() === 'admin@apecpowersolutions.com' || 
+    activeEmail.toLowerCase() === 'managingdirector@apecpowersolutions.com';
+
   // Camera & Capture states
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -425,11 +430,7 @@ export default function Attendance() {
 
   // Filter logic
   const filteredLogs = logs.filter(log => {
-    // Normal users can only see their own attendance logs
-    const activeEmail = userProfile?.email || auth?.currentUser?.email || 'admin@apecpowersolutions.com';
-    const isUserAdmin = isAdmin || 
-      activeEmail.toLowerCase() === 'admin@apecpowersolutions.com' || 
-      activeEmail.toLowerCase() === 'managingdirector@apecpowersolutions.com';
+    // Normal users can only see their own attendance logs (inherited from component scope)
 
     if (!isUserAdmin && log.userEmail?.toLowerCase() !== activeEmail.toLowerCase()) {
       return false;
@@ -489,11 +490,11 @@ export default function Attendance() {
         )}
       </div>
 
-      {/* Main split grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+      {/* Main split grid or centered container */}
+      <div className={isUserAdmin ? "grid grid-cols-1 xl:grid-cols-12 gap-6 items-start" : "w-full"}>
         
-        {/* PUNCH CARD INTERFACE (COL-5) */}
-        <div className="xl:col-span-5 space-y-6">
+        {/* PUNCH CARD INTERFACE */}
+        <div className={isUserAdmin ? "xl:col-span-5 space-y-6" : "max-w-xl mx-auto w-full space-y-6"}>
           <div className="glass-card rounded-2xl border border-white/10 p-5 space-y-5 shadow-xl relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/5 to-transparent pointer-events-none" />
             
@@ -750,7 +751,8 @@ export default function Attendance() {
         </div>
 
         {/* ATTENDANCE HISTORY LIST (COL-7) */}
-        <div className="xl:col-span-7 space-y-6">
+        {isUserAdmin && (
+          <div className="xl:col-span-7 space-y-6">
           <div className="glass-card rounded-2xl border border-white/10 p-5 space-y-5 shadow-xl">
             
             {/* Header controls & export */}
@@ -940,6 +942,7 @@ export default function Attendance() {
 
           </div>
         </div>
+        )}
 
       </div>
 
