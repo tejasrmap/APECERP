@@ -356,7 +356,7 @@ export default function Reports() {
                 type="date"
                 value={startDateStr}
                 onChange={(e) => setStartDateStr(e.target.value)}
-                className="bg-slate-950 border border-slate-850 focus:border-cyan-500 rounded-xl px-3.5 py-1.5 text-xs text-slate-200 focus:outline-none font-mono"
+                className="bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-xl px-3.5 py-1.5 text-xs text-slate-200 focus:outline-none font-mono"
               />
             </div>
             <div className="flex items-center gap-2">
@@ -365,7 +365,7 @@ export default function Reports() {
                 type="date"
                 value={endDateStr}
                 onChange={(e) => setEndDateStr(e.target.value)}
-                className="bg-slate-950 border border-slate-850 focus:border-cyan-500 rounded-xl px-3.5 py-1.5 text-xs text-slate-200 focus:outline-none font-mono"
+                className="bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-xl px-3.5 py-1.5 text-xs text-slate-200 focus:outline-none font-mono"
               />
             </div>
           </div>
@@ -382,7 +382,7 @@ export default function Reports() {
               placeholder="Search technician or project..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-850 focus:border-cyan-505 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-200 focus:outline-none placeholder-slate-650"
+              className="w-full bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-200 focus:outline-none placeholder-slate-500"
             />
           </div>
 
@@ -393,7 +393,7 @@ export default function Reports() {
               value={statusFilter}
               disabled={activeTab !== 'shifts'}
               onChange={(e) => setStatusFilter(e.target.value as any)}
-              className="w-full bg-slate-950 border border-slate-850 focus:border-cyan-505 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <option value="All">All Dispatch Statuses</option>
               <option value="Scheduled">Scheduled</option>
@@ -404,7 +404,7 @@ export default function Reports() {
           </div>
 
           {/* Tab Selector */}
-          <div className="flex bg-slate-950 border border-slate-850 p-1 rounded-xl">
+          <div className="flex bg-slate-950 border border-slate-800 p-1 rounded-xl">
             <button
               onClick={() => setActiveTab('shifts')}
               className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
@@ -507,10 +507,10 @@ export default function Reports() {
                       <td className="py-3.5 px-3 font-mono">{calculateShiftHours(s.time)} hrs</td>
                       <td className="py-3.5 px-3">
                         <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[9px] font-bold uppercase tracking-wider ${
-                          s.status === 'On Time' ? 'bg-green-500/10 border-green-500/20 text-green-405 text-green-400' :
-                          s.status === 'Delayed' ? 'bg-amber-500/10 border-amber-500/20 text-amber-450 text-amber-400' :
-                          s.status === 'Absent' ? 'bg-rose-500/10 border-rose-500/20 text-rose-450 text-rose-400' :
-                          'bg-slate-900 border-slate-800 text-slate-450'
+                          s.status === 'On Time' ? 'bg-green-500/10 border-green-500/20 text-green-400' :
+                          s.status === 'Delayed' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' :
+                          s.status === 'Absent' ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' :
+                          'bg-slate-900 border-slate-800 text-slate-400'
                         }`}>
                           {s.status === 'On Time' && <CheckCircle2 className="w-3 h-3" />}
                           {s.status === 'Delayed' && <AlertTriangle className="w-3 h-3" />}
@@ -547,7 +547,7 @@ export default function Reports() {
                     const punchDate = new Date(log.timestamp);
                     const punchStr = punchDate.toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' });
                     return (
-                      <tr key={log.id} className="hover:bg-slate-955/20 text-slate-200">
+                      <tr key={log.id} className="hover:bg-slate-900/20 text-slate-200">
                         <td className="py-3.5 px-3 font-mono">{punchStr}</td>
                         <td className="py-3.5 px-3">
                           <div>
@@ -557,8 +557,8 @@ export default function Reports() {
                         </td>
                         <td className="py-3.5 px-3">
                           <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[9px] font-bold uppercase tracking-wider ${
-                            log.type === 'punch_in' ? 'bg-cyan-500/10 border-cyan-500/20 text-cyan-405 text-cyan-400' :
-                            'bg-indigo-500/10 border-indigo-500/20 text-indigo-405 text-indigo-400'
+                            log.type === 'punch_in' ? 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400' :
+                            'bg-indigo-500/10 border-indigo-500/20 text-indigo-400'
                           }`}>
                             {log.type === 'punch_in' ? 'CHECK-IN' : 'CHECK-OUT'}
                           </span>
