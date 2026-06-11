@@ -228,8 +228,9 @@ export default function Chat() {
 
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.15, ease: 'easeOut' }}
       className="flex-1 flex glass-card rounded-2xl overflow-hidden h-[calc(100vh-115px)] md:h-[calc(100vh-160px)] min-h-[450px] md:min-h-[500px] shadow-[0_12px_40px_rgba(0,0,0,0.4)] border border-white/10"
     >
       {/* Contact List Panel (Left) */}

@@ -1,39 +1,74 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Routes, Route } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
+
+// Eagerly loaded (always needed)
 import Login from './components/Login';
-import Dashboard from './components/Dashboard';
-import Overview from './components/Overview';
-import Projects from './components/Projects';
-import Inventory from './components/Inventory';
-import Team from './components/Team';
-import Chat from './components/Chat';
-import Settings from './components/Settings';
-import TeamControl from './components/TeamControl';
 import ProtectedRoute from './components/ProtectedRoute';
-import Scheduling from './components/Scheduling';
-import Safety from './components/Safety';
-import ProfileView from './components/ProfileView';
-import Attendance from './components/Attendance';
-import Reports from './components/Reports';
+import Dashboard from './components/Dashboard';
+
+// Lazy loaded (only parsed when the route is visited)
+const Overview     = lazy(() => import('./components/Overview'));
+const Projects     = lazy(() => import('./components/Projects'));
+const Inventory    = lazy(() => import('./components/Inventory'));
+const Team         = lazy(() => import('./components/Team'));
+const Chat         = lazy(() => import('./components/Chat'));
+const Settings     = lazy(() => import('./components/Settings'));
+const TeamControl  = lazy(() => import('./components/TeamControl'));
+const Scheduling   = lazy(() => import('./components/Scheduling'));
+const Safety       = lazy(() => import('./components/Safety'));
+const ProfileView  = lazy(() => import('./components/ProfileView'));
+const Attendance   = lazy(() => import('./components/Attendance'));
+const Reports      = lazy(() => import('./components/Reports'));
+
+const PageLoader = () => (
+  <div className="absolute inset-0 flex items-center justify-center bg-[#070a13]/50 z-30">
+    <Loader2 className="w-10 h-10 animate-spin text-cyan-400" />
+  </div>
+);
 
 export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Login />} />
-      <Route path="/profile/:id" element={<ProfileView />} />
+      <Route path="/profile/:id" element={
+        <Suspense fallback={<PageLoader />}><ProfileView /></Suspense>
+      } />
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<Dashboard />}>
-          <Route index element={<Overview />} />
-          <Route path="projects" element={<Projects />} />
-          <Route path="inventory" element={<Inventory />} />
-          <Route path="team" element={<Team />} />
-          <Route path="workforce" element={<Chat />} />
-          <Route path="settings" element={<Settings />} />
-          <Route path="team-control" element={<TeamControl />} />
-          <Route path="scheduling" element={<Scheduling />} />
-          <Route path="safety" element={<Safety />} />
-          <Route path="attendance" element={<Attendance />} />
-          <Route path="reports" element={<Reports />} />
+          <Route index element={
+            <Suspense fallback={<PageLoader />}><Overview /></Suspense>
+          } />
+          <Route path="projects" element={
+            <Suspense fallback={<PageLoader />}><Projects /></Suspense>
+          } />
+          <Route path="inventory" element={
+            <Suspense fallback={<PageLoader />}><Inventory /></Suspense>
+          } />
+          <Route path="team" element={
+            <Suspense fallback={<PageLoader />}><Team /></Suspense>
+          } />
+          <Route path="workforce" element={
+            <Suspense fallback={<PageLoader />}><Chat /></Suspense>
+          } />
+          <Route path="settings" element={
+            <Suspense fallback={<PageLoader />}><Settings /></Suspense>
+          } />
+          <Route path="team-control" element={
+            <Suspense fallback={<PageLoader />}><TeamControl /></Suspense>
+          } />
+          <Route path="scheduling" element={
+            <Suspense fallback={<PageLoader />}><Scheduling /></Suspense>
+          } />
+          <Route path="safety" element={
+            <Suspense fallback={<PageLoader />}><Safety /></Suspense>
+          } />
+          <Route path="attendance" element={
+            <Suspense fallback={<PageLoader />}><Attendance /></Suspense>
+          } />
+          <Route path="reports" element={
+            <Suspense fallback={<PageLoader />}><Reports /></Suspense>
+          } />
         </Route>
       </Route>
     </Routes>

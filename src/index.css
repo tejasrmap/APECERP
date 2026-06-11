@@ -14,16 +14,20 @@ body {
 
 @utility glass-card {
   background-color: rgba(13, 20, 35, 0.65);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  /* Reduced blur from 16px → 10px: imperceptible visually, significant GPU win */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+  /* Isolate paint to avoid triggering full-page repaints */
+  contain: layout style;
 }
 
 @utility glass-sidebar {
-  background-color: rgba(9, 13, 24, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background-color: rgba(9, 13, 24, 0.90);
+  /* Reduced blur from 20px → 12px */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-right: 1px solid rgba(255, 255, 255, 0.05);
 }
 
@@ -34,9 +38,13 @@ body {
 
 @utility cyber-grid {
   background-image: 
-    linear-gradient(to right, rgba(6, 182, 212, 0.035) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(6, 182, 212, 0.035) 1px, transparent 1px);
+    linear-gradient(to right, rgba(6, 182, 212, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(6, 182, 212, 0.03) 1px, transparent 1px);
   background-size: 32px 32px;
+  /* Hoist to own compositing layer so grid never triggers main-thread paints */
+  will-change: transform;
+  transform: translateZ(0);
+  contain: strict;
 }
 
 /* Custom Scrollbar / Slider Styling */
@@ -97,5 +105,6 @@ body {
     font-size: 16px !important;
   }
 }
+
 
 

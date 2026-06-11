@@ -165,11 +165,11 @@ export default function Dashboard() {
   return (
     <div className="h-[100dvh] w-full bg-[#070a13] flex font-sans text-slate-200 overflow-hidden relative selection:bg-cyan-500/15 selection:text-cyan-400">
       
-      {/* Background Ambience */}
+      {/* Background Ambience — each blob promoted to its own GPU compositing layer */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-25%] left-[-15%] w-[60%] h-[60%] bg-cyan-950/15 rounded-full blur-[140px]" />
-        <div className="absolute bottom-[-25%] right-[-15%] w-[70%] h-[70%] bg-rose-955/10 rounded-full blur-[160px]" />
-        <div className="absolute inset-0 cyber-grid opacity-50"></div>
+        <div className="absolute top-[-25%] left-[-15%] w-[60%] h-[60%] bg-cyan-950/15 rounded-full blur-[100px]" style={{ willChange: 'transform', transform: 'translateZ(0)' }} />
+        <div className="absolute bottom-[-25%] right-[-15%] w-[70%] h-[70%] bg-rose-950/10 rounded-full blur-[120px]" style={{ willChange: 'transform', transform: 'translateZ(0)' }} />
+        <div className="absolute inset-0 cyber-grid opacity-30"></div>
       </div>
 
       {/* Mobile Sidebar Overlay */}
@@ -212,7 +212,7 @@ export default function Dashboard() {
               <button
                 key={item.name}
                 onClick={() => { navigate(getPathForTab(item.name)); setIsSidebarOpen(false); }}
-                className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 ${
+                className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-colors duration-150 ${
                   isActive 
                     ? 'bg-cyan-950/40 text-cyan-400 border border-cyan-500/30 font-medium shadow-md glowing-active' 
                     : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/40 border border-transparent'
@@ -283,7 +283,7 @@ export default function Dashboard() {
             <div className="relative">
               <button 
                 onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                className={`relative p-2 rounded-full transition-colors border ${isNotificationsOpen ? 'bg-slate-800/80 border-slate-705 text-cyan-400' : 'hover:bg-slate-800 border-transparent hover:border-slate-700 text-slate-400 hover:text-slate-250'}`}
+                className={`relative p-2 rounded-full transition-colors duration-150 border ${isNotificationsOpen ? 'bg-slate-800/80 border-slate-700 text-cyan-400' : 'hover:bg-slate-800 border-transparent hover:border-slate-700 text-slate-400 hover:text-slate-200'}`}
               >
                 <Bell className="w-5 h-5" />
                 {notifications.length > 0 && (
@@ -319,7 +319,7 @@ export default function Dashboard() {
                       ) : (
                         <div className="space-y-2.5">
                           {notifications.map((n) => (
-                            <div key={n.id} className="p-2.5 rounded-xl bg-slate-955/40 border border-slate-900/60 hover:border-slate-800 transition-all text-xs flex gap-2">
+                            <div key={n.id} className="p-2.5 rounded-xl bg-slate-950/40 border border-slate-900/60 hover:border-slate-800 transition-colors duration-100 text-xs flex gap-2">
                               <span className={`w-2 h-2 rounded-full shrink-0 mt-1.5 ${
                                 n.type === 'alert' ? 'bg-rose-500 animate-pulse' :
                                 n.type === 'permit' ? 'bg-cyan-500' :
