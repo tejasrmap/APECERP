@@ -75,8 +75,12 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-.overflow-x-auto, 
+.overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+}
+
 .overflow-y-auto {
+  overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
 }
 

@@ -158,7 +158,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="h-screen w-full bg-[#070a13] flex font-sans text-slate-200 overflow-hidden relative selection:bg-cyan-500/15 selection:text-cyan-400">
+    <div className="h-[100dvh] w-full bg-[#070a13] flex font-sans text-slate-200 overflow-hidden relative selection:bg-cyan-500/15 selection:text-cyan-400">
       
       {/* Background Ambience */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">

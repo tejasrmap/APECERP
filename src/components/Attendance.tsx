@@ -470,8 +470,8 @@ export default function Attendance() {
       animate={{ opacity: 1, y: 0 }}
       className="space-y-6 lg:space-y-8"
     >
-      {/* Header Panel */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 lg:p-6 rounded-2xl glass-card border border-white/10 shadow-2xl relative overflow-hidden">
+      {/* Header Panel - Hidden on mobile to save viewport space */}
+      <div className="hidden md:flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 lg:p-6 rounded-2xl glass-card border border-white/10 shadow-2xl relative overflow-hidden">
         <div className="absolute inset-0 cyber-grid opacity-10 pointer-events-none" />
         <div className="relative z-10">
           <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
