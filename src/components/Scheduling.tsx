@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, Timestamp } from 'firebase/firestore';
 import { useOutletContext } from 'react-router-dom';
-import { db } from '../firebase';
+import { auth, db } from '../firebase';
 
 
 interface Shift {
@@ -66,9 +66,25 @@ const getShiftTimelinePosition = (timeStr: string) => {
 };
 
 export default function Scheduling() {
-  const { setFirestoreError, isDbActionLoading, setIsDbActionLoading, isAdmin } = useOutletContext<any>();
+  const { setFirestoreError, isDbActionLoading, setIsDbActionLoading, isAdmin, userProfile } = useOutletContext<any>();
 
   const [teamList, setTeamList] = useState<any[]>([]);
+  
+  // Memoize visible team members based on admin status (admins see all workload, technicians see only their own)
+  const visibleTeamList = React.useMemo(() => {
+    if (isAdmin) {
+      return teamList;
+    }
+    if (userProfile) {
+      return teamList.filter(t => t.id === userProfile.id || t.email?.toLowerCase() === userProfile.email?.toLowerCase());
+    }
+    const authEmail = auth?.currentUser?.email;
+    if (authEmail) {
+      return teamList.filter(t => t.email?.toLowerCase() === authEmail.toLowerCase());
+    }
+    return [];
+  }, [teamList, isAdmin, userProfile]);
+
   const [projectsList, setProjectsList] = useState<any[]>([]);
   const [schedules, setSchedules] = useState<Shift[]>([]);
   const [loading, setLoading] = useState(true);
@@ -555,9 +571,18 @@ export default function Scheduling() {
 
             <div className="flex items-center gap-3 bg-slate-955/60 border border-slate-900 rounded-xl px-4 py-2">
               <div className="text-right">
-                <span className="text-[9px] text-slate-500 font-bold block uppercase tracking-wider">Today's Schedule load</span>
+                <span className="text-[9px] text-slate-500 font-bold block uppercase tracking-wider">
+                  {isAdmin ? "Today's Schedule load" : "Your Shifts Today"}
+                </span>
                 <span className="text-xs font-mono font-bold text-cyan-400">
-                  {selectedDateShifts.reduce((sum, s) => sum + calculateShiftHours(s.time), 0)} hrs ({selectedDateShifts.length} shifts)
+                  {(() => {
+                    const shiftsCount = selectedDateShifts.filter(s => {
+                      if (isAdmin) return true;
+                      return s.technicianId === userProfile?.id || s.technicianName === userProfile?.name;
+                    });
+                    const totalHours = shiftsCount.reduce((sum, s) => sum + calculateShiftHours(s.time), 0);
+                    return `${totalHours} hrs (${shiftsCount.length} shifts)`;
+                  })()}
                 </span>
               </div>
               <Clock className="w-4 h-4 text-cyan-505 opacity-60" />
@@ -602,7 +627,7 @@ export default function Scheduling() {
 
               {/* Technician Dispatch Timeline List */}
               <div className="space-y-3">
-                {teamList.map((tech) => {
+                {visibleTeamList.map((tech) => {
                   const techShifts = selectedDateShifts.filter(s => s.technicianId === tech.id);
                   const weeklyHours = getWeeklyHoursForTech(tech.id, selectedDateStr);
                   const isOvertimeLimit = weeklyHours > 48;
