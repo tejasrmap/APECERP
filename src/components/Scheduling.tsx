@@ -34,31 +34,34 @@ interface Shift {
   status: 'Scheduled' | 'On Time' | 'Delayed' | 'Absent';
 }
 
-// Helper to calculate left and width percentages for daily timeline visualization (07:00 - 19:00 window)
+// Helper to calculate left and width percentages for daily timeline visualization (12 AM - 12 AM 24h window)
 const getShiftTimelinePosition = (timeStr: string) => {
-  const startHourRef = 7; // 7 AM
-  const endHourRef = 19; // 7 PM
-  const totalHours = endHourRef - startHourRef;
+  const startHourRef = 0; // 12 AM
+  const endHourRef = 24; // 12 AM next day
+  const totalHours = 24;
 
   try {
     const parts = timeStr.split('-');
-    if (parts.length !== 2) return { left: '8.33%', width: '75%', isOutOfRange: false };
+    if (parts.length !== 2) return { left: '33.33%', width: '37.5%', isOutOfRange: false };
     const [start, end] = parts.map(p => p.trim());
     
     const [startH, startM] = start.split(':').map(Number);
     const [endH, endM] = end.split(':').map(Number);
     
-    const startDecimal = startH + (startM || 0) / 60;
-    const endDecimal = endH + (endM || 0) / 60;
+    let startDecimal = startH + (startM || 0) / 60;
+    let endDecimal = endH + (endM || 0) / 60;
     
-    const isOutOfRange = endDecimal <= startHourRef || startDecimal >= endHourRef;
+    // Support overnight shifts visually cap at end of day
+    if (endDecimal < startDecimal) {
+      endDecimal = 24;
+    }
     
     const leftPercent = Math.max(0, Math.min(100, ((startDecimal - startHourRef) / totalHours) * 100));
-    const widthPercent = Math.max(5, Math.min(100 - leftPercent, ((endDecimal - startDecimal) / totalHours) * 100));
+    const widthPercent = Math.max(2, Math.min(100 - leftPercent, ((endDecimal - startDecimal) / totalHours) * 100));
     
-    return { left: `${leftPercent}%`, width: `${widthPercent}%`, isOutOfRange };
+    return { left: `${leftPercent}%`, width: `${widthPercent}%`, isOutOfRange: false };
   } catch {
-    return { left: '8.33%', width: '75%', isOutOfRange: false };
+    return { left: '33.33%', width: '37.5%', isOutOfRange: false };
   }
 };
 
@@ -506,26 +509,35 @@ export default function Scheduling() {
 
         {/* Daily Timeline Scheduler */}
         <div className="space-y-4">
+          {/* Scrollable Container with sticky columns */}
           <div className="overflow-x-auto select-none pb-2 scrollbar-thin">
-            <div className="min-w-[850px] px-1 space-y-4">
+            <div className="min-w-[1400px] px-1 space-y-4">
               
               {/* Timeline Header Row (Hours Labels) */}
-              <div className="grid grid-cols-12 gap-4">
-                <div className="col-span-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 px-2 select-none">
+              <div className="flex gap-4 items-center">
+                {/* Sticky header column for Technician Workload label */}
+                <div className="w-[200px] sticky left-0 bg-[#0d1423] z-25 text-[10px] font-bold uppercase tracking-wider text-slate-500 px-3 py-1 select-none flex-shrink-0 border-r border-transparent">
                   Technician Workload
                 </div>
-                <div className="col-span-9 relative h-6">
+                
+                {/* Hour labels (00:00 to 24:00) */}
+                <div className="flex-grow relative h-6">
                   {(() => {
-                    const hoursRange = Array.from({ length: 13 }, (_, i) => 7 + i); // 07:00 to 19:00
-                    return hoursRange.map((h, idx) => (
-                      <span 
-                        key={h} 
-                        style={{ left: `${(idx / 12) * 100}%` }}
-                        className="absolute -translate-x-1/2 text-[9px] font-mono font-bold text-slate-500 whitespace-nowrap"
-                      >
-                        {String(h).padStart(2, '0')}:00
-                      </span>
-                    ));
+                    const hoursRange = Array.from({ length: 25 }, (_, i) => i);
+                    return hoursRange.map((h, idx) => {
+                      const label = h === 0 || h === 24 ? '12 AM' : h === 12 ? '12 PM' : h < 12 ? `${h} AM` : `${h - 12} PM`;
+                      const shouldShowLabel = h % 2 === 0; // Show every 2 hours to avoid clutter
+                      
+                      return shouldShowLabel ? (
+                        <span 
+                          key={h} 
+                          style={{ left: `${(idx / 24) * 100}%` }}
+                          className="absolute -translate-x-1/2 text-[9px] font-mono font-bold text-slate-500 whitespace-nowrap select-none"
+                        >
+                          {label}
+                        </span>
+                      ) : null;
+                    });
                   })()}
                 </div>
               </div>
@@ -540,10 +552,10 @@ export default function Scheduling() {
                   return (
                     <div 
                       key={tech.id} 
-                      className="grid grid-cols-12 gap-4 items-center p-3 rounded-2xl border border-slate-900 bg-slate-955/15 hover:border-slate-850 hover:bg-slate-950/20 transition-all"
+                      className="group flex gap-4 items-center p-3 rounded-2xl border border-slate-900 bg-slate-955/15 hover:border-slate-850 hover:bg-slate-950/20 transition-all"
                     >
-                      {/* Col 1: Tech Profile Details */}
-                      <div className="col-span-3 flex items-center gap-3">
+                      {/* Col 1: Tech Profile Details (Sticky Left) */}
+                      <div className="w-[200px] flex-shrink-0 sticky left-0 bg-[#0d1423] group-hover:bg-[#121b30] border-r border-slate-900/60 pr-4 z-20 flex items-center gap-2.5 transition-colors shadow-[4px_0_10px_-4px_rgba(0,0,0,0.5)]">
                         <div className="w-8 h-8 rounded-full bg-slate-900 border border-slate-850 flex items-center justify-center text-xs font-bold text-slate-300 shadow-inner select-none flex-shrink-0">
                           {tech.name.slice(0, 2).toUpperCase()}
                         </div>
@@ -552,26 +564,26 @@ export default function Scheduling() {
                           <p className="text-[9.5px] text-slate-505 font-mono truncate leading-none mt-0.5">{tech.role}</p>
                           
                           {/* Workload hours count */}
-                          <span className={`inline-flex items-center gap-1 mt-1 text-[8px] font-bold px-1.5 py-0.5 rounded leading-none ${
+                          <span className={`inline-flex items-center gap-1 mt-1 text-[8px] font-bold px-1.5 py-0.5 rounded leading-none \${
                             isOvertimeLimit 
                               ? 'bg-rose-500/10 border border-rose-500/25 text-rose-400' 
                               : 'bg-slate-900 border border-slate-800 text-slate-400'
                           }`}>
-                            Week load: ${weeklyHours}h ${isOvertimeLimit ? '⚠️' : ''}
+                            Week load: {weeklyHours}h {isOvertimeLimit ? '⚠️' : ''}
                           </span>
                         </div>
                       </div>
 
-                      {/* Col 2: Absolute positioned daily timeline */}
-                      <div className="col-span-9">
+                      {/* Col 2: Absolute positioned daily timeline (Flex-grow) */}
+                      <div className="flex-grow">
                         <div className="relative h-[60px] bg-slate-955/45 border border-slate-900/80 rounded-xl overflow-hidden flex items-center">
                           
-                          {/* Hour Dividers / Background Grid */}
+                          {/* Hour Dividers / Background Grid (24-hour lines) */}
                           <div className="absolute inset-0 flex pointer-events-none z-0">
-                            {Array.from({ length: 13 }).map((_, idx) => (
+                            {Array.from({ length: 25 }).map((_, idx) => (
                               <div 
                                 key={idx} 
-                                style={{ left: `${(idx / 12) * 100}%` }} 
+                                style={{ left: `${(idx / 24) * 100}%` }} 
                                 className="absolute top-0 bottom-0 w-px bg-slate-900/30 border-r border-dashed border-slate-800/10" 
                               />
                             ))}
@@ -580,14 +592,14 @@ export default function Scheduling() {
                           {/* Interactive scheduling layer or shift display */}
                           {shift ? (
                             (() => {
-                              const { left, width, isOutOfRange } = getShiftTimelinePosition(shift.time);
+                              const { left, width } = getShiftTimelinePosition(shift.time);
                               const autoMatch = getAutoStatus(shift);
                               const isSyncNeeded = autoMatch.status !== shift.status;
 
                               return (
                                 <div
                                   style={{ left, width }}
-                                  className={`absolute h-11 rounded-lg border px-3 flex items-center justify-between transition-all group z-10 ${
+                                  className={`absolute h-11 rounded-lg border px-3 flex items-center justify-between transition-all group z-10 \${
                                     shift.status === 'On Time' ? 'bg-green-500/10 border-green-500/20 text-green-400 hover:bg-green-500/15' :
                                     shift.status === 'Delayed' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/15' :
                                     shift.status === 'Absent' ? 'bg-rose-500/10 border-rose-500/20 text-rose-400 hover:bg-rose-500/15' :
@@ -597,24 +609,24 @@ export default function Scheduling() {
                                   {/* Shift Info */}
                                   <div className="min-w-0 flex-1 flex flex-col justify-center">
                                     <div className="flex items-center gap-1.5 min-w-0">
-                                      <MapPin className="w-2.5 h-2.5 text-cyan-405/80 flex-shrink-0" />
-                                      <span className="text-[10px] font-bold truncate leading-tight">${shift.projectName}</span>
+                                      <MapPin className="w-2.5 h-2.5 text-cyan-450/80 flex-shrink-0" />
+                                      <span className="text-[10px] font-bold truncate leading-tight">{shift.projectName}</span>
                                     </div>
                                     <span className="text-[8.5px] opacity-70 font-mono mt-0.5 leading-none">
-                                      ${shift.time} (${calculateShiftHours(shift.time)}h)
+                                      {shift.time} ({calculateShiftHours(shift.time)}h)
                                     </span>
                                   </div>
 
                                   {/* Status indicators & Actions */}
                                   <div className="flex items-center gap-2 flex-shrink-0 ml-2">
                                     {/* Attendance match badge */}
-                                    <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider bg-slate-950/80 leading-none ${
+                                    <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider bg-slate-955/80 leading-none \${
                                       autoMatch.status === 'On Time' ? 'bg-green-500/10 border-green-500/20 text-green-400' :
-                                      autoMatch.status === 'Delayed' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' :
+                                      autoMatch.status === 'Delayed' ? 'bg-amber-500/10 border-amber-500/20 text-amber-450' :
                                       autoMatch.status === 'Absent' ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' :
                                       'bg-slate-900 border-slate-800 text-slate-455'
                                     }`}>
-                                      ${autoMatch.status}
+                                      {autoMatch.status}
                                     </span>
 
                                     {/* Sync Action */}
@@ -645,15 +657,15 @@ export default function Scheduling() {
                                             e.stopPropagation();
                                             setActiveStatusDropdown(activeStatusDropdown === shift.id ? null : shift.id);
                                           }}
-                                          className={`text-[8px] font-bold px-1.5 py-0.5 rounded border bg-slate-950/80 cursor-pointer flex items-center gap-1 transition-colors leading-none ${
+                                          className={`text-[8px] font-bold px-1.5 py-0.5 rounded border bg-slate-955/80 cursor-pointer flex items-center gap-1 transition-colors leading-none \${
                                             shift.status === 'On Time' ? 'border-green-500/30 text-green-400 hover:bg-green-500/5' :
                                             shift.status === 'Delayed' ? 'border-amber-500/30 text-amber-400 hover:bg-amber-500/5' :
                                             shift.status === 'Absent' ? 'border-rose-500/30 text-rose-400 hover:bg-rose-500/5' :
                                             'border-slate-800 text-slate-400 hover:bg-slate-900'
                                           }`}
                                         >
-                                          ${shift.status}
-                                          <ChevronDown className="w-2.5 h-2.5 text-slate-500" />
+                                          {shift.status}
+                                          <ChevronDown className="w-2.5 h-2.5 text-slate-550" />
                                         </button>
                                         
                                         <AnimatePresence>
@@ -674,10 +686,10 @@ export default function Scheduling() {
                                                       handleUpdateStatus(shift.id, opt);
                                                       setActiveStatusDropdown(null);
                                                     }}
-                                                    className={`w-full text-left px-2 py-1.5 rounded-lg text-[8.5px] font-bold transition-colors flex items-center justify-between cursor-pointer ${
+                                                    className={`w-full text-left px-2 py-1.5 rounded-lg text-[8.5px] font-bold transition-colors flex items-center justify-between cursor-pointer \${
                                                       shift.status === opt 
                                                         ? 'bg-cyan-500/10 text-cyan-400' 
-                                                        : 'text-slate-350 hover:bg-slate-950'
+                                                        : 'text-slate-355 hover:bg-slate-955'
                                                     }`}
                                                   >
                                                     {opt}
@@ -690,13 +702,13 @@ export default function Scheduling() {
                                         </AnimatePresence>
                                       </div>
                                     ) : (
-                                      <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider leading-none ${
+                                      <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider leading-none \${
                                         shift.status === 'On Time' ? 'bg-green-500/10 border-green-500/20 text-green-400' :
-                                        shift.status === 'Delayed' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' :
+                                        shift.status === 'Delayed' ? 'bg-amber-500/10 border-amber-505/20 text-amber-450' :
                                         shift.status === 'Absent' ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' :
-                                        'bg-slate-900 border-slate-800 text-slate-450'
+                                        'bg-slate-900 border-slate-800 text-slate-455'
                                       }`}>
-                                        ${shift.status}
+                                        {shift.status}
                                       </span>
                                     )}
 
