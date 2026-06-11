@@ -15,7 +15,8 @@ import {
   MessageSquare,
   Shield,
   Calendar,
-  ShieldAlert
+  ShieldAlert,
+  Clock
 } from 'lucide-react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { auth, db } from '../firebase';
@@ -130,6 +131,7 @@ export default function Dashboard() {
     { name: 'Scheduling', icon: Calendar },
     { name: 'Safety', icon: ShieldAlert },
     { name: 'Workforce', icon: Users },
+    { name: 'Attendance', icon: Clock },
     { name: 'Settings', icon: Settings },
     ...(isAdmin ? [{ name: 'Team Control', icon: Shield }] : [])
   ];
@@ -144,6 +146,7 @@ export default function Dashboard() {
     if (path === '/dashboard/workforce') return 'Workforce';
     if (path === '/dashboard/settings') return 'Settings';
     if (path === '/dashboard/team-control') return 'Team Control';
+    if (path === '/dashboard/attendance') return 'Attendance';
     return 'Dashboard';
   };
   const activeTab = getActiveTab();

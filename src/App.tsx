@@ -13,6 +13,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Scheduling from './components/Scheduling';
 import Safety from './components/Safety';
 import ProfileView from './components/ProfileView';
+import Attendance from './components/Attendance';
 
 export default function App() {
   return (
@@ -30,6 +31,7 @@ export default function App() {
           <Route path="team-control" element={<TeamControl />} />
           <Route path="scheduling" element={<Scheduling />} />
           <Route path="safety" element={<Safety />} />
+          <Route path="attendance" element={<Attendance />} />
         </Route>
       </Route>
     </Routes>
