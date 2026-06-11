@@ -407,10 +407,11 @@ export default function Attendance() {
     csvContent += 'Date,Time,Employee ID,Name,Email,Type,Latitude,Longitude,Address\n';
 
     filteredLogs.forEach(log => {
-      const date = new Date(log.timestamp).toLocaleDateString();
-      const time = new Date(log.timestamp).toLocaleTimeString();
+      const d = new Date(log.timestamp);
+      const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const timeStr = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
       const cleanAddress = (log.location?.address || '').replace(/"/g, '""');
-      csvContent += `"${date}","${time}","${log.employeeId}","${log.userName}","${log.userEmail}","${log.type === 'punch_in' ? 'Punch In' : 'Punch Out'}","${log.location?.latitude || ''}","${log.location?.longitude || ''}","${cleanAddress}"\n`;
+      csvContent += `"${dateStr}","${timeStr}","${log.employeeId}","${log.userName}","${log.userEmail}","${log.type === 'punch_in' ? 'Punch In' : 'Punch Out'}","${log.location?.latitude || ''}","${log.location?.longitude || ''}","${cleanAddress}"\n`;
     });
 
     const encodedUri = encodeURI(csvContent);
