@@ -73,9 +73,6 @@ export default function Attendance() {
       };
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
       setIsCameraActive(true);
     } catch (err: any) {
       console.error('Error accessing camera:', err);
@@ -86,6 +83,13 @@ export default function Attendance() {
       );
     }
   };
+
+  // Synchronize stream with video element once it is mounted in the DOM
+  useEffect(() => {
+    if (isCameraActive && streamRef.current && videoRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+    }
+  }, [isCameraActive]);
 
   // Stop video stream
   const stopCamera = () => {
