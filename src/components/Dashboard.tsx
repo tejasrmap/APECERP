@@ -194,8 +194,8 @@ export default function Dashboard() {
                  <p className="text-[9px] text-cyan-405 font-bold uppercase tracking-widest text-cyan-400">ERP System</p>
              </div>
           </div>
-          <button className="lg:hidden p-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 rounded-lg transition-colors" onClick={() => setIsSidebarOpen(false)}>
-            <X className="w-5 h-5" />
+          <button className="lg:hidden p-2.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 rounded-xl transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer active:scale-95 duration-200" onClick={() => setIsSidebarOpen(false)}>
+            <X className="w-5.5 h-5.5" />
           </button>
         </div>
 
@@ -257,9 +257,9 @@ export default function Dashboard() {
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setIsSidebarOpen(true)}
-              className="lg:hidden p-2 rounded-lg bg-slate-900/60 border border-slate-800 text-slate-400 hover:text-slate-200 transition-colors"
+              className="lg:hidden p-2.5 rounded-xl bg-slate-900/60 border border-slate-800 text-slate-400 hover:text-slate-200 transition-colors active:scale-95 duration-200 cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
             >
-              <Menu className="w-5 h-5" />
+              <Menu className="w-5.5 h-5.5" />
             </button>
             <h2 className="text-lg lg:text-xl font-bold text-slate-100 tracking-tight">
               {activeTab === 'Workforce' ? 'Communication Center' : activeTab}

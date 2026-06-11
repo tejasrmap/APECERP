@@ -201,7 +201,7 @@ export default function Login() {
         {/* Top brand indicator */}
         <div className="h-1.5 bg-gradient-to-r from-rose-600 via-cyan-500 to-cyan-400" />
 
-        <div className="p-8 min-h-[460px] flex flex-col justify-center">
+        <div className="p-5 sm:p-8 min-h-[460px] flex flex-col justify-center">
           <AnimatePresence mode="wait">
             {step === 'credentials' ? (
               <motion.div

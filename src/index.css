@@ -70,4 +70,28 @@ body {
   scrollbar-color: rgba(255, 255, 255, 0.1) #070a13;
 }
 
+/* Touch and Mobile Device Optimizations */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.overflow-x-auto, 
+.overflow-y-auto {
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 640px) {
+  /* Prevent viewport auto-zoom on input focus for iOS devices */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="date"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
 
