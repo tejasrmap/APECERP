@@ -564,7 +564,7 @@ export default function Scheduling() {
                           <p className="text-[9.5px] text-slate-505 font-mono truncate leading-none mt-0.5">{tech.role}</p>
                           
                           {/* Workload hours count */}
-                          <span className={`inline-flex items-center gap-1 mt-1 text-[8px] font-bold px-1.5 py-0.5 rounded leading-none \${
+                          <span className={`inline-flex items-center gap-1 mt-1 text-[8px] font-bold px-1.5 py-0.5 rounded leading-none ${
                             isOvertimeLimit 
                               ? 'bg-rose-500/10 border border-rose-500/25 text-rose-400' 
                               : 'bg-slate-900 border border-slate-800 text-slate-400'
@@ -599,7 +599,7 @@ export default function Scheduling() {
                               return (
                                 <div
                                   style={{ left, width }}
-                                  className={`absolute h-11 rounded-lg border px-3 flex items-center justify-between transition-all group z-10 \${
+                                  className={`absolute h-11 rounded-lg border px-3 flex items-center justify-between transition-all group z-10 ${
                                     shift.status === 'On Time' ? 'bg-green-500/10 border-green-500/20 text-green-400 hover:bg-green-500/15' :
                                     shift.status === 'Delayed' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/15' :
                                     shift.status === 'Absent' ? 'bg-rose-500/10 border-rose-500/20 text-rose-400 hover:bg-rose-500/15' :
@@ -620,7 +620,7 @@ export default function Scheduling() {
                                   {/* Status indicators & Actions */}
                                   <div className="flex items-center gap-2 flex-shrink-0 ml-2">
                                     {/* Attendance match badge */}
-                                    <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider bg-slate-955/80 leading-none \${
+                                    <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider bg-slate-955/80 leading-none ${
                                       autoMatch.status === 'On Time' ? 'bg-green-500/10 border-green-500/20 text-green-400' :
                                       autoMatch.status === 'Delayed' ? 'bg-amber-500/10 border-amber-500/20 text-amber-450' :
                                       autoMatch.status === 'Absent' ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' :
@@ -657,7 +657,7 @@ export default function Scheduling() {
                                             e.stopPropagation();
                                             setActiveStatusDropdown(activeStatusDropdown === shift.id ? null : shift.id);
                                           }}
-                                          className={`text-[8px] font-bold px-1.5 py-0.5 rounded border bg-slate-955/80 cursor-pointer flex items-center gap-1 transition-colors leading-none \${
+                                          className={`text-[8px] font-bold px-1.5 py-0.5 rounded border bg-slate-955/80 cursor-pointer flex items-center gap-1 transition-colors leading-none ${
                                             shift.status === 'On Time' ? 'border-green-500/30 text-green-400 hover:bg-green-500/5' :
                                             shift.status === 'Delayed' ? 'border-amber-500/30 text-amber-400 hover:bg-amber-500/5' :
                                             shift.status === 'Absent' ? 'border-rose-500/30 text-rose-400 hover:bg-rose-500/5' :
@@ -686,7 +686,7 @@ export default function Scheduling() {
                                                       handleUpdateStatus(shift.id, opt);
                                                       setActiveStatusDropdown(null);
                                                     }}
-                                                    className={`w-full text-left px-2 py-1.5 rounded-lg text-[8.5px] font-bold transition-colors flex items-center justify-between cursor-pointer \${
+                                                    className={`w-full text-left px-2 py-1.5 rounded-lg text-[8.5px] font-bold transition-colors flex items-center justify-between cursor-pointer ${
                                                       shift.status === opt 
                                                         ? 'bg-cyan-500/10 text-cyan-400' 
                                                         : 'text-slate-355 hover:bg-slate-955'
@@ -702,7 +702,7 @@ export default function Scheduling() {
                                         </AnimatePresence>
                                       </div>
                                     ) : (
-                                      <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider leading-none \${
+                                      <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider leading-none ${
                                         shift.status === 'On Time' ? 'bg-green-500/10 border-green-500/20 text-green-400' :
                                         shift.status === 'Delayed' ? 'bg-amber-500/10 border-amber-505/20 text-amber-450' :
                                         shift.status === 'Absent' ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' :
