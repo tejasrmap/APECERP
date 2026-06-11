@@ -117,6 +117,14 @@ export default function Scheduling() {
   const [zoomLevel, setZoomLevel] = useState(1400);
   const [selectedShiftForDetails, setSelectedShiftForDetails] = useState<Shift | null>(null);
 
+  // View mode for Admins ('timeline' or 'list')
+  const [viewMode, setViewMode] = useState<'timeline' | 'list'>(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth < 768 ? 'list' : 'timeline';
+    }
+    return 'timeline';
+  });
+
   // Helper to check if a proposed shift time overlaps with any existing shift for the technician on that day
   const checkOverlap = (techId: string, dateStr: string, newTimeStr: string, excludeShiftId?: string) => {
     try {
@@ -544,32 +552,62 @@ export default function Scheduling() {
 
           {/* Quick Date Selector & Daily Hours Stats */}
           <div className="flex flex-wrap items-center gap-4">
+            {/* View Mode Toggle Switch */}
+            {isAdmin && (
+              <div className="flex bg-slate-950 p-1 rounded-xl border border-slate-900">
+                <button
+                  type="button"
+                  onClick={() => setViewMode('timeline')}
+                  className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                    viewMode === 'timeline'
+                      ? 'bg-cyan-500 text-slate-950 shadow-md'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  Timeline
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('list')}
+                  className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                    viewMode === 'list'
+                      ? 'bg-cyan-500 text-slate-950 shadow-md'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  List
+                </button>
+              </div>
+            )}
+
             {/* Timeline Zoom Slider */}
-            <div className="flex items-center gap-2 bg-slate-955/60 border border-slate-900 rounded-xl px-3 py-1.5">
-              <span className="text-[10px] font-semibold text-slate-505 uppercase tracking-wider">Timeline Zoom:</span>
-              <input 
-                type="range" 
-                min="1200" 
-                max="3000" 
-                step="100"
-                value={zoomLevel} 
-                onChange={(e) => setZoomLevel(Number(e.target.value))}
-                className="w-24 accent-cyan-400 cursor-pointer h-1 bg-slate-800 rounded-lg appearance-none"
-              />
-              <span className="text-[10px] font-mono text-cyan-400 font-bold">{Math.round((zoomLevel / 1400) * 100)}%</span>
-            </div>
+            {isAdmin && viewMode === 'timeline' && (
+              <div className="flex items-center gap-2 bg-slate-950/60 border border-slate-900 rounded-xl px-3 py-1.5">
+                <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Timeline Zoom:</span>
+                <input 
+                  type="range" 
+                  min="1200" 
+                  max="3000" 
+                  step="100"
+                  value={zoomLevel} 
+                  onChange={(e) => setZoomLevel(Number(e.target.value))}
+                  className="w-24 accent-cyan-400 cursor-pointer h-1 bg-slate-800 rounded-lg appearance-none"
+                />
+                <span className="text-[10px] font-mono text-cyan-400 font-bold">{Math.round((zoomLevel / 1400) * 100)}%</span>
+              </div>
+            )}
 
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-semibold text-slate-505 uppercase tracking-wider">Jump to Date:</span>
+              <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Jump to Date:</span>
               <input 
                 type="date"
                 value={selectedDateStr}
                 onChange={(e) => setSelectedDateStr(e.target.value)}
-                className="bg-slate-955 border border-slate-900 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500 font-mono"
+                className="bg-slate-950 border border-slate-900 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-cyan-500 font-mono"
               />
             </div>
 
-            <div className="flex items-center gap-3 bg-slate-955/60 border border-slate-900 rounded-xl px-4 py-2">
+            <div className="flex items-center gap-3 bg-slate-950/60 border border-slate-900 rounded-xl px-4 py-2">
               <div className="text-right">
                 <span className="text-[9px] text-slate-500 font-bold block uppercase tracking-wider">
                   {isAdmin ? "Today's Schedule load" : "Your Shifts Today"}
@@ -591,42 +629,195 @@ export default function Scheduling() {
         </div>
 
         {/* Daily Timeline Scheduler */}
-        <div className="space-y-4">
-          {/* Scrollable Container with sticky columns */}
-          <div className="overflow-x-auto select-none pb-2 scrollbar-thin">
-            <div style={{ minWidth: `${zoomLevel}px` }} className="px-1 space-y-4">
-              
-              {/* Timeline Header Row (Hours Labels) */}
-              <div className="flex gap-4 items-center">
-                {/* Sticky header column for Technician Workload label */}
-                <div className="w-[200px] sticky left-0 bg-[#0d1423] z-25 text-[10px] font-bold uppercase tracking-wider text-slate-500 px-3 py-1 select-none flex-shrink-0 border-r border-transparent">
-                  Technician Workload
-                </div>
-                
-                {/* Hour labels (00:00 to 24:00) */}
-                <div className="flex-grow relative h-6">
-                  {(() => {
-                    const hoursRange = Array.from({ length: 25 }, (_, i) => i);
-                    return hoursRange.map((h, idx) => {
-                      const label = h === 0 || h === 24 ? '12 AM' : h === 12 ? '12 PM' : h < 12 ? `${h} AM` : `${h - 12} PM`;
-                      const shouldShowLabel = h % 2 === 0; // Show every 2 hours to avoid clutter
-                      
-                      return shouldShowLabel ? (
-                        <span 
-                          key={h} 
-                          style={{ left: `${(idx / 24) * 100}%` }}
-                          className="absolute -translate-x-1/2 text-[9px] font-mono font-bold text-slate-500 whitespace-nowrap select-none"
+        {isAdmin ? (
+          viewMode === 'timeline' ? (
+            <div className="space-y-4">
+              {/* Scrollable Container with sticky columns */}
+              <div className="overflow-x-auto select-none pb-2 scrollbar-thin">
+                <div style={{ minWidth: `${zoomLevel}px` }} className="px-1 space-y-4">
+                  
+                  {/* Timeline Header Row (Hours Labels) */}
+                  <div className="flex gap-4 items-center">
+                    {/* Sticky header column for Technician Workload label */}
+                    <div className="w-[200px] sticky left-0 bg-[#0d1423] z-25 text-[10px] font-bold uppercase tracking-wider text-slate-500 px-3 py-1 select-none flex-shrink-0 border-r border-transparent">
+                      Technician Workload
+                    </div>
+                    
+                    {/* Hour labels (00:00 to 24:00) */}
+                    <div className="flex-grow relative h-6">
+                      {(() => {
+                        const hoursRange = Array.from({ length: 25 }, (_, i) => i);
+                        return hoursRange.map((h, idx) => {
+                          const label = h === 0 || h === 24 ? '12 AM' : h === 12 ? '12 PM' : h < 12 ? `${h} AM` : `${h - 12} PM`;
+                          const shouldShowLabel = h % 2 === 0; // Show every 2 hours to avoid clutter
+                          
+                          return shouldShowLabel ? (
+                            <span 
+                              key={h} 
+                              style={{ left: `${(idx / 24) * 100}%` }}
+                              className="absolute -translate-x-1/2 text-[9px] font-mono font-bold text-slate-500 whitespace-nowrap select-none"
+                            >
+                              {label}
+                            </span>
+                          ) : null;
+                        });
+                      })()}
+                    </div>
+                  </div>
+
+                  {/* Technician Dispatch Timeline List */}
+                  <div className="space-y-3">
+                    {visibleTeamList.map((tech) => {
+                      const techShifts = selectedDateShifts.filter(s => s.technicianId === tech.id);
+                      const weeklyHours = getWeeklyHoursForTech(tech.id, selectedDateStr);
+                      const isOvertimeLimit = weeklyHours > 48;
+
+                      return (
+                        <div 
+                          key={tech.id} 
+                          className="group flex gap-4 items-center p-3 rounded-2xl border border-slate-900 bg-slate-950/15 hover:border-slate-850 hover:bg-slate-950/20 transition-all"
                         >
-                          {label}
-                        </span>
-                      ) : null;
-                    });
-                  })()}
+                          {/* Col 1: Tech Profile Details (Sticky Left) */}
+                          <div className="w-[200px] flex-shrink-0 sticky left-0 bg-[#0d1423] group-hover:bg-[#121b30] border-r border-slate-900/60 pr-4 z-20 flex items-center gap-2.5 transition-colors shadow-[4px_0_10px_-4px_rgba(0,0,0,0.5)]">
+                            <div className="w-8 h-8 rounded-full bg-slate-900 border border-slate-850 flex items-center justify-center text-xs font-bold text-slate-300 shadow-inner select-none flex-shrink-0">
+                              {tech.name.slice(0, 2).toUpperCase()}
+                            </div>
+                            <div className="min-w-0">
+                              <h4 className="text-[11.5px] font-bold text-slate-200 truncate leading-tight">{tech.name}</h4>
+                              <p className="text-[9.5px] text-slate-500 font-mono truncate leading-none mt-0.5">{tech.role}</p>
+                              
+                              {/* Workload hours count */}
+                              <span className={`inline-flex items-center gap-1 mt-1 text-[8px] font-bold px-1.5 py-0.5 rounded leading-none ${
+                                isOvertimeLimit 
+                                  ? 'bg-rose-500/10 border border-rose-500/25 text-rose-400' 
+                                  : 'bg-slate-900 border border-slate-800 text-slate-400'
+                              }`}>
+                                Week load: {weeklyHours}h {isOvertimeLimit ? '⚠️' : ''}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Col 2: Absolute positioned daily timeline (Flex-grow) */}
+                          <div className="flex-grow">
+                            <div className="relative h-[60px] bg-slate-950/45 border border-slate-900/80 rounded-xl overflow-hidden flex items-center">
+                              
+                              {/* Hour Dividers / Background Grid (24-hour lines) */}
+                              <div className="absolute inset-0 flex pointer-events-none z-0">
+                                {Array.from({ length: 25 }).map((_, idx) => (
+                                  <div 
+                                    key={idx} 
+                                    style={{ left: `${(idx / 24) * 100}%` }} 
+                                    className="absolute top-0 bottom-0 w-px bg-slate-900/30 border-r border-dashed border-slate-800/10" 
+                                  />
+                                ))}
+                              </div>
+
+                              {/* Click-to-assign background layer */}
+                              <div 
+                                className="absolute inset-0 z-5 cursor-crosshair group/track"
+                                onClick={(e) => {
+                                  // Prevent modal trigger if clicking directly on a shift-card
+                                  if ((e.target as HTMLElement).closest('.shift-card')) return;
+                                  
+                                  const rect = e.currentTarget.getBoundingClientRect();
+                                  const clickX = e.clientX - rect.left;
+                                  const clickPercent = clickX / rect.width;
+                                  const clickedHour = Math.floor(clickPercent * 24);
+                                  
+                                  const startHourStr = String(clickedHour).padStart(2, '0') + ':00';
+                                  const endHourStr = String(Math.min(24, clickedHour + 8)).padStart(2, '0') + ':00';
+                                  
+                                  setSelectedTechId(tech.id);
+                                  setShiftTime(`${startHourStr} - ${endHourStr}`);
+                                  setShowAddForm(true);
+                                }}
+                              >
+                                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/track:opacity-100 bg-cyan-500/[0.02] transition-opacity duration-150 pointer-events-none select-none">
+                                  <span className="text-[10px] text-cyan-400/80 font-semibold flex items-center gap-1">
+                                    <Plus className="w-3.5 h-3.5" /> Click slot to assign shift
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Absolute positioned shift cards */}
+                              {techShifts.map((sItem) => {
+                                const { left, width } = getShiftTimelinePosition(sItem.time);
+                                const shiftHours = calculateShiftHours(sItem.time);
+                                const isShortShift = shiftHours <= 1.5;
+
+                                return (
+                                  <div
+                                    key={sItem.id}
+                                    style={{ left, width }}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedShiftForDetails(sItem);
+                                    }}
+                                    className={`shift-card absolute h-11 rounded-lg border transition-all cursor-pointer z-10 hover:brightness-110 shadow-lg ${
+                                      isShortShift ? 'px-1.5 flex items-center justify-center' : 'px-3 flex items-center justify-between'
+                                    } ${
+                                      sItem.status === 'On Time' ? 'bg-green-500/10 border-green-500/20 text-green-400 hover:bg-green-500/15' :
+                                      sItem.status === 'Delayed' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/15' :
+                                      sItem.status === 'Absent' ? 'bg-rose-500/10 border-rose-500/20 text-rose-400 hover:bg-rose-500/15' :
+                                      'bg-cyan-500/10 border-cyan-500/20 text-cyan-400 hover:bg-cyan-500/15'
+                                    }`}
+                                    title={`Click to view details: ${sItem.projectName} (${sItem.time})`}
+                                  >
+                                    {isShortShift ? (
+                                      <div className="min-w-0 flex items-center gap-1 w-full justify-between select-none">
+                                        <MapPin className="w-2.5 h-2.5 text-cyan-400 flex-shrink-0" />
+                                        <span className="text-[9px] font-bold truncate leading-tight">
+                                          {sItem.projectName.slice(0, 3).toUpperCase()}
+                                        </span>
+                                        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                                          sItem.status === 'On Time' ? 'bg-green-500' :
+                                          sItem.status === 'Delayed' ? 'bg-amber-500' :
+                                          sItem.status === 'Absent' ? 'bg-rose-500' :
+                                          'bg-cyan-500'
+                                        }`} />
+                                      </div>
+                                    ) : (
+                                      <>
+                                        <div className="min-w-0 flex-1 flex flex-col justify-center select-none">
+                                          <div className="flex items-center gap-1 min-w-0">
+                                            <MapPin className="w-2.5 h-2.5 text-cyan-400 flex-shrink-0" />
+                                            <span className="text-[9.5px] font-bold truncate leading-tight">{sItem.projectName}</span>
+                                          </div>
+                                          <span className="text-[8px] opacity-70 font-mono mt-0.5 leading-none">
+                                            {sItem.time} ({shiftHours}h)
+                                          </span>
+                                        </div>
+
+                                        <div className="flex items-center gap-1.5 flex-shrink-0 ml-1 select-none pointer-events-none">
+                                          <span className={`text-[7.5px] font-bold px-1.5 py-0.2 rounded border uppercase tracking-wider bg-slate-905/80 leading-none ${
+                                            sItem.status === 'On Time' ? 'border-green-500/20 text-green-400' :
+                                            sItem.status === 'Delayed' ? 'border-amber-500/20 text-amber-500' :
+                                            sItem.status === 'Absent' ? 'border-rose-500/20 text-rose-400' :
+                                            'border-slate-800 text-slate-400'
+                                          }`}>
+                                            {sItem.status === 'On Time' ? 'ON TIME' :
+                                             sItem.status === 'Delayed' ? 'LATE' :
+                                             sItem.status === 'Absent' ? 'ABSENT' : 'SCHED'}
+                                          </span>
+                                        </div>
+                                      </>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
-
-              {/* Technician Dispatch Timeline List */}
-              <div className="space-y-3">
+            </div>
+          ) : (
+            /* Admin List View (Grouped Technician Agenda Blocks) */
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {visibleTeamList.map((tech) => {
                   const techShifts = selectedDateShifts.filter(s => s.technicianId === tech.id);
                   const weeklyHours = getWeeklyHoursForTech(tech.id, selectedDateStr);
@@ -635,133 +826,177 @@ export default function Scheduling() {
                   return (
                     <div 
                       key={tech.id} 
-                      className="group flex gap-4 items-center p-3 rounded-2xl border border-slate-900 bg-slate-955/15 hover:border-slate-850 hover:bg-slate-950/20 transition-all"
+                      className="p-5 rounded-2xl border border-slate-900 bg-slate-950/20 hover:bg-slate-950/40 transition-all space-y-4"
                     >
-                      {/* Col 1: Tech Profile Details (Sticky Left) */}
-                      <div className="w-[200px] flex-shrink-0 sticky left-0 bg-[#0d1423] group-hover:bg-[#121b30] border-r border-slate-900/60 pr-4 z-20 flex items-center gap-2.5 transition-colors shadow-[4px_0_10px_-4px_rgba(0,0,0,0.5)]">
-                        <div className="w-8 h-8 rounded-full bg-slate-900 border border-slate-850 flex items-center justify-center text-xs font-bold text-slate-300 shadow-inner select-none flex-shrink-0">
-                          {tech.name.slice(0, 2).toUpperCase()}
+                      {/* Tech Profile Summary */}
+                      <div className="flex items-center justify-between pb-3 border-b border-slate-900/60">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-xs font-bold text-slate-300 select-none">
+                            {tech.name.slice(0, 2).toUpperCase()}
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-bold text-slate-200 leading-tight">{tech.name}</h4>
+                            <p className="text-[10px] text-slate-500 font-mono mt-0.5 leading-none">{tech.role}</p>
+                          </div>
                         </div>
-                        <div className="min-w-0">
-                          <h4 className="text-[11.5px] font-bold text-slate-200 truncate leading-tight">{tech.name}</h4>
-                          <p className="text-[9.5px] text-slate-505 font-mono truncate leading-none mt-0.5">{tech.role}</p>
-                          
-                          {/* Workload hours count */}
-                          <span className={`inline-flex items-center gap-1 mt-1 text-[8px] font-bold px-1.5 py-0.5 rounded leading-none ${
-                            isOvertimeLimit 
-                              ? 'bg-rose-500/10 border border-rose-500/25 text-rose-400' 
-                              : 'bg-slate-900 border border-slate-800 text-slate-400'
-                          }`}>
-                            Week load: {weeklyHours}h {isOvertimeLimit ? '⚠️' : ''}
-                          </span>
-                        </div>
+                        <span className={`inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded leading-none ${
+                          isOvertimeLimit 
+                            ? 'bg-rose-500/10 border border-rose-500/20 text-rose-400' 
+                            : 'bg-slate-900 border border-slate-800 text-slate-400'
+                        }`}>
+                          Week load: {weeklyHours}h {isOvertimeLimit ? '⚠️' : ''}
+                        </span>
                       </div>
 
-                      {/* Col 2: Absolute positioned daily timeline (Flex-grow) */}
-                      <div className="flex-grow">
-                        <div className="relative h-[60px] bg-slate-955/45 border border-slate-900/80 rounded-xl overflow-hidden flex items-center">
-                          
-                          {/* Hour Dividers / Background Grid (24-hour lines) */}
-                          <div className="absolute inset-0 flex pointer-events-none z-0">
-                            {Array.from({ length: 25 }).map((_, idx) => (
-                              <div 
-                                key={idx} 
-                                style={{ left: `${(idx / 24) * 100}%` }} 
-                                className="absolute top-0 bottom-0 w-px bg-slate-900/30 border-r border-dashed border-slate-800/10" 
-                              />
-                            ))}
+                      {/* Technician Agenda Shifts */}
+                      <div className="space-y-3">
+                        {techShifts.length === 0 ? (
+                          <div className="text-center py-4 bg-slate-950/10 border border-slate-900/40 rounded-xl">
+                            <span className="text-[10px] text-slate-500 font-mono">Rest Day / Off</span>
                           </div>
-
-                          {/* Click-to-assign background layer */}
-                          {isAdmin && (
-                            <div 
-                              className="absolute inset-0 z-5 cursor-crosshair group/track"
-                              onClick={(e) => {
-                                // Prevent modal trigger if clicking directly on a shift-card
-                                if ((e.target as HTMLElement).closest('.shift-card')) return;
-                                
-                                const rect = e.currentTarget.getBoundingClientRect();
-                                const clickX = e.clientX - rect.left;
-                                const clickPercent = clickX / rect.width;
-                                const clickedHour = Math.floor(clickPercent * 24);
-                                
-                                const startHourStr = String(clickedHour).padStart(2, '0') + ':00';
-                                const endHourStr = String(Math.min(24, clickedHour + 8)).padStart(2, '0') + ':00';
-                                
-                                setSelectedTechId(tech.id);
-                                setShiftTime(`${startHourStr} - ${endHourStr}`);
-                                setShowAddForm(true);
-                              }}
-                            >
-                              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/track:opacity-100 bg-cyan-500/[0.02] transition-opacity duration-150 pointer-events-none select-none">
-                                <span className="text-[10px] text-cyan-400/80 font-semibold flex items-center gap-1">
-                                  <Plus className="w-3.5 h-3.5" /> Click slot to assign shift
-                                </span>
-                              </div>
-                            </div>
-                          )}
-
-                          {!isAdmin && techShifts.length === 0 && (
-                            <div className="absolute inset-0 flex items-center justify-center opacity-40 select-none pointer-events-none">
-                              <span className="text-[9px] text-slate-600 font-medium italic">No shift scheduled today</span>
-                            </div>
-                          )}
-
-                          {/* Absolute positioned shift cards */}
-                          {techShifts.map((sItem) => {
-                            const { left, width } = getShiftTimelinePosition(sItem.time);
-                            const autoMatch = getAutoStatus(sItem);
-
+                        ) : (
+                          techShifts.map((shift) => {
+                            const autoMatch = getAutoStatus(shift);
                             return (
                               <div
-                                key={sItem.id}
-                                style={{ left, width }}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedShiftForDetails(sItem);
-                                }}
-                                className={`shift-card absolute h-11 rounded-lg border px-3 flex items-center justify-between transition-all cursor-pointer z-10 hover:brightness-110 shadow-lg ${
-                                  sItem.status === 'On Time' ? 'bg-green-500/10 border-green-500/20 text-green-400 hover:bg-green-500/15' :
-                                  sItem.status === 'Delayed' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/15' :
-                                  sItem.status === 'Absent' ? 'bg-rose-500/10 border-rose-500/20 text-rose-400 hover:bg-rose-500/15' :
-                                  'bg-cyan-500/10 border-cyan-500/20 text-cyan-400 hover:bg-cyan-500/15'
+                                key={shift.id}
+                                onClick={() => setSelectedShiftForDetails(shift)}
+                                className={`p-3.5 rounded-xl border bg-slate-950/40 hover:bg-slate-950/60 transition-all cursor-pointer space-y-3 hover:-translate-y-0.5 duration-150 ${
+                                  shift.status === 'On Time' ? 'border-green-500/15 text-green-450' :
+                                  shift.status === 'Delayed' ? 'border-amber-500/15 text-amber-500' :
+                                  shift.status === 'Absent' ? 'border-rose-500/15 text-rose-400' :
+                                  'border-cyan-500/15 text-cyan-400'
                                 }`}
-                                title="Click to view details"
                               >
-                                <div className="min-w-0 flex-1 flex flex-col justify-center select-none">
-                                  <div className="flex items-center gap-1 min-w-0">
-                                    <MapPin className="w-2.5 h-2.5 text-cyan-400 flex-shrink-0" />
-                                    <span className="text-[9.5px] font-bold truncate leading-tight">{sItem.projectName}</span>
+                                <div className="flex justify-between items-start">
+                                  <div className="min-w-0 flex-1">
+                                    <span className="text-[8px] font-bold text-cyan-400 uppercase tracking-widest font-mono">Project Site</span>
+                                    <h5 className="text-[11px] font-bold text-slate-200 truncate flex items-center gap-1 mt-0.5">
+                                      <MapPin className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0" />
+                                      {shift.projectName}
+                                    </h5>
                                   </div>
-                                  <span className="text-[8px] opacity-70 font-mono mt-0.5 leading-none">
-                                    {sItem.time} ({calculateShiftHours(sItem.time)}h)
+                                  <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8.5px] font-bold uppercase tracking-wider border bg-slate-950/80 ${
+                                    shift.status === 'On Time' ? 'border-green-500/20 text-green-400' :
+                                    shift.status === 'Delayed' ? 'border-amber-500/20 text-amber-500' :
+                                    shift.status === 'Absent' ? 'border-rose-500/20 text-rose-400' :
+                                    'border-slate-800 text-slate-400'
+                                  }`}>
+                                    {shift.status}
                                   </span>
                                 </div>
 
-                                <div className="flex items-center gap-1.5 flex-shrink-0 ml-1 select-none pointer-events-none">
-                                  <span className={`text-[7.5px] font-bold px-1.5 py-0.2 rounded border uppercase tracking-wider bg-slate-955/80 leading-none ${
-                                    sItem.status === 'On Time' ? 'border-green-500/20 text-green-400' :
-                                    sItem.status === 'Delayed' ? 'border-amber-500/20 text-amber-450' :
-                                    sItem.status === 'Absent' ? 'border-rose-500/20 text-rose-400' :
-                                    'border-slate-800 text-slate-450'
-                                  }`}>
-                                    {sItem.status === 'On Time' ? 'ON TIME' :
-                                     sItem.status === 'Delayed' ? 'LATE' :
-                                     sItem.status === 'Absent' ? 'ABSENT' : 'SCHED'}
-                                  </span>
+                                <div className="flex items-center justify-between text-[10px] border-t border-slate-900/40 pt-2 font-mono">
+                                  <div className="text-slate-400 flex items-center gap-1">
+                                    <Clock className="w-3 h-3 text-cyan-500 opacity-60" />
+                                    {shift.time}
+                                  </div>
+                                  <div className="text-slate-300 font-bold">
+                                    {calculateShiftHours(shift.time)} hrs
+                                  </div>
+                                </div>
+
+                                <div className="text-[9.5px] text-slate-500 bg-slate-950/60 p-2 rounded-lg border border-slate-900/60 leading-normal italic font-mono truncate">
+                                  {autoMatch.details}
                                 </div>
                               </div>
                             );
-                          })}
-                        </div>
+                          })
+                        )}
                       </div>
                     </div>
                   );
                 })}
               </div>
             </div>
+          )
+        ) : (
+          /* Timetable Card View for Non-Admin Technicians */
+          <div className="space-y-4">
+            {(() => {
+              const myId = userProfile?.id || visibleTeamList[0]?.id;
+              const myShifts = selectedDateShifts.filter(s => s.technicianId === myId);
+
+              if (myShifts.length === 0) {
+                return (
+                  <div className="py-12 text-center bg-slate-950/30 border border-slate-900 rounded-2xl space-y-3">
+                    <CalendarIcon className="w-12 h-12 text-cyan-400/60 mx-auto opacity-70" />
+                    <div>
+                      <h4 className="text-slate-200 font-bold text-sm">No Shifts Scheduled</h4>
+                      <p className="text-xs text-slate-500 mt-1">You have no assignments scheduled for this date.</p>
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {myShifts.map((shift) => {
+                    const autoMatch = getAutoStatus(shift);
+                    return (
+                      <div 
+                        key={shift.id}
+                        onClick={() => setSelectedShiftForDetails(shift)}
+                        className={`p-5 rounded-2xl border bg-slate-950/45 hover:bg-slate-950/60 transition-all cursor-pointer space-y-4 hover:-translate-y-0.5 duration-200 ${
+                          shift.status === 'On Time' ? 'border-green-500/20 shadow-[0_4px_20px_rgba(34,197,94,0.04)]' :
+                          shift.status === 'Delayed' ? 'border-amber-500/20 shadow-[0_4px_20px_rgba(245,158,11,0.04)]' :
+                          shift.status === 'Absent' ? 'border-rose-500/20 shadow-[0_4px_20px_rgba(239,68,68,0.04)]' :
+                          'border-cyan-500/20 shadow-[0_4px_20px_rgba(6,182,212,0.04)]'
+                        }`}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="space-y-1">
+                            <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest font-mono">Assigned Project Site</span>
+                            <h4 className="text-slate-100 font-bold text-sm flex items-center gap-1.5">
+                              <MapPin className="w-4 h-4 text-cyan-400" />
+                              {shift.projectName}
+                            </h4>
+                          </div>
+
+                          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider border ${
+                            shift.status === 'On Time' ? 'bg-green-500/10 border-green-500/20 text-green-400' :
+                            shift.status === 'Delayed' ? 'bg-amber-500/10 border-amber-500/20 text-amber-450' :
+                            shift.status === 'Absent' ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' :
+                            'bg-slate-900 border-slate-800 text-slate-400'
+                          }`}>
+                            {shift.status}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 py-3 border-y border-slate-900/60">
+                          <div className="space-y-1">
+                            <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block">Shift Timing</span>
+                            <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-slate-200">
+                              <Clock className="w-3.5 h-3.5 text-cyan-550 opacity-60" />
+                              {shift.time}
+                            </div>
+                          </div>
+                          <div className="space-y-1">
+                            <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block">Duration</span>
+                            <div className="text-xs font-bold text-slate-200">
+                              {calculateShiftHours(shift.time)} Hours
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="space-y-1">
+                          <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block">Verification Details</span>
+                          <p className="text-[10.5px] text-slate-400 leading-normal italic font-mono bg-slate-950/50 p-2.5 rounded-lg border border-slate-900/80">
+                            {autoMatch.details}
+                          </p>
+                        </div>
+
+                        <div className="text-right">
+                          <span className="text-[9px] font-bold text-cyan-400 transition-colors uppercase tracking-wider">Click to view fully &rarr;</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
-        </div>
+        )}
       </div>
 
             {/* Dispatch Creator Modal Popup */}
@@ -815,7 +1050,7 @@ export default function Scheduling() {
                     value={selectedDateStr}
                     onChange={(e) => setSelectedDateStr(e.target.value)}
                     required
-                    className="w-full bg-slate-950 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-505 text-sm"
+                    className="w-full bg-slate-950 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 text-sm"
                   />
                 </div>
 
@@ -825,7 +1060,7 @@ export default function Scheduling() {
                     <button
                       type="button"
                       onClick={() => setIsTechDropdownOpen(!isTechDropdownOpen)}
-                      className="w-full bg-slate-955 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 text-sm cursor-pointer flex justify-between items-center text-left"
+                      className="w-full bg-slate-950 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 text-sm cursor-pointer flex justify-between items-center text-left"
                     >
                       <span className={selectedTechId ? 'text-slate-100' : 'text-slate-500'}>
                         {selectedTechId 
@@ -870,12 +1105,12 @@ export default function Scheduling() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-semibold text-slate-405 uppercase tracking-wider ml-1">Project Site Hub</label>
+                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider ml-1">Project Site Hub</label>
                   <div className="relative">
                     <button
                       type="button"
                       onClick={() => setIsProjectDropdownOpen(!isProjectDropdownOpen)}
-                      className="w-full bg-slate-955 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 text-sm cursor-pointer flex justify-between items-center text-left"
+                      className="w-full bg-slate-950 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 text-sm cursor-pointer flex justify-between items-center text-left"
                     >
                       <span className={selectedProjectId ? 'text-slate-100' : 'text-slate-500'}>
                         {selectedProjectId 
@@ -920,21 +1155,21 @@ export default function Scheduling() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-semibold text-slate-405 uppercase tracking-wider ml-1">Shift Timing</label>
+                  <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider ml-1">Shift Timing</label>
                   <input 
                     type="text"
                     value={shiftTime}
                     onChange={(e) => setShiftTime(e.target.value)}
                     required
                     placeholder="e.g. 08:00 - 17:00"
-                    className="w-full bg-slate-950 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-505 text-sm"
+                    className="w-full bg-slate-955 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 text-sm"
                   />
                 </div>
 
                 <button 
                   type="submit"
                   disabled={isDbActionLoading}
-                  className="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-305 text-slate-955 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                  className="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-950 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   {isDbActionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirm Dispatch'}
                 </button>
@@ -989,7 +1224,7 @@ export default function Scheduling() {
                   {/* Info Cards Grid */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {/* Technician details card */}
-                    <div className="p-3 bg-slate-955/40 border border-slate-900 rounded-xl space-y-2">
+                    <div className="p-3 bg-slate-950/40 border border-slate-900 rounded-xl space-y-2">
                       <span className="text-[9px] text-slate-500 font-bold block uppercase tracking-wider">Technician</span>
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-full bg-slate-900 border border-slate-850 flex items-center justify-center text-xs font-bold text-cyan-400 select-none">
@@ -1003,7 +1238,7 @@ export default function Scheduling() {
                     </div>
 
                     {/* Hours details card */}
-                    <div className="p-3 bg-slate-955/40 border border-slate-900 rounded-xl space-y-2">
+                    <div className="p-3 bg-slate-950/40 border border-slate-900 rounded-xl space-y-2">
                       <span className="text-[9px] text-slate-500 font-bold block uppercase tracking-wider">Schedule Time</span>
                       <div className="flex items-center gap-2">
                         <Clock className="w-8 h-8 text-cyan-500 opacity-60 p-1.5 bg-slate-900 border border-slate-850 rounded-lg" />
@@ -1016,12 +1251,12 @@ export default function Scheduling() {
                   </div>
 
                   {/* Live Status & Attendance Log Matching */}
-                  <div className="p-4 bg-slate-955/65 border border-slate-900 rounded-xl space-y-3">
+                  <div className="p-4 bg-slate-950/65 border border-slate-900 rounded-xl space-y-3">
                     <div className="flex justify-between items-center">
                       <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Live Punch Matching</span>
                       <span className={`text-[8.5px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${
                         shift.status === 'On Time' ? 'bg-green-500/10 border-green-500/20 text-green-400' :
-                        shift.status === 'Delayed' ? 'bg-amber-500/10 border-amber-500/20 text-amber-450' :
+                        shift.status === 'Delayed' ? 'bg-amber-500/10 border-amber-500/20 text-amber-500' :
                         shift.status === 'Absent' ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' :
                         'bg-slate-900 border-slate-800 text-slate-400'
                       }`}>
@@ -1038,7 +1273,7 @@ export default function Scheduling() {
                         <span>Verified Punch Time:</span>
                         <span className="font-semibold text-slate-200 font-mono">{autoMatch.punchTime || 'No Punch-in Today'}</span>
                       </div>
-                      <div className="text-[10px] text-slate-505 leading-normal italic mt-1 pt-1.5 border-t border-slate-900/60 font-mono">
+                      <div className="text-[10px] text-slate-500 leading-normal italic mt-1 pt-1.5 border-t border-slate-900/60 font-mono">
                         {autoMatch.details}
                       </div>
                     </div>
@@ -1079,7 +1314,7 @@ export default function Scheduling() {
                                 await handleUpdateStatus(shift.id, newStat);
                                 setSelectedShiftForDetails(prev => prev ? { ...prev, status: newStat } : null);
                               }}
-                              className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-505 cursor-pointer min-w-[130px]"
+                              className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500 cursor-pointer min-w-[130px]"
                             >
                               <option value="Scheduled">Scheduled</option>
                               <option value="On Time">On Time</option>
