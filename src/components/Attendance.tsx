@@ -28,7 +28,6 @@ export default function Attendance() {
 
   // Camera & Capture states
   const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
   const [isCameraActive, setIsCameraActive] = useState(false);
@@ -110,8 +109,8 @@ export default function Attendance() {
 
     // 1. Capture snapshot from video
     const video = videoRef.current;
-    const canvas = canvasRef.current;
-    if (video && canvas && isCameraActive) {
+    if (video && isCameraActive) {
+      const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
       if (context) {
         canvas.width = 400;
@@ -121,7 +120,7 @@ export default function Attendance() {
         context.drawImage(video, 0, 0, 400, 300);
         
         // Compress & convert to JPEG base64 URL (~25-35KB)
-        const photoData = canvas.toDataURL('image/jpeg', 0.8);
+        const photoData = canvas.toDataURL('image/jpeg', 0.85);
         setCapturedPhoto(photoData);
         stopCamera();
       }
