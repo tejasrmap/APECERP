@@ -34,6 +34,34 @@ interface Shift {
   status: 'Scheduled' | 'On Time' | 'Delayed' | 'Absent';
 }
 
+// Helper to calculate left and width percentages for daily timeline visualization (07:00 - 19:00 window)
+const getShiftTimelinePosition = (timeStr: string) => {
+  const startHourRef = 7; // 7 AM
+  const endHourRef = 19; // 7 PM
+  const totalHours = endHourRef - startHourRef;
+
+  try {
+    const parts = timeStr.split('-');
+    if (parts.length !== 2) return { left: '8.33%', width: '75%', isOutOfRange: false };
+    const [start, end] = parts.map(p => p.trim());
+    
+    const [startH, startM] = start.split(':').map(Number);
+    const [endH, endM] = end.split(':').map(Number);
+    
+    const startDecimal = startH + (startM || 0) / 60;
+    const endDecimal = endH + (endM || 0) / 60;
+    
+    const isOutOfRange = endDecimal <= startHourRef || startDecimal >= endHourRef;
+    
+    const leftPercent = Math.max(0, Math.min(100, ((startDecimal - startHourRef) / totalHours) * 100));
+    const widthPercent = Math.max(5, Math.min(100 - leftPercent, ((endDecimal - startDecimal) / totalHours) * 100));
+    
+    return { left: `${leftPercent}%`, width: `${widthPercent}%`, isOutOfRange };
+  } catch {
+    return { left: '8.33%', width: '75%', isOutOfRange: false };
+  }
+};
+
 export default function Scheduling() {
   const { setFirestoreError, isDbActionLoading, setIsDbActionLoading, isAdmin } = useOutletContext<any>();
 
@@ -476,222 +504,255 @@ export default function Scheduling() {
           </div>
         </div>
 
-        {/* Technician Workload & Dispatch Grid */}
+        {/* Daily Timeline Scheduler */}
         <div className="space-y-4">
-          <div className="hidden lg:grid grid-cols-12 gap-4 text-slate-505 text-[10px] font-bold uppercase tracking-wider px-4">
-            <div className="col-span-3">Technician Details</div>
-            <div className="col-span-5">Shift Schedule & Hours</div>
-            <div className="col-span-3">Attendance Match Status</div>
-            <div className="col-span-1 text-right">Actions</div>
-          </div>
-
-          <div className="divide-y divide-slate-900/60 space-y-3.5">
-            {teamList.map((tech) => {
-              // Find shift for this tech on selected date
-              const shift = schedules.find(s => s.technicianId === tech.id && s.date === selectedDateStr);
-              const weeklyHours = getWeeklyHoursForTech(tech.id, selectedDateStr);
-              const isOvertimeLimit = weeklyHours > 48;
-
-              return (
-                <div 
-                  key={tech.id} 
-                  className={`grid grid-cols-1 lg:grid-cols-12 gap-4 items-center p-4 rounded-2xl border transition-all ${
-                    shift 
-                      ? 'bg-slate-955/20 border-slate-900 hover:border-slate-850' 
-                      : 'bg-slate-955/40 border-slate-900/40 border-dashed hover:border-slate-800'
-                  }`}
-                >
-                  {/* Col 1: Technician Profile Info */}
-                  <div className="col-span-3 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-slate-900 border border-slate-850 flex items-center justify-center text-xs font-bold text-slate-300 shadow-inner">
-                      {tech.name.slice(0, 2).toUpperCase()}
-                    </div>
-                    <div className="min-w-0">
-                      <h4 className="text-xs font-bold text-slate-200 truncate">{tech.name}</h4>
-                      <p className="text-[10px] text-slate-505 font-mono truncate">{tech.role}</p>
-                      
-                      {/* Workload hours count */}
-                      <span className={`inline-flex items-center gap-1 mt-1 text-[9px] font-bold px-1.5 py-0.5 rounded ${
-                        isOvertimeLimit 
-                          ? 'bg-rose-500/10 border border-rose-500/25 text-rose-400' 
-                          : 'bg-slate-900 border border-slate-800 text-slate-400'
-                      }`}>
-                        Week load: {weeklyHours}h {isOvertimeLimit && '⚠️ Overtime'}
+          <div className="overflow-x-auto select-none pb-2 scrollbar-thin">
+            <div className="min-w-[850px] px-1 space-y-4">
+              
+              {/* Timeline Header Row (Hours Labels) */}
+              <div className="grid grid-cols-12 gap-4">
+                <div className="col-span-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 px-2 select-none">
+                  Technician Workload
+                </div>
+                <div className="col-span-9 relative h-6">
+                  {(() => {
+                    const hoursRange = Array.from({ length: 13 }, (_, i) => 7 + i); // 07:00 to 19:00
+                    return hoursRange.map((h, idx) => (
+                      <span 
+                        key={h} 
+                        style={{ left: `${(idx / 12) * 100}%` }}
+                        className="absolute -translate-x-1/2 text-[9px] font-mono font-bold text-slate-500 whitespace-nowrap"
+                      >
+                        {String(h).padStart(2, '0')}:00
                       </span>
-                    </div>
-                  </div>
+                    ));
+                  })()}
+                </div>
+              </div>
 
-                  {/* Col 2: Shift Details */}
-                  <div className="col-span-5">
-                    {shift ? (
-                      <div className="p-3 bg-slate-955/65 border border-slate-900 rounded-xl space-y-2 relative">
-                        <div className="flex items-start justify-between">
-                          <div className="space-y-1">
-                            <span className="text-[10px] text-slate-400 font-semibold flex items-center gap-1">
-                              <MapPin className="w-3 h-3 text-cyan-400" />
-                              {shift.projectName}
-                            </span>
-                            <span className="text-[9.5px] text-slate-500 font-mono block">
-                              Time: {shift.time}
-                            </span>
-                          </div>
+              {/* Technician Dispatch Timeline List */}
+              <div className="space-y-3">
+                {teamList.map((tech) => {
+                  const shift = schedules.find(s => s.technicianId === tech.id && s.date === selectedDateStr);
+                  const weeklyHours = getWeeklyHoursForTech(tech.id, selectedDateStr);
+                  const isOvertimeLimit = weeklyHours > 48;
+
+                  return (
+                    <div 
+                      key={tech.id} 
+                      className="grid grid-cols-12 gap-4 items-center p-3 rounded-2xl border border-slate-900 bg-slate-955/15 hover:border-slate-850 hover:bg-slate-950/20 transition-all"
+                    >
+                      {/* Col 1: Tech Profile Details */}
+                      <div className="col-span-3 flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-slate-900 border border-slate-850 flex items-center justify-center text-xs font-bold text-slate-300 shadow-inner select-none flex-shrink-0">
+                          {tech.name.slice(0, 2).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="text-[11.5px] font-bold text-slate-200 truncate leading-tight">{tech.name}</h4>
+                          <p className="text-[9.5px] text-slate-505 font-mono truncate leading-none mt-0.5">{tech.role}</p>
                           
-                          {/* Hours sum display */}
-                          <span className="text-[9px] bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 px-1.5 py-0.5 rounded font-mono font-bold">
-                            {calculateShiftHours(shift.time)} hrs
+                          {/* Workload hours count */}
+                          <span className={`inline-flex items-center gap-1 mt-1 text-[8px] font-bold px-1.5 py-0.5 rounded leading-none ${
+                            isOvertimeLimit 
+                              ? 'bg-rose-500/10 border border-rose-500/25 text-rose-400' 
+                              : 'bg-slate-900 border border-slate-800 text-slate-400'
+                          }`}>
+                            Week load: ${weeklyHours}h ${isOvertimeLimit ? '⚠️' : ''}
                           </span>
                         </div>
                       </div>
-                    ) : (
-                      /* Slot Add Dispatch button */
-                      isAdmin ? (
-                        <button
-                          onClick={() => {
-                            setSelectedTechId(tech.id);
-                            setShowAddForm(true);
-                          }}
-                          className="w-full py-4 border border-dashed border-slate-800 hover:border-cyan-500/30 hover:bg-cyan-500/5 rounded-xl transition-all flex items-center justify-center gap-1.5 text-[10.5px] text-slate-500 hover:text-cyan-400 font-semibold cursor-pointer"
-                        >
-                          <Plus className="w-4 h-4" />
-                          Assign Dispatch Shift
-                        </button>
-                      ) : (
-                        <div className="text-[10px] text-slate-650 font-medium italic py-2">No shift assigned today</div>
-                      )
-                    )}
-                  </div>
 
-                  {/* Col 3: Attendance Match Verification */}
-                  <div className="col-span-3">
-                    {shift ? (
-                      (() => {
-                        const autoMatch = getAutoStatus(shift);
-                        const isSyncNeeded = autoMatch.status !== shift.status;
-                        
-                        return (
-                          <div className="space-y-1.5">
-                            <div className="flex items-center gap-1.5">
-                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border flex items-center gap-1 ${
-                                autoMatch.status === 'On Time' ? 'border-green-500/15 text-green-400 bg-green-500/5' :
-                                autoMatch.status === 'Delayed' ? 'border-amber-500/15 text-amber-400 bg-amber-500/5' :
-                                autoMatch.status === 'Absent' ? 'border-rose-500/15 text-rose-400 bg-rose-500/5' :
-                                'border-slate-800 text-slate-450 bg-slate-900/10'
-                              }`}>
-                                {autoMatch.status === 'On Time' && <CheckCircle2 className="w-2.5 h-2.5" />}
-                                {autoMatch.status === 'Delayed' && <AlertTriangle className="w-2.5 h-2.5" />}
-                                {autoMatch.status}
-                              </span>
+                      {/* Col 2: Absolute positioned daily timeline */}
+                      <div className="col-span-9">
+                        <div className="relative h-[60px] bg-slate-955/45 border border-slate-900/80 rounded-xl overflow-hidden flex items-center">
+                          
+                          {/* Hour Dividers / Background Grid */}
+                          <div className="absolute inset-0 flex pointer-events-none z-0">
+                            {Array.from({ length: 13 }).map((_, idx) => (
+                              <div 
+                                key={idx} 
+                                style={{ left: `${(idx / 12) * 100}%` }} 
+                                className="absolute top-0 bottom-0 w-px bg-slate-900/30 border-r border-dashed border-slate-800/10" 
+                              />
+                            ))}
+                          </div>
 
-                              {isAdmin && isSyncNeeded && (
-                                <button
-                                  disabled={syncingShiftId === shift.id}
-                                  onClick={() => handleSyncStatus(shift.id, autoMatch.status)}
-                                  className="p-1 rounded bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/25 transition-all cursor-pointer"
-                                  title="Sync to Verified Status"
+                          {/* Interactive scheduling layer or shift display */}
+                          {shift ? (
+                            (() => {
+                              const { left, width, isOutOfRange } = getShiftTimelinePosition(shift.time);
+                              const autoMatch = getAutoStatus(shift);
+                              const isSyncNeeded = autoMatch.status !== shift.status;
+
+                              return (
+                                <div
+                                  style={{ left, width }}
+                                  className={`absolute h-11 rounded-lg border px-3 flex items-center justify-between transition-all group z-10 ${
+                                    shift.status === 'On Time' ? 'bg-green-500/10 border-green-500/20 text-green-400 hover:bg-green-500/15' :
+                                    shift.status === 'Delayed' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400 hover:bg-amber-500/15' :
+                                    shift.status === 'Absent' ? 'bg-rose-500/10 border-rose-500/20 text-rose-400 hover:bg-rose-500/15' :
+                                    'bg-cyan-500/10 border-cyan-500/20 text-cyan-400 hover:bg-cyan-500/15'
+                                  }`}
                                 >
-                                  {syncingShiftId === shift.id ? (
-                                    <Loader2 className="w-3 h-3 animate-spin" />
-                                  ) : (
-                                    <RefreshCw className="w-3 h-3" />
-                                  )}
-                                </button>
+                                  {/* Shift Info */}
+                                  <div className="min-w-0 flex-1 flex flex-col justify-center">
+                                    <div className="flex items-center gap-1.5 min-w-0">
+                                      <MapPin className="w-2.5 h-2.5 text-cyan-405/80 flex-shrink-0" />
+                                      <span className="text-[10px] font-bold truncate leading-tight">${shift.projectName}</span>
+                                    </div>
+                                    <span className="text-[8.5px] opacity-70 font-mono mt-0.5 leading-none">
+                                      ${shift.time} (${calculateShiftHours(shift.time)}h)
+                                    </span>
+                                  </div>
+
+                                  {/* Status indicators & Actions */}
+                                  <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                                    {/* Attendance match badge */}
+                                    <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider bg-slate-950/80 leading-none ${
+                                      autoMatch.status === 'On Time' ? 'bg-green-500/10 border-green-500/20 text-green-400' :
+                                      autoMatch.status === 'Delayed' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' :
+                                      autoMatch.status === 'Absent' ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' :
+                                      'bg-slate-900 border-slate-800 text-slate-455'
+                                    }`}>
+                                      ${autoMatch.status}
+                                    </span>
+
+                                    {/* Sync Action */}
+                                    {isAdmin && isSyncNeeded && (
+                                      <button
+                                        disabled={syncingShiftId === shift.id}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleSyncStatus(shift.id, autoMatch.status);
+                                        }}
+                                        className="p-1 rounded bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/25 transition-all cursor-pointer flex items-center justify-center"
+                                        title="Sync to Verified Status"
+                                      >
+                                        {syncingShiftId === shift.id ? (
+                                          <Loader2 className="w-2.5 h-2.5 animate-spin" />
+                                        ) : (
+                                          <RefreshCw className="w-2.5 h-2.5" />
+                                        )}
+                                      </button>
+                                    )}
+
+                                    {/* Status selection override dropdown */}
+                                    {isAdmin ? (
+                                      <div className="relative">
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setActiveStatusDropdown(activeStatusDropdown === shift.id ? null : shift.id);
+                                          }}
+                                          className={`text-[8px] font-bold px-1.5 py-0.5 rounded border bg-slate-950/80 cursor-pointer flex items-center gap-1 transition-colors leading-none ${
+                                            shift.status === 'On Time' ? 'border-green-500/30 text-green-400 hover:bg-green-500/5' :
+                                            shift.status === 'Delayed' ? 'border-amber-500/30 text-amber-400 hover:bg-amber-500/5' :
+                                            shift.status === 'Absent' ? 'border-rose-500/30 text-rose-400 hover:bg-rose-500/5' :
+                                            'border-slate-800 text-slate-400 hover:bg-slate-900'
+                                          }`}
+                                        >
+                                          ${shift.status}
+                                          <ChevronDown className="w-2.5 h-2.5 text-slate-500" />
+                                        </button>
+                                        
+                                        <AnimatePresence>
+                                          {activeStatusDropdown === shift.id && (
+                                            <>
+                                              <div className="fixed inset-0 z-35" onClick={(e) => { e.stopPropagation(); setActiveStatusDropdown(null); }} />
+                                              <motion.div
+                                                initial={{ opacity: 0, scale: 0.95, y: -4 }}
+                                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                exit={{ opacity: 0, scale: 0.95, y: -4 }}
+                                                className="absolute right-0 top-full mt-1 z-40 bg-slate-900 border border-slate-800 rounded-xl p-1 shadow-2xl space-y-0.5 min-w-[105px]"
+                                              >
+                                                {(['Scheduled', 'On Time', 'Delayed', 'Absent'] as const).map((opt) => (
+                                                  <button
+                                                    key={opt}
+                                                    onClick={(e) => {
+                                                      e.stopPropagation();
+                                                      handleUpdateStatus(shift.id, opt);
+                                                      setActiveStatusDropdown(null);
+                                                    }}
+                                                    className={`w-full text-left px-2 py-1.5 rounded-lg text-[8.5px] font-bold transition-colors flex items-center justify-between cursor-pointer ${
+                                                      shift.status === opt 
+                                                        ? 'bg-cyan-500/10 text-cyan-400' 
+                                                        : 'text-slate-350 hover:bg-slate-950'
+                                                    }`}
+                                                  >
+                                                    {opt}
+                                                    {shift.status === opt ? <Check className="w-2.5 h-2.5 text-cyan-400" /> : ''}
+                                                  </button>
+                                                ))}
+                                              </motion.div>
+                                            </>
+                                          )}
+                                        </AnimatePresence>
+                                      </div>
+                                    ) : (
+                                      <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider leading-none ${
+                                        shift.status === 'On Time' ? 'bg-green-500/10 border-green-500/20 text-green-400' :
+                                        shift.status === 'Delayed' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' :
+                                        shift.status === 'Absent' ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' :
+                                        'bg-slate-900 border-slate-800 text-slate-450'
+                                      }`}>
+                                        ${shift.status}
+                                      </span>
+                                    )}
+
+                                    {/* Delete dispatch action */}
+                                    {isAdmin && (
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDeleteShift(shift.id);
+                                        }}
+                                        className="p-1 text-slate-500 hover:text-rose-505 rounded hover:bg-rose-500/5 transition-all cursor-pointer flex items-center justify-center"
+                                        title="Cancel Dispatch"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })()
+                          ) : (
+                            /* Empty Timeline Slot click to Assign */
+                            <div 
+                              className="w-full h-full relative group z-10"
+                              {...(isAdmin ? {
+                                onClick: () => {
+                                  setSelectedTechId(tech.id);
+                                  setShowAddForm(true);
+                                }
+                              } : {})}
+                            >
+                              {isAdmin ? (
+                                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 bg-cyan-500/5 transition-opacity duration-150 cursor-pointer">
+                                  <span className="text-[10px] text-cyan-400 font-semibold flex items-center gap-1">
+                                    <Plus className="w-3.5 h-3.5" /> Assign Dispatch Shift
+                                  </span>
+                                </div>
+                              ) : (
+                                <div className="absolute inset-0 flex items-center justify-center opacity-40 select-none">
+                                  <span className="text-[9px] text-slate-600 font-medium italic">No shift scheduled today</span>
+                                </div>
                               )}
                             </div>
-                            <span className="text-[9.5px] text-slate-500 block leading-tight font-medium">
-                              {autoMatch.details}
-                            </span>
-                          </div>
-                        );
-                      })()
-                    ) : (
-                      <span className="text-[10px] text-slate-650 font-mono">—</span>
-                    )}
-                  </div>
-
-                  {/* Col 4: Dispatch Actions */}
-                  <div className="col-span-1 text-right flex items-center justify-end gap-2.5">
-                    {shift && (
-                      <>
-                        {/* Custom Dropdown selection for Shift Status override */}
-                        {isAdmin ? (
-                          <div className="relative">
-                            <button
-                              type="button"
-                              onClick={() => setActiveStatusDropdown(activeStatusDropdown === shift.id ? null : shift.id)}
-                              className={`text-[9.5px] font-bold px-2 py-1 rounded-xl border bg-slate-950 cursor-pointer flex items-center gap-1 transition-colors ${
-                                shift.status === 'On Time' ? 'border-green-500/30 text-green-400 hover:bg-green-500/5' :
-                                shift.status === 'Delayed' ? 'border-amber-500/30 text-amber-400 hover:bg-amber-500/5' :
-                                shift.status === 'Absent' ? 'border-rose-500/30 text-rose-400 hover:bg-rose-500/5' :
-                                'border-slate-800 text-slate-400 hover:bg-slate-900'
-                              }`}
-                            >
-                              {shift.status}
-                              <ChevronDown className="w-3 h-3 text-slate-500" />
-                            </button>
-                            <AnimatePresence>
-                              {activeStatusDropdown === shift.id && (
-                                <>
-                                  <div className="fixed inset-0 z-10" onClick={() => setActiveStatusDropdown(null)} />
-                                  <motion.div
-                                    initial={{ opacity: 0, scale: 0.95, y: -4 }}
-                                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                                    exit={{ opacity: 0, scale: 0.95, y: -4 }}
-                                    className="absolute right-0 top-full mt-1 z-20 bg-slate-900 border border-slate-800 rounded-xl p-1 shadow-2xl space-y-0.5 min-w-[110px]"
-                                  >
-                                    {(['Scheduled', 'On Time', 'Delayed', 'Absent'] as const).map((opt) => (
-                                      <button
-                                        key={opt}
-                                        onClick={() => {
-                                          handleUpdateStatus(shift.id, opt);
-                                          setActiveStatusDropdown(null);
-                                        }}
-                                        className={`w-full text-left px-2.5 py-1.5 rounded-lg text-[9.5px] font-bold transition-colors flex items-center justify-between cursor-pointer ${
-                                          shift.status === opt 
-                                            ? 'bg-cyan-500/10 text-cyan-400' 
-                                            : 'text-slate-350 hover:bg-slate-950'
-                                        }`}
-                                      >
-                                        {opt}
-                                        {shift.status === opt && <Check className="w-3 h-3 text-cyan-400" />}
-                                      </button>
-                                    ))}
-                                  </motion.div>
-                                </>
-                              )}
-                            </AnimatePresence>
-                          </div>
-                        ) : (
-                          <span className={`text-[9.5px] font-bold px-2 py-0.5 rounded border uppercase tracking-wider ${
-                            shift.status === 'On Time' ? 'bg-green-500/10 border-green-500/20 text-green-400' :
-                            shift.status === 'Delayed' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' :
-                            shift.status === 'Absent' ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' :
-                            'bg-slate-900 border-slate-800 text-slate-450'
-                          }`}>
-                            {shift.status}
-                          </span>
-                        )}
-
-                        {/* Delete Shift Button */}
-                        {isAdmin && (
-                          <button
-                            onClick={() => handleDeleteShift(shift.id)}
-                            className="p-1 text-slate-500 hover:text-rose-500 rounded hover:bg-rose-500/5 transition-all cursor-pointer"
-                            title="Cancel Dispatch"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        )}
-                      </>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Dispatch Creator Modal Popup */}
+            {/* Dispatch Creator Modal Popup */}
       <AnimatePresence>
         {showAddForm && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
