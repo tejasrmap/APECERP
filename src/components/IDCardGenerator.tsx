@@ -284,7 +284,7 @@ export default function IDCardGenerator() {
                 {/* QR Code Container */}
                 <div className="flex justify-center items-center mt-3">
                   <img 
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`ID:${selectedEmployee.employeeId || selectedEmployee.id}\nName:${selectedEmployee.name}\nEmail:${selectedEmployee.email}\nPhone:${selectedEmployee.phone}`)}`} 
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`${window.location.origin}/profile/${selectedEmployee.id}`)}`} 
                     alt="QR Code"
                     className="w-[52px] h-[52px] object-contain"
                   />
@@ -352,7 +352,7 @@ export default function IDCardGenerator() {
                 {/* Bottom QR Code */}
                 <div className="flex justify-center items-center mt-4">
                   <img 
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`APEC Power Solutions Pvt Ltd\n59A-21/3-3A, 2, DON BOSCO SCHOOL ROAD, VIJAYANAGAR COLONY, Patamata, Vijayawada, Andhra Pradesh 520010`)}`} 
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent('https://www.apecpowersolutions.com')}`} 
                     alt="QR Code"
                     className="w-[52px] h-[52px] object-contain"
                   />
