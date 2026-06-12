@@ -492,7 +492,7 @@ export default function Scheduling() {
     // Calculate latency (punchTime - shiftStart)
     const diffMinutes = Math.floor((punchTimeObj.getTime() - shiftStart.getTime()) / (1000 * 60));
 
-    if (diffMinutes <= 30) {
+    if (diffMinutes <= 10) {
       return { 
         status: 'On Time' as const, 
         details: `Punched in on time at ${punchTimeStr}`, 
