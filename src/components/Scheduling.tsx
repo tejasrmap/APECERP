@@ -414,14 +414,21 @@ export default function Scheduling() {
       }
     }
 
-    if (techPunches.length === 0) {
-      const timeParts = shift.time.split('-');
-      const startTimeStr = timeParts[0]?.trim() || '08:00';
-      const [shStr, smStr] = startTimeStr.split(':');
-      
-      const shiftStart = new Date(shift.date);
-      shiftStart.setHours(parseInt(shStr) || 8, parseInt(smStr) || 0, 0, 0);
+    const timeParts = shift.time.split('-');
+    const startTimeStr = timeParts[0]?.trim() || '08:00';
+    const [shStr, smStr] = startTimeStr.split(':');
+    const shiftStart = new Date(shift.date);
+    shiftStart.setHours(parseInt(shStr) || 8, parseInt(smStr) || 0, 0, 0);
 
+    const windowStartMs = shiftStart.getTime() - 30 * 60 * 1000;
+
+    // Filter to only include punch-ins that are >= 30 minutes before the shift start
+    const validPunches = techPunches.filter(p => {
+      const punchTime = new Date(p.timestamp).getTime();
+      return punchTime >= windowStartMs;
+    });
+
+    if (validPunches.length === 0) {
       const now = new Date();
       if (now.getTime() - shiftStart.getTime() > 2 * 60 * 60 * 1000) {
         return { status: 'Absent' as const, details: 'No punch-in recorded (Shift started >2h ago)', punchTime: null };
@@ -429,21 +436,15 @@ export default function Scheduling() {
       return { status: 'Scheduled' as const, details: 'Awaiting punch-in...', punchTime: null };
     }
 
-    techPunches.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
-    const earliestPunch = techPunches[0];
+    validPunches.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+    const earliestPunch = validPunches[0];
     const punchTimeObj = new Date(earliestPunch.timestamp);
     const punchTimeStr = punchTimeObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
 
-    // Calculate latency
-    const timeParts = shift.time.split('-');
-    const startTimeStr = timeParts[0]?.trim() || '08:00';
-    const [shStr, smStr] = startTimeStr.split(':');
-    const shiftStart = new Date(shift.date);
-    shiftStart.setHours(parseInt(shStr) || 8, parseInt(smStr) || 0, 0, 0);
-
+    // Calculate latency (punchTime - shiftStart)
     const diffMinutes = Math.floor((punchTimeObj.getTime() - shiftStart.getTime()) / (1000 * 60));
 
-    if (diffMinutes <= 15) {
+    if (diffMinutes <= 30) {
       return { 
         status: 'On Time' as const, 
         details: `Punched in on time at ${punchTimeStr}`, 
