@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { 
   Printer, 
@@ -56,7 +56,7 @@ export default function IDCardGenerator() {
 
       // Resolve parameter selection
       if (targetEmpId) {
-        const matched = list.find(t => t.employeeId === targetEmpId || t.id === targetEmpId);
+        const matched = list.find((t: any) => t.employeeId === targetEmpId || t.id === targetEmpId);
         if (matched) {
           setSelectedEmployee(matched);
           setSelectedId(matched.id);
