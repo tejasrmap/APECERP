@@ -257,24 +257,24 @@ export default function IDCardGenerator() {
 
                 {/* Employee Name */}
                 <div className="flex flex-col items-center mt-2.5">
-                  <h3 className="text-[15px] font-extrabold text-[#0b2265] text-center tracking-wide leading-tight uppercase font-sans">
+                  <h3 className="text-[17px] font-black text-[#0b2265] text-center tracking-wide leading-tight font-sans">
                     {selectedEmployee.name}
                   </h3>
                 </div>
 
                 {/* Details List */}
-                <div className="w-full px-1.5 mt-2 text-[8.5px] text-slate-800 space-y-1 font-sans">
-                  <div className="grid grid-cols-[34px_3px_1fr] gap-x-1 items-start">
+                <div className="w-full px-1.5 mt-2.5 text-[9.5px] text-slate-800 space-y-1.5 font-sans">
+                  <div className="grid grid-cols-[38px_4px_1fr] gap-x-1 items-start">
                     <span className="font-extrabold text-black">ID No</span>
                     <span className="font-bold text-black">:</span>
                     <span className="font-extrabold text-[#c91c1c] tracking-tight">{selectedEmployee.employeeId || 'N/A'}</span>
                   </div>
-                  <div className="grid grid-cols-[34px_3px_1fr] gap-x-1 items-start">
+                  <div className="grid grid-cols-[38px_4px_1fr] gap-x-1 items-start">
                     <span className="font-extrabold text-black">Email</span>
                     <span className="font-bold text-black">:</span>
                     <span className="break-all font-bold text-slate-850 leading-tight">{selectedEmployee.email || 'N/A'}</span>
                   </div>
-                  <div className="grid grid-cols-[34px_3px_1fr] gap-x-1 items-start">
+                  <div className="grid grid-cols-[38px_4px_1fr] gap-x-1 items-start">
                     <span className="font-extrabold text-black">Phone</span>
                     <span className="font-bold text-black">:</span>
                     <span className="font-bold text-slate-850">{selectedEmployee.phone || 'N/A'}</span>
@@ -291,13 +291,13 @@ export default function IDCardGenerator() {
                 </div>
 
                 {/* Bottom Left Accent Squares */}
-                <div style={{ position: 'absolute', bottom: '0px', left: '0px', width: '12px', height: '12px', backgroundColor: '#c91c1c' }} />
-                <div style={{ position: 'absolute', bottom: '12px', left: '12px', width: '12px', height: '12px', backgroundColor: '#c91c1c' }} />
+                <div style={{ position: 'absolute', bottom: '0px', left: '0px', width: '14px', height: '14px', backgroundColor: '#c91c1c' }} />
+                <div style={{ position: 'absolute', bottom: '14px', left: '14px', width: '14px', height: '14px', backgroundColor: '#c91c1c' }} />
               </div>
 
               {/* Right Side (Solid Red Column) */}
               <div className="w-[62px] h-full bg-[#c91c1c] flex items-center justify-center relative overflow-hidden select-none">
-                <div className="text-white font-extrabold text-xs uppercase whitespace-nowrap tracking-[0.25em]" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', fontFamily: 'sans-serif' }}>
+                <div className="text-white font-[900] text-sm uppercase whitespace-nowrap tracking-[0.3em]" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', fontFamily: 'sans-serif' }}>
                   {selectedEmployee.role}
                 </div>
               </div>
@@ -334,12 +334,12 @@ export default function IDCardGenerator() {
                 <h5 className="text-[11px] font-black text-black tracking-wider text-center mt-4">TERMS & CONDITIONS</h5>
 
                 {/* Subtext */}
-                <p className="text-[7.5px] font-extrabold text-slate-800 text-center mt-1 px-1.5 uppercase leading-snug">
+                <p className="text-[7.5px] font-extrabold text-slate-800 text-center mt-1 px-1.5 leading-snug">
                   Security: If the ID is found anywhere please send to
                 </p>
 
                 {/* Address Block */}
-                <div className="text-[7.5px] font-extrabold text-slate-850 text-center mt-2.5 px-3 leading-normal uppercase">
+                <div className="text-[7.5px] font-extrabold text-slate-850 text-center mt-2.5 px-3 leading-normal">
                   APEC Power Solutions Pvt Ltd<br/>
                   59A-21/3-3A, 2,<br/>
                   DON BOSCO SCHOOL ROAD,<br/>
@@ -360,16 +360,16 @@ export default function IDCardGenerator() {
 
                 {/* Corner Red Accent Squares (Top Right & Bottom Right) */}
                 {/* Top Right Corner Accent */}
-                <div style={{ position: 'absolute', top: '0px', right: '0px', width: '12px', height: '12px', backgroundColor: '#c91c1c' }} />
-                <div style={{ position: 'absolute', top: '12px', right: '12px', width: '12px', height: '12px', backgroundColor: '#c91c1c' }} />
+                <div style={{ position: 'absolute', top: '0px', right: '0px', width: '14px', height: '14px', backgroundColor: '#c91c1c' }} />
+                <div style={{ position: 'absolute', top: '14px', right: '14px', width: '14px', height: '14px', backgroundColor: '#c91c1c' }} />
 
                 {/* Bottom Right Corner Accent (Step-stair L-shape Pattern) */}
-                <div style={{ position: 'absolute', bottom: '0px', right: '0px', width: '12px', height: '12px', backgroundColor: '#c91c1c' }} />
-                <div style={{ position: 'absolute', bottom: '0px', right: '12px', width: '12px', height: '12px', backgroundColor: '#c91c1c' }} />
-                <div style={{ position: 'absolute', bottom: '12px', right: '0px', width: '12px', height: '12px', backgroundColor: '#c91c1c' }} />
-                <div style={{ position: 'absolute', bottom: '12px', right: '12px', width: '12px', height: '12px', backgroundColor: '#c91c1c' }} />
-                <div style={{ position: 'absolute', bottom: '0px', right: '24px', width: '12px', height: '12px', backgroundColor: '#c91c1c' }} />
-                <div style={{ position: 'absolute', bottom: '24px', right: '0px', width: '12px', height: '12px', backgroundColor: '#c91c1c' }} />
+                <div style={{ position: 'absolute', bottom: '0px', right: '0px', width: '14px', height: '14px', backgroundColor: '#c91c1c' }} />
+                <div style={{ position: 'absolute', bottom: '0px', right: '14px', width: '14px', height: '14px', backgroundColor: '#c91c1c' }} />
+                <div style={{ position: 'absolute', bottom: '14px', right: '0px', width: '14px', height: '14px', backgroundColor: '#c91c1c' }} />
+                <div style={{ position: 'absolute', bottom: '14px', right: '14px', width: '14px', height: '14px', backgroundColor: '#c91c1c' }} />
+                <div style={{ position: 'absolute', bottom: '0px', right: '28px', width: '14px', height: '14px', backgroundColor: '#c91c1c' }} />
+                <div style={{ position: 'absolute', bottom: '28px', right: '0px', width: '14px', height: '14px', backgroundColor: '#c91c1c' }} />
               </div>
             </div>
 
