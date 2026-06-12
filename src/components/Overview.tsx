@@ -16,7 +16,7 @@ import { useOutletContext } from 'react-router-dom';
 import { db } from '../firebase';
 
 export default function Overview() {
-  const { setFirestoreError, firestoreError } = useOutletContext<any>();
+  const { setFirestoreError, firestoreError, isAdmin } = useOutletContext<any>();
 
   const [projectsList, setProjectsList] = useState<any[]>([]);
   const [alertsList, setAlertsList] = useState<any[]>([]);
@@ -30,6 +30,7 @@ export default function Overview() {
 
   // Reports Exporter logic
   const handleExport = (format: 'pdf' | 'csv') => {
+    if (!isAdmin) return;
     if (format === 'csv') {
       let csvContent = "data:text/csv;charset=utf-8,";
       csvContent += "Type,Name/Title,Detail,Status\n";
@@ -229,22 +230,24 @@ export default function Overview() {
           <h2 className="text-xl font-bold text-slate-100 print:text-slate-900">APEC Operations Terminal</h2>
           <p className="text-xs text-slate-400 mt-0.5 print:text-slate-600">Operational overview and analytics control dashboard</p>
         </div>
-        <div className="flex items-center gap-2 self-stretch sm:self-auto print:hidden">
-          <button 
-            onClick={() => handleExport('csv')}
-            className="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-slate-100 hover:border-slate-700 text-xs font-semibold transition-all flex items-center justify-center gap-1.5"
-          >
-            <Download className="w-4 h-4" />
-            Export CSV
-          </button>
-          <button 
-            onClick={() => handleExport('pdf')}
-            className="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-955 text-xs font-bold transition-all shadow-[0_4px_12px_rgba(6,182,212,0.15)] hover:shadow-lg flex items-center justify-center gap-1.5"
-          >
-            <FileText className="w-4 h-4" />
-            Generate PDF Report
-          </button>
-        </div>
+        {isAdmin && (
+          <div className="flex items-center gap-2 self-stretch sm:self-auto print:hidden">
+            <button 
+              onClick={() => handleExport('csv')}
+              className="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-slate-100 hover:border-slate-700 text-xs font-semibold transition-all flex items-center justify-center gap-1.5"
+            >
+              <Download className="w-4 h-4" />
+              Export CSV
+            </button>
+            <button 
+              onClick={() => handleExport('pdf')}
+              className="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-955 text-xs font-bold transition-all shadow-[0_4px_12px_rgba(6,182,212,0.15)] hover:shadow-lg flex items-center justify-center gap-1.5"
+            >
+              <FileText className="w-4 h-4" />
+              Generate PDF Report
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Stats Grid */}
