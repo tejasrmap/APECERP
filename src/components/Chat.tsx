@@ -12,7 +12,7 @@ import {
   Download,
   X
 } from 'lucide-react';
-import { collection, onSnapshot, query, addDoc, Timestamp } from 'firebase/firestore';
+import { collection, onSnapshot, query, addDoc, Timestamp, where } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useOutletContext } from 'react-router-dom';
 import { db, auth, storage } from '../firebase';
@@ -93,7 +93,7 @@ export default function Chat() {
     }
 
     setIsChatLoading(true);
-    const q = query(collection(db, 'messages'));
+    const q = query(collection(db, 'messages'), where('roomId', '==', activeRoomId));
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const msgs = snapshot.docs

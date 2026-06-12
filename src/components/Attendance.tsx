@@ -429,33 +429,34 @@ export default function Attendance() {
   };
 
   // Filter logic
-  const filteredLogs = logs.filter(log => {
-    // Normal users can only see their own attendance logs (inherited from component scope)
+  const filteredLogs = React.useMemo(() => {
+    return logs.filter(log => {
+      // Normal users can only see their own attendance logs (inherited from component scope)
+      if (!isUserAdmin && log.userEmail?.toLowerCase() !== activeEmail.toLowerCase()) {
+        return false;
+      }
 
-    if (!isUserAdmin && log.userEmail?.toLowerCase() !== activeEmail.toLowerCase()) {
-      return false;
-    }
+      // Search query match
+      const term = searchTerm.toLowerCase();
+      const nameMatch = log.userName?.toLowerCase().includes(term) || false;
+      const empIdMatch = log.employeeId?.toLowerCase().includes(term) || false;
+      const addrMatch = log.location?.address?.toLowerCase().includes(term) || false;
+      const emailMatch = log.userEmail?.toLowerCase().includes(term) || false;
+      const searchMatch = nameMatch || empIdMatch || addrMatch || emailMatch;
 
-    // Search query match
-    const term = searchTerm.toLowerCase();
-    const nameMatch = log.userName?.toLowerCase().includes(term) || false;
-    const empIdMatch = log.employeeId?.toLowerCase().includes(term) || false;
-    const addrMatch = log.location?.address?.toLowerCase().includes(term) || false;
-    const emailMatch = log.userEmail?.toLowerCase().includes(term) || false;
-    const searchMatch = nameMatch || empIdMatch || addrMatch || emailMatch;
+      // Type filter
+      const typeMatch = typeFilter === 'all' || log.type === typeFilter;
 
-    // Type filter
-    const typeMatch = typeFilter === 'all' || log.type === typeFilter;
+      // Date filter
+      let dateMatch = true;
+      if (dateFilter) {
+        const logDate = log.timestamp.split('T')[0];
+        dateMatch = logDate === dateFilter;
+      }
 
-    // Date filter
-    let dateMatch = true;
-    if (dateFilter) {
-      const logDate = log.timestamp.split('T')[0];
-      dateMatch = logDate === dateFilter;
-    }
-
-    return searchMatch && typeMatch && dateMatch;
-  });
+      return searchMatch && typeMatch && dateMatch;
+    });
+  }, [logs, isUserAdmin, activeEmail, searchTerm, typeFilter, dateFilter]);
 
   // Ensure camera stops when leaving route
   useEffect(() => {

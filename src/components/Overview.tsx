@@ -11,7 +11,7 @@ import {
   Download,
   FileText
 } from 'lucide-react';
-import { collection, onSnapshot, query, Timestamp } from 'firebase/firestore';
+import { collection, onSnapshot, query, Timestamp, orderBy, limit } from 'firebase/firestore';
 import { useOutletContext } from 'react-router-dom';
 import { db } from '../firebase';
 
@@ -143,7 +143,7 @@ export default function Overview() {
     });
 
     // 4. Activities listener
-    const qActivities = query(collection(db, 'activities'));
+    const qActivities = query(collection(db, 'activities'), orderBy('timestamp', 'desc'), limit(15));
     const unsubActivities = onSnapshot(qActivities, (snapshot) => {
       const sortedActs = snapshot.docs
         .map(d => ({ id: d.id, ...d.data() }))

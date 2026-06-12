@@ -87,16 +87,18 @@ export default function Team() {
     );
   }
 
-  const filteredTeam = teamList.filter(m => {
-    const term = searchTerm.toLowerCase();
-    const nameMatch = m.name?.toLowerCase().includes(term) || false;
-    const emailMatch = m.email?.toLowerCase().includes(term) || false;
-    const roleMatch = m.role?.toLowerCase().includes(term) || false;
-    const deptMatch = m.department?.toLowerCase().includes(term) || false;
-    const skillMatch = m.skills?.some((s: string) => s.toLowerCase().includes(term)) || false;
-    const empIdMatch = m.employeeId?.toLowerCase().includes(term) || false;
-    return nameMatch || emailMatch || roleMatch || deptMatch || skillMatch || empIdMatch;
-  });
+  const filteredTeam = React.useMemo(() => {
+    return teamList.filter(m => {
+      const term = searchTerm.toLowerCase();
+      const nameMatch = m.name?.toLowerCase().includes(term) || false;
+      const emailMatch = m.email?.toLowerCase().includes(term) || false;
+      const roleMatch = m.role?.toLowerCase().includes(term) || false;
+      const deptMatch = m.department?.toLowerCase().includes(term) || false;
+      const skillMatch = m.skills?.some((s: string) => s.toLowerCase().includes(term)) || false;
+      const empIdMatch = m.employeeId?.toLowerCase().includes(term) || false;
+      return nameMatch || emailMatch || roleMatch || deptMatch || skillMatch || empIdMatch;
+    });
+  }, [teamList, searchTerm]);
 
   return (
     <motion.div 
