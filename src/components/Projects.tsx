@@ -13,7 +13,7 @@ import { useOutletContext } from 'react-router-dom';
 import { db } from '../firebase';
 
 export default function Projects() {
-  const { setFirestoreError, isDbActionLoading, setIsDbActionLoading } = useOutletContext<any>();
+  const { setFirestoreError, isDbActionLoading, setIsDbActionLoading, isAdmin } = useOutletContext<any>();
 
   const [projectsList, setProjectsList] = useState<any[]>([]);
   const [teamList, setTeamList] = useState<any[]>([]);
@@ -106,7 +106,7 @@ export default function Projects() {
 
   const handleAddProject = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newProjectName || !db) return;
+    if (!newProjectName || !db || !isAdmin) return;
     setIsDbActionLoading(true);
     try {
       await addDoc(collection(db, 'projects'), {
@@ -134,7 +134,7 @@ export default function Projects() {
   };
 
   const handleDeleteDocument = async (colName: string, id: string, docNameForLog?: string) => {
-    if (!db) return;
+    if (!db || !isAdmin) return;
     setIsDbActionLoading(true);
     try {
       await deleteDoc(doc(db, colName, id));
@@ -174,14 +174,16 @@ export default function Projects() {
           <h3 className="text-xl font-bold text-slate-100">Project Directory</h3>
           <p className="text-xs text-slate-400 mt-1">APEC active and pipeline installations</p>
         </div>
-        <button 
-          onClick={() => setIsAddingProject(!isAddingProject)}
-          disabled={isDbActionLoading}
-          className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-955 text-xs font-bold flex items-center gap-1.5 transition-all shadow-[0_4px_12px_rgba(6,182,212,0.15)] hover:shadow-lg disabled:opacity-50"
-        >
-          {isAddingProject ? <ArrowLeft className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
-          {isAddingProject ? 'Back to List' : 'Add Project'}
-        </button>
+        {isAdmin && (
+          <button 
+            onClick={() => setIsAddingProject(!isAddingProject)}
+            disabled={isDbActionLoading}
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-955 text-xs font-bold flex items-center gap-1.5 transition-all shadow-[0_4px_12px_rgba(6,182,212,0.15)] hover:shadow-lg disabled:opacity-50"
+          >
+            {isAddingProject ? <ArrowLeft className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
+            {isAddingProject ? 'Back to List' : 'Add Project'}
+          </button>
+        )}
       </div>
 
       <AnimatePresence mode="wait">
@@ -413,9 +415,9 @@ export default function Projects() {
                       <tr className="border-b border-slate-800 bg-slate-950/45 text-xs uppercase tracking-wider text-slate-400 font-semibold">
                         <th className="p-4">Project Name</th>
                         <th className="p-4 hidden sm:table-cell">Site Location</th>
-                        <th className="p-4 hidden md:table-cell">Project Manager</th>
+                         <th className="p-4 hidden md:table-cell">Project Manager</th>
                         <th className="p-4">Status</th>
-                        <th className="p-4 text-center">Actions</th>
+                        {isAdmin && <th className="p-4 text-center">Actions</th>}
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800/50 text-sm text-slate-300">
@@ -452,21 +454,23 @@ export default function Projects() {
                                 {p.status}
                               </span>
                             </td>
-                            <td className="p-4 text-center">
-                              <button 
-                                onClick={() => handleDeleteDocument('projects', p.id, p.name)}
-                                disabled={isDbActionLoading}
-                                className="p-1.5 text-slate-500 hover:text-rose-500 transition-colors rounded hover:bg-rose-950/20 disabled:opacity-50"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </td>
+                            {isAdmin && (
+                              <td className="p-4 text-center">
+                                <button 
+                                  onClick={() => handleDeleteDocument('projects', p.id, p.name)}
+                                  disabled={isDbActionLoading}
+                                  className="p-1.5 text-slate-500 hover:text-rose-500 transition-colors rounded hover:bg-rose-950/20 disabled:opacity-50"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </td>
+                            )}
                           </tr>
 
                           {/* Expanded Gantt milestones panel */}
                           {expandedProjectId === p.id && (
                             <tr className="bg-slate-950/20">
-                              <td colSpan={5} className="p-4 border-t border-slate-800/40">
+                              <td colSpan={isAdmin ? 5 : 4} className="p-4 border-t border-slate-800/40">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-2">
                                   <div>
                                     <h5 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">Project Gantt Milestones</h5>
