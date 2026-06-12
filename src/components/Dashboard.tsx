@@ -17,7 +17,8 @@ import {
   Calendar,
   ShieldAlert,
   Clock,
-  FileText
+  FileText,
+  CalendarRange
 } from 'lucide-react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { auth, db } from '../firebase';
@@ -141,6 +142,7 @@ export default function Dashboard() {
     { name: 'Scheduling', icon: Calendar },
     { name: 'Workforce', icon: Users },
     { name: 'Attendance', icon: Clock },
+    { name: 'Leaves', icon: CalendarRange },
     { name: 'Settings', icon: Settings },
     ...(isAdmin ? [
       { name: 'Team Control', icon: Shield },
@@ -158,6 +160,7 @@ export default function Dashboard() {
     if (path === '/dashboard/team-control') return 'Team Control';
     if (path === '/dashboard/attendance') return 'Attendance';
     if (path === '/dashboard/reports') return 'Reports';
+    if (path === '/dashboard/leaves') return 'Leaves';
     return 'Dashboard';
   };
   const activeTab = getActiveTab();
