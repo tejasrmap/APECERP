@@ -211,79 +211,94 @@ export default function IDCardGenerator() {
               </div>
             </div>
           </div>
-
           {/* ID CARD VISUAL GRAPHIC CONTAINER */}
-          <div className="lg:col-span-8 flex flex-col md:flex-row gap-8 items-center justify-center p-4 print:p-0 print:flex-col print:gap-12 print:w-full">
+          <div className="lg:col-span-8 flex flex-col md:flex-row gap-8 items-center justify-center p-4 print:p-0 print:flex-col print:gap-0 print:w-full id-card-print-container">
             
             {/* FRONT SIDE OF ID CARD */}
             <div 
               id="id-card-front"
-              className="id-card-print-block w-[280px] h-[440px] rounded-2xl border border-cyan-500/40 bg-gradient-to-br from-[#0a0f1d] to-[#0e162c] shadow-[0_12px_36px_rgba(0,0,0,0.6)] relative overflow-hidden flex flex-col justify-between p-5 select-none print:shadow-none print:border-black/50"
+              className="id-card-print-block w-[280px] h-[440px] rounded-lg border border-slate-350 bg-white shadow-[0_12px_36px_rgba(0,0,0,0.15)] relative overflow-hidden flex flex-row select-none print:shadow-none print:border-black/50"
               style={{ contentVisibility: 'auto' }}
             >
-              {/* Futuristic vector overlays */}
-              <div className="absolute inset-0 cyber-grid opacity-15 pointer-events-none" />
-              <div className="absolute top-0 right-0 w-[150px] h-[150px] bg-gradient-to-br from-cyan-500/5 to-transparent rounded-full pointer-events-none" />
-              
-              {/* Header Branding */}
-              <div className="flex items-center gap-2.5 z-10">
-                <img 
-                  src="/logo.png" 
-                  alt="Logo" 
-                  className="w-8 h-8 object-contain bg-slate-900/60 p-0.5 rounded border border-slate-700/60"
-                  onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).src = '/logo.jpeg';
-                  }}
-                />
-                <div>
-                  <h4 className="text-[11px] font-extrabold uppercase tracking-wider text-slate-100 leading-tight">APEC Power Solutions</h4>
-                  <p className="text-[7.5px] text-cyan-405 font-bold uppercase tracking-widest text-cyan-400 leading-none">GRID SERVICES</p>
+              {/* Left Side (White Grid Background) */}
+              <div className="w-[218px] h-full card-grid-bg relative flex flex-col justify-between p-4 z-10">
+                {/* Branding Header */}
+                <div className="flex items-center gap-2">
+                  <img 
+                    src="/logo.png" 
+                    alt="APEC Logo" 
+                    className="w-7 h-7 object-contain"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = '/logo.jpeg';
+                    }}
+                  />
+                  <div className="flex flex-col">
+                    <span className="text-[12px] font-[900] text-black leading-none tracking-tight">APEC</span>
+                    <span className="text-[9px] font-bold text-[#c91c1c] leading-none tracking-tight">Power Solutions</span>
+                  </div>
                 </div>
+
+                {/* Profile Photo Frame */}
+                <div className="flex flex-col items-center mt-2">
+                  <div className="w-[105px] h-[125px] border-[3px] border-[#c91c1c] bg-white overflow-hidden shadow-sm flex items-center justify-center">
+                    {selectedEmployee.photoUrl ? (
+                      <img 
+                        src={selectedEmployee.photoUrl} 
+                        alt={selectedEmployee.name} 
+                        className="w-full h-full object-cover" 
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-slate-100 flex items-center justify-center text-xl font-bold text-slate-400">
+                        {selectedEmployee.name.slice(0, 2).toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Employee Name */}
+                <div className="flex flex-col items-center mt-2.5">
+                  <h3 className="text-[15px] font-extrabold text-[#0b2265] text-center tracking-wide leading-tight uppercase font-sans">
+                    {selectedEmployee.name}
+                  </h3>
+                </div>
+
+                {/* Details List */}
+                <div className="w-full px-1.5 mt-2 text-[8.5px] text-slate-800 space-y-1 font-sans">
+                  <div className="grid grid-cols-[34px_3px_1fr] gap-x-1 items-start">
+                    <span className="font-extrabold text-black">ID No</span>
+                    <span className="font-bold text-black">:</span>
+                    <span className="font-extrabold text-[#c91c1c] tracking-tight">{selectedEmployee.employeeId || 'N/A'}</span>
+                  </div>
+                  <div className="grid grid-cols-[34px_3px_1fr] gap-x-1 items-start">
+                    <span className="font-extrabold text-black">Email</span>
+                    <span className="font-bold text-black">:</span>
+                    <span className="break-all font-bold text-slate-850 leading-tight">{selectedEmployee.email || 'N/A'}</span>
+                  </div>
+                  <div className="grid grid-cols-[34px_3px_1fr] gap-x-1 items-start">
+                    <span className="font-extrabold text-black">Phone</span>
+                    <span className="font-bold text-black">:</span>
+                    <span className="font-bold text-slate-850">{selectedEmployee.phone || 'N/A'}</span>
+                  </div>
+                </div>
+
+                {/* QR Code Container */}
+                <div className="flex justify-center items-center mt-3">
+                  <img 
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`ID:${selectedEmployee.employeeId || selectedEmployee.id}\nName:${selectedEmployee.name}\nEmail:${selectedEmployee.email}\nPhone:${selectedEmployee.phone}`)}`} 
+                    alt="QR Code"
+                    className="w-[52px] h-[52px] object-contain"
+                  />
+                </div>
+
+                {/* Bottom Left Accent Squares */}
+                <div style={{ position: 'absolute', bottom: '0px', left: '0px', width: '12px', height: '12px', backgroundColor: '#c91c1c' }} />
+                <div style={{ position: 'absolute', bottom: '12px', left: '12px', width: '12px', height: '12px', backgroundColor: '#c91c1c' }} />
               </div>
 
-              {/* Profile Avatar Frame */}
-              <div className="flex flex-col items-center gap-3.5 z-10 my-auto">
-                <div className="relative">
-                  {/* Hexagon/Square glow border */}
-                  <div className="absolute inset-0 -m-1 rounded-2xl bg-gradient-to-tr from-cyan-500 to-cyan-400 blur-sm opacity-50" />
-                  
-                  {selectedEmployee.photoUrl ? (
-                    <img 
-                      src={selectedEmployee.photoUrl} 
-                      alt={selectedEmployee.name} 
-                      className="w-24 h-24 rounded-2xl object-cover border-2 border-slate-900 shadow-xl relative z-10" 
-                    />
-                  ) : (
-                    <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-cyan-500/5 border border-cyan-500/20 flex items-center justify-center text-2xl font-extrabold text-cyan-400 shadow-xl relative z-10">
-                      {selectedEmployee.name.slice(0, 2).toUpperCase()}
-                    </div>
-                  )}
-                </div>
-                
-                <div className="text-center space-y-0.5">
-                  <h3 className="text-sm font-black text-slate-100 tracking-wide uppercase">{selectedEmployee.name}</h3>
-                  <p className="text-[9.5px] text-rose-500 font-extrabold uppercase tracking-widest leading-tight">{selectedEmployee.role}</p>
-                  <p className="text-[8.5px] text-slate-500 font-mono tracking-wider">{selectedEmployee.department || 'Operations Control'}</p>
-                </div>
-              </div>
-
-              {/* Card Footer Bar */}
-              <div className="border-t border-cyan-500/20 pt-3 flex justify-between items-end z-10 font-mono">
-                <div>
-                  <span className="text-slate-500 block uppercase text-[6px] tracking-wider leading-none">EMPLOYEE ID</span>
-                  <span className="font-extrabold text-cyan-400 text-[10px] leading-tight">{selectedEmployee.employeeId || 'APEC-MEMBER'}</span>
-                </div>
-                <div className="text-right">
-                  <span className="text-slate-500 block uppercase text-[6.5px] tracking-wider leading-none">Access Level</span>
-                  <span className="font-bold text-slate-350 text-[7.5px] uppercase">
-                    {[
-                      'admin@apecpowersolutions.com',
-                      'managingdirector@apecpowersolutions.com'
-                    ].includes(selectedEmployee.email?.toLowerCase()) || selectedEmployee.accessRole === 'Admin' || selectedEmployee.roleType === 'Admin'
-                      ? 'ADMIN SECURE'
-                      : 'STAFF OPERATIONS'
-                    }
-                  </span>
+              {/* Right Side (Solid Red Column) */}
+              <div className="w-[62px] h-full bg-[#c91c1c] flex items-center justify-center relative overflow-hidden select-none">
+                <div className="text-white font-extrabold text-xs uppercase whitespace-nowrap tracking-[0.25em]" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', fontFamily: 'sans-serif' }}>
+                  {selectedEmployee.role}
                 </div>
               </div>
             </div>
@@ -291,66 +306,70 @@ export default function IDCardGenerator() {
             {/* BACK SIDE OF ID CARD */}
             <div 
               id="id-card-back"
-              className="id-card-print-block w-[280px] h-[440px] rounded-2xl border border-cyan-500/40 bg-gradient-to-br from-[#0a0f1d] to-[#0e162c] shadow-[0_12px_36px_rgba(0,0,0,0.6)] relative overflow-hidden flex flex-col justify-between p-5 select-none print:shadow-none print:border-black/50"
+              className="id-card-print-block w-[280px] h-[440px] rounded-lg border border-slate-350 bg-white shadow-[0_12px_36px_rgba(0,0,0,0.15)] relative overflow-hidden flex flex-row select-none print:shadow-none print:border-black/50"
               style={{ contentVisibility: 'auto' }}
             >
-              {/* Overlay graphics */}
-              <div className="absolute inset-0 cyber-grid opacity-15 pointer-events-none" />
-              
-              {/* Back Header */}
-              <div className="space-y-1 text-center border-b border-cyan-500/20 pb-2.5">
-                <h5 className="text-[9px] font-extrabold uppercase tracking-widest text-slate-400">APEC Power Solutions</h5>
-                <p className="text-[6.5px] text-slate-500 font-mono">ISO 9001:2015 Operations Control System</p>
-              </div>
+              {/* Left Side (Solid Red Column) */}
+              <div className="w-[62px] h-full bg-[#c91c1c] relative z-10" />
 
-              {/* Emergency & Corporate Details */}
-              <div className="space-y-3.5 my-auto">
-                
-                {/* Emergency Block */}
-                <div className="p-2.5 bg-rose-500/5 border border-rose-500/10 rounded-xl font-mono text-[9px] space-y-1">
-                  <span className="font-bold text-rose-500 block text-[7px] uppercase tracking-wider">Emergency & Medical Information</span>
-                  <div className="flex justify-between items-center text-slate-400">
-                    <span>Contact Person:</span>
-                    <span className="font-bold text-slate-200">{selectedEmployee.emergencyName || 'N/A'}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-slate-400">
-                    <span>Emergency Phone:</span>
-                    <span className="font-bold text-slate-200">{selectedEmployee.emergencyPhone || 'N/A'}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-slate-400">
-                    <span>Blood Group:</span>
-                    <span className="font-bold text-rose-455 text-rose-400 flex items-center gap-0.5">🩸 {selectedEmployee.bloodGroup || 'N/A'}</span>
+              {/* Right Side (White Grid Background) */}
+              <div className="w-[218px] h-full card-grid-bg relative flex flex-col justify-between items-center p-4 z-10">
+                {/* Header Logo */}
+                <div className="flex flex-col items-center mt-1">
+                  <img 
+                    src="/logo.png" 
+                    alt="APEC Logo" 
+                    className="w-8 h-8 object-contain"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = '/logo.jpeg';
+                    }}
+                  />
+                  <div className="flex flex-col items-center mt-0.5">
+                    <span className="text-[12px] font-[900] text-black leading-none tracking-tight">APEC</span>
+                    <span className="text-[9px] font-bold text-[#c91c1c] leading-none tracking-tight">Power Solutions</span>
                   </div>
                 </div>
 
-                {/* Office Info Block */}
-                <div className="space-y-1 font-mono text-[8px] text-slate-500 leading-normal">
-                  <span className="font-bold text-slate-400 block text-[6.5px] uppercase tracking-wider">APEC Corporate Registry Office</span>
-                  <p>Hubli Substation Grid Ops Center, Koppal Wind Farm & Dharwad Solar Installation Hubs.</p>
-                  <p>Contact: ops@apecpowersolutions.com</p>
+                {/* Terms and Conditions Title */}
+                <h5 className="text-[11px] font-black text-black tracking-wider text-center mt-4">TERMS & CONDITIONS</h5>
+
+                {/* Subtext */}
+                <p className="text-[7.5px] font-extrabold text-slate-800 text-center mt-1 px-1.5 uppercase leading-snug">
+                  Security: If the ID is found anywhere please send to
+                </p>
+
+                {/* Address Block */}
+                <div className="text-[7.5px] font-extrabold text-slate-850 text-center mt-2.5 px-3 leading-normal uppercase">
+                  APEC Power Solutions Pvt Ltd<br/>
+                  59A-21/3-3A, 2,<br/>
+                  DON BOSCO SCHOOL ROAD,<br/>
+                  VIJAYANAGAR COLONY,<br/>
+                  Patamata,<br/>
+                  Vijayawada,<br/>
+                  Andhra Pradesh 520010
                 </div>
 
-                {/* Instructions / Notice */}
-                <div className="p-2.5 bg-slate-950/40 border border-slate-900 rounded-xl text-center text-[7.5px] text-slate-500 leading-relaxed uppercase">
-                  This card is the corporate property of APEC Power Solutions. If found, please return to the nearest grid services office address.
+                {/* Bottom QR Code */}
+                <div className="flex justify-center items-center mt-4">
+                  <img 
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(`APEC Power Solutions Pvt Ltd\n59A-21/3-3A, 2, DON BOSCO SCHOOL ROAD, VIJAYANAGAR COLONY, Patamata, Vijayawada, Andhra Pradesh 520010`)}`} 
+                    alt="QR Code"
+                    className="w-[52px] h-[52px] object-contain"
+                  />
                 </div>
-              </div>
 
-              {/* Barcode & Signature Block */}
-              <div className="space-y-3 pt-3 border-t border-cyan-500/20">
-                <div className="flex justify-between items-center text-[6.5px] font-mono text-slate-550 uppercase">
-                  <span>Authorized Signature</span>
-                  <span>APEC Verification Code</span>
-                </div>
-                <div className="flex justify-between items-end gap-4">
-                  <div className="border-b border-slate-700 w-24 h-6 flex items-center justify-center italic text-[9px] text-slate-500 select-none">
-                    Pradeep Mathi
-                  </div>
-                  <div className="shrink-0 flex flex-col items-center">
-                    {renderBarcode()}
-                    <span className="text-[7px] font-mono text-slate-500 mt-1 select-none">*{selectedEmployee.employeeId || selectedEmployee.id}*</span>
-                  </div>
-                </div>
+                {/* Corner Red Accent Squares (Top Right & Bottom Right) */}
+                {/* Top Right Corner Accent */}
+                <div style={{ position: 'absolute', top: '0px', right: '0px', width: '12px', height: '12px', backgroundColor: '#c91c1c' }} />
+                <div style={{ position: 'absolute', top: '12px', right: '12px', width: '12px', height: '12px', backgroundColor: '#c91c1c' }} />
+
+                {/* Bottom Right Corner Accent (Step-stair L-shape Pattern) */}
+                <div style={{ position: 'absolute', bottom: '0px', right: '0px', width: '12px', height: '12px', backgroundColor: '#c91c1c' }} />
+                <div style={{ position: 'absolute', bottom: '0px', right: '12px', width: '12px', height: '12px', backgroundColor: '#c91c1c' }} />
+                <div style={{ position: 'absolute', bottom: '12px', right: '0px', width: '12px', height: '12px', backgroundColor: '#c91c1c' }} />
+                <div style={{ position: 'absolute', bottom: '12px', right: '12px', width: '12px', height: '12px', backgroundColor: '#c91c1c' }} />
+                <div style={{ position: 'absolute', bottom: '0px', right: '24px', width: '12px', height: '12px', backgroundColor: '#c91c1c' }} />
+                <div style={{ position: 'absolute', bottom: '24px', right: '0px', width: '12px', height: '12px', backgroundColor: '#c91c1c' }} />
               </div>
             </div>
 
@@ -365,16 +384,24 @@ export default function IDCardGenerator() {
         </div>
       )}
 
-      {/* Styled Printable media CSS (scopings to standard CR80 printable card scale) */}
+      {/* Styled Printable media CSS */}
       <style>{`
+        .card-grid-bg {
+          background-color: #ffffff;
+          background-image: 
+            linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+          background-size: 14px 14px;
+        }
+
         @media print {
           /* Hide all general web wrappers */
           body * {
             visibility: hidden;
           }
           
-          /* Show only selected ID Card print blocks */
-          .id-card-print-block, .id-card-print-block * {
+          /* Show only selected ID Card print blocks and container */
+          .id-card-print-container, .id-card-print-container * {
             visibility: visible;
           }
           
@@ -389,28 +416,28 @@ export default function IDCardGenerator() {
             background-image: none !important;
           }
           
-          /* Center cards nicely on print canvas */
-          #id-card-front {
+          /* Positioning cards nicely on print canvas */
+          .id-card-print-container {
             position: absolute !important;
-            left: 50% !important;
-            top: 10% !important;
-            transform: translateX(-50%) !important;
-            page-break-after: always !important;
-            border: 1.5px solid #000 !important;
-            box-shadow: none !important;
-            background: #070a13 !important;
-            color: #fff !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: flex-start !important;
+            padding-top: 40px !important;
+            gap: 40px !important;
           }
-          
-          #id-card-back {
-            position: absolute !important;
-            left: 50% !important;
-            top: 10% !important;
-            transform: translateX(-50%) !important;
-            border: 1.5px solid #000 !important;
+
+          .id-card-print-block {
+            page-break-after: always !important;
+            break-after: page !important;
+            margin: 0 auto !important;
+            border: 1px solid #ddd !important;
             box-shadow: none !important;
-            background: #070a13 !important;
-            color: #fff !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
         }
       `}</style>
