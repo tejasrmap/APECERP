@@ -137,10 +137,8 @@ export default function Dashboard() {
 
   const navItems = [
     { name: 'Dashboard', icon: LayoutDashboard },
-    { name: 'Inventory', icon: Package },
     { name: 'Projects', icon: Activity },
     { name: 'Scheduling', icon: Calendar },
-    { name: 'Safety', icon: ShieldAlert },
     { name: 'Workforce', icon: Users },
     { name: 'Attendance', icon: Clock },
     { name: 'Settings', icon: Settings },
@@ -153,10 +151,8 @@ export default function Dashboard() {
   // Helper to resolve active tab based on router pathname
   const getActiveTab = () => {
     const path = location.pathname;
-    if (path === '/dashboard/inventory') return 'Inventory';
     if (path === '/dashboard/projects') return 'Projects';
     if (path === '/dashboard/scheduling') return 'Scheduling';
-    if (path === '/dashboard/safety') return 'Safety';
     if (path === '/dashboard/workforce') return 'Workforce';
     if (path === '/dashboard/settings') return 'Settings';
     if (path === '/dashboard/team-control') return 'Team Control';

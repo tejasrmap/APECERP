@@ -10,13 +10,11 @@ import Dashboard from './components/Dashboard';
 // Lazy loaded (only parsed when the route is visited)
 const Overview     = lazy(() => import('./components/Overview'));
 const Projects     = lazy(() => import('./components/Projects'));
-const Inventory    = lazy(() => import('./components/Inventory'));
 const Team         = lazy(() => import('./components/Team'));
 const Chat         = lazy(() => import('./components/Chat'));
 const Settings     = lazy(() => import('./components/Settings'));
 const TeamControl  = lazy(() => import('./components/TeamControl'));
 const Scheduling   = lazy(() => import('./components/Scheduling'));
-const Safety       = lazy(() => import('./components/Safety'));
 const ProfileView  = lazy(() => import('./components/ProfileView'));
 const Attendance   = lazy(() => import('./components/Attendance'));
 const Reports      = lazy(() => import('./components/Reports'));
@@ -42,9 +40,6 @@ export default function App() {
           <Route path="projects" element={
             <Suspense fallback={<PageLoader />}><Projects /></Suspense>
           } />
-          <Route path="inventory" element={
-            <Suspense fallback={<PageLoader />}><Inventory /></Suspense>
-          } />
           <Route path="team" element={
             <Suspense fallback={<PageLoader />}><Team /></Suspense>
           } />
@@ -59,9 +54,6 @@ export default function App() {
           } />
           <Route path="scheduling" element={
             <Suspense fallback={<PageLoader />}><Scheduling /></Suspense>
-          } />
-          <Route path="safety" element={
-            <Suspense fallback={<PageLoader />}><Safety /></Suspense>
           } />
           <Route path="attendance" element={
             <Suspense fallback={<PageLoader />}><Attendance /></Suspense>
