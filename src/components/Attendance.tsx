@@ -23,6 +23,44 @@ import { db, auth } from '../firebase';
 import { supabase } from '../supabase';
 import ImageViewerModal from './ImageViewerModal';
 
+const getHaversineDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+  const R = 6371e3; // Earth radius in meters
+  const phi1 = (lat1 * Math.PI) / 180;
+  const phi2 = (lat2 * Math.PI) / 180;
+  const deltaPhi = ((lat2 - lat1) * Math.PI) / 180;
+  const deltaLambda = ((lon2 - lon1) * Math.PI) / 180;
+
+  const a =
+    Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
+    Math.cos(phi1) * Math.cos(phi2) * Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c; // Distance in meters
+};
+
+const getDefaultCoordinates = (siteName: string) => {
+  const name = siteName.toLowerCase();
+  if (name.includes('hubli')) {
+    return { latitude: 15.3647, longitude: 75.1240 };
+  }
+  if (name.includes('koppal')) {
+    return { latitude: 15.3533, longitude: 76.1554 };
+  }
+  if (name.includes('dharwad')) {
+    return { latitude: 15.4589, longitude: 75.0078 };
+  }
+  // Default to Hubli as global fallback
+  return { latitude: 15.3647, longitude: 75.1240 };
+};
+
+const getLocalDateString = () => {
+  const today = new Date();
+  const y = today.getFullYear();
+  const m = String(today.getMonth() + 1).padStart(2, '0');
+  const d = String(today.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+};
+
 export default function Attendance() {
   const { setFirestoreError, isDbActionLoading, setIsDbActionLoading, isAdmin, userProfile } = useOutletContext<any>();
 
@@ -63,6 +101,42 @@ export default function Attendance() {
 
   // Fallback indicator
   const [isFallbackMode, setIsFallbackMode] = useState(false);
+
+  // Geofencing related states and memo hooks
+  const [projectsList, setProjectsList] = useState<any[]>([]);
+  const [schedules, setSchedules] = useState<any[]>([]);
+
+  const activeShift = React.useMemo(() => {
+    if (!selectedUser) return null;
+    const todayStr = getLocalDateString();
+    return schedules.find(s => {
+      const isDateMatch = s.date === todayStr;
+      if (!isDateMatch) return false;
+      
+      const isIdMatch = s.technicianId === selectedUser.id;
+      const isEmailMatch = s.technicianEmail?.toLowerCase() === selectedUser.email?.toLowerCase();
+      const isNameMatch = s.technicianName?.toLowerCase() === selectedUser.name?.toLowerCase();
+      
+      return isIdMatch || isEmailMatch || isNameMatch;
+    });
+  }, [selectedUser, schedules]);
+
+  const activeProject = React.useMemo(() => {
+    if (!activeShift) return null;
+    return projectsList.find(p => p.id === activeShift.projectId);
+  }, [activeShift, projectsList]);
+
+  const resolvedCoordinates = React.useMemo(() => {
+    if (!activeProject) return null;
+    let lat = Number(activeProject.latitude);
+    let lng = Number(activeProject.longitude);
+    if (isNaN(lat) || isNaN(lng) || activeProject.latitude === undefined || activeProject.longitude === undefined) {
+      const defaults = getDefaultCoordinates(activeProject.site || activeProject.name || '');
+      lat = defaults.latitude;
+      lng = defaults.longitude;
+    }
+    return { latitude: lat, longitude: lng };
+  }, [activeProject]);
 
   // Start video stream
   const startCamera = async () => {
@@ -283,7 +357,38 @@ export default function Attendance() {
     }
   }, [teamList, userProfile]);
 
-  // Load attendance logs
+  // Load schedules and projects
+  useEffect(() => {
+    if (!db) {
+      // Offline fallback mock data
+      setProjectsList([
+        { id: '1', name: 'Grid Substation Hubli', site: 'Hubli Substation', latitude: 15.3647, longitude: 75.1240 },
+        { id: '2', name: 'Koppal Wind Farm', site: 'Koppal Wind Farm', latitude: 15.3533, longitude: 76.1554 },
+        { id: '3', name: 'Dharwad Solar Hub', site: 'Dharwad Solar Hub', latitude: 15.4589, longitude: 75.0078 }
+      ]);
+      setSchedules([
+        { id: '1', technicianId: 'tech-1', technicianName: 'Rahul Sharma', projectId: '1', projectName: 'Grid Substation Hubli', date: getLocalDateString(), time: '08:00 - 17:00', status: 'Scheduled' }
+      ]);
+      return;
+    }
+
+    const unsubProjects = onSnapshot(collection(db, 'projects'), (snapshot) => {
+      setProjectsList(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    }, (err) => {
+      console.error('Projects subscription error in Attendance:', err);
+    });
+
+    const unsubSchedules = onSnapshot(collection(db, 'schedules'), (snapshot) => {
+      setSchedules(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    }, (err) => {
+      console.error('Schedules subscription error in Attendance:', err);
+    });
+
+    return () => {
+      unsubProjects();
+      unsubSchedules();
+    };
+  }, []);
   useEffect(() => {
     if (!db) {
       setIsFallbackMode(true);
@@ -345,6 +450,32 @@ export default function Attendance() {
       const finalPhotoUrl = await uploadPhoto(capturedPhoto, selectedUser.employeeId || selectedUser.id);
 
       // 2. Prepare record payload
+      let geofenceStatus: any = null;
+
+      if (punchType === 'punch_in') {
+        if (activeShift && resolvedCoordinates) {
+          const dist = getHaversineDistance(
+            coords.latitude,
+            coords.longitude,
+            resolvedCoordinates.latitude,
+            resolvedCoordinates.longitude
+          );
+          geofenceStatus = {
+            isVerifiedOnSite: dist <= 500,
+            distanceMeters: dist,
+            assignedProjectName: activeShift.projectName,
+            status: dist <= 500 ? 'Verified' : 'Off-Site'
+          };
+        } else {
+          geofenceStatus = {
+            isVerifiedOnSite: false,
+            distanceMeters: null,
+            assignedProjectName: null,
+            status: 'Unscheduled'
+          };
+        }
+      }
+
       const payload: any = {
         employeeId: selectedUser.employeeId || 'APEC-MEMBER',
         userName: selectedUser.name,
@@ -359,6 +490,10 @@ export default function Attendance() {
         }
       };
 
+      if (geofenceStatus) {
+        payload.geofenceStatus = geofenceStatus;
+      }
+
       const now = new Date();
 
       if (db && !isFallbackMode) {
@@ -369,9 +504,18 @@ export default function Attendance() {
         });
 
         // Add to recent activity log
+        let activityDesc = `Location: ${payload.location.address.slice(0, 50)}...`;
+        if (geofenceStatus) {
+          if (geofenceStatus.status === 'Verified') {
+            activityDesc = `📍 Verified On-Site (${geofenceStatus.assignedProjectName}) · ${activityDesc}`;
+          } else if (geofenceStatus.status === 'Off-Site') {
+            activityDesc = `⚠️ Off-Site (${(geofenceStatus.distanceMeters / 1000).toFixed(2)} km from ${geofenceStatus.assignedProjectName}) · ${activityDesc}`;
+          }
+        }
+
         await addDoc(collection(db, 'activities'), {
           title: `${selectedUser.name} Punched ${punchType === 'punch_in' ? 'In' : 'Out'}`,
-          desc: `Location: ${payload.location.address.slice(0, 50)}...`,
+          desc: activityDesc,
           type: 'task',
           timestamp: Timestamp.fromDate(now)
         });
@@ -493,10 +637,10 @@ export default function Attendance() {
       </div>
 
       {/* Main split grid or centered container */}
-      <div className={isUserAdmin ? "grid grid-cols-1 xl:grid-cols-12 gap-6 items-start" : "w-full"}>
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
         
         {/* PUNCH CARD INTERFACE */}
-        <div className={isUserAdmin ? "xl:col-span-5 space-y-6" : "max-w-xl mx-auto w-full space-y-6"}>
+        <div className="xl:col-span-5 space-y-6">
           <div className="glass-card rounded-2xl border border-white/10 p-5 space-y-5 shadow-xl relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/5 to-transparent pointer-events-none" />
             
@@ -549,6 +693,44 @@ export default function Attendance() {
                     {selectedUser.department?.split(' ')[0] || 'Operations'}
                   </span>
                 </div>
+              </div>
+            )}
+
+            {/* Today's Assignment Sub-card */}
+            {selectedUser && (
+              <div className="p-3 bg-slate-900/40 border border-slate-800/60 rounded-xl space-y-2">
+                <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  <span className="flex items-center gap-1">
+                    <Calendar className="w-3.5 h-3.5 text-cyan-400" />
+                    Today's Assignment
+                  </span>
+                  <span className="text-[9px] text-cyan-400 font-mono">
+                    {activeShift ? activeShift.time : 'No Shift Scheduled'}
+                  </span>
+                </div>
+                {activeShift ? (
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="text-xs font-bold text-slate-200">
+                          {activeShift.projectName}
+                        </h4>
+                        <p className="text-[10px] text-slate-400">
+                          Site: {activeProject?.site || 'APEC Site'}
+                        </p>
+                      </div>
+                      {resolvedCoordinates && (
+                        <div className="text-right text-[9px] text-slate-500 font-mono">
+                          <span>{resolvedCoordinates.latitude.toFixed(4)}, {resolvedCoordinates.longitude.toFixed(4)}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-[10px] text-slate-500 italic">
+                    No active project shift scheduled for today. Geofencing verification will be marked as unscheduled.
+                  </p>
+                )}
               </div>
             )}
 
@@ -753,8 +935,7 @@ export default function Attendance() {
         </div>
 
         {/* ATTENDANCE HISTORY LIST (COL-7) */}
-        {isUserAdmin && (
-          <div className="xl:col-span-7 space-y-6">
+        <div className="xl:col-span-7 space-y-6">
           <div className="glass-card rounded-2xl border border-white/10 p-5 space-y-5 shadow-xl">
             
             {/* Header controls & export */}
@@ -766,15 +947,17 @@ export default function Attendance() {
                 <p className="text-[10px] text-slate-400 mt-0.5">Showing verified logs matching filter credentials</p>
               </div>
 
-              <button
-                type="button"
-                onClick={handleExportCSV}
-                disabled={filteredLogs.length === 0}
-                className="w-full sm:w-auto px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-805 hover:border-slate-700 text-slate-300 hover:text-slate-100 text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                <Download className="w-4 h-4" />
-                Export CSV
-              </button>
+              {isUserAdmin && (
+                <button
+                  type="button"
+                  onClick={handleExportCSV}
+                  disabled={filteredLogs.length === 0}
+                  className="w-full sm:w-auto px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-805 hover:border-slate-700 text-slate-300 hover:text-slate-100 text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <Download className="w-4 h-4" />
+                  Export CSV
+                </button>
+              )}
             </div>
 
             {/* Filter Bar */}
@@ -892,23 +1075,44 @@ export default function Attendance() {
                             </h4>
                             <p className="text-[9.5px] text-slate-400 font-mono mt-0.5">{log.userEmail}</p>
                           </div>
-                          
-                          {/* Punch Type Badge */}
-                          <span className={`px-2 py-0.5 rounded text-[8.5px] font-extrabold uppercase tracking-wider border leading-none shrink-0 ${
-                            isPunchIn 
-                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_8px_rgba(16,185,129,0.05)]' 
-                              : 'bg-rose-500/10 text-rose-455 border-rose-500/20 shadow-[0_0_8px_rgba(244,63,94,0.05)]'
-                          }`}>
-                            {isPunchIn ? 'Punch In' : 'Punch Out'}
-                          </span>
+                                            {/* Punch Type Badge */}
+                          <div className="flex flex-col items-end gap-1.5 shrink-0">
+                            <span className={`px-2 py-0.5 rounded text-[8.5px] font-extrabold uppercase tracking-wider border leading-none ${
+                              isPunchIn 
+                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_8px_rgba(16,185,129,0.05)]' 
+                                : 'bg-rose-500/10 text-rose-455 border-rose-500/20 shadow-[0_0_8px_rgba(244,63,94,0.05)]'
+                            }`}>
+                              {isPunchIn ? 'Punch In' : 'Punch Out'}
+                            </span>
+                            {isPunchIn && log.geofenceStatus && (
+                              <span className={`px-2 py-0.5 rounded text-[8.5px] font-extrabold uppercase tracking-wider border leading-none ${
+                                log.geofenceStatus.status === 'Verified' 
+                                  ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20 shadow-[0_0_8px_rgba(6,182,212,0.05)]'
+                                  : log.geofenceStatus.status === 'Off-Site'
+                                  ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-[0_0_8px_rgba(245,158,11,0.05)]'
+                                  : 'bg-slate-500/10 text-slate-400 border-slate-500/20'
+                              }`}>
+                                {log.geofenceStatus.status === 'Verified' && '📍 Verified On-Site'}
+                                {log.geofenceStatus.status === 'Off-Site' && `⚠️ Off-Site (${(log.geofenceStatus.distanceMeters / 1000).toFixed(2)} km)`}
+                                {log.geofenceStatus.status === 'Unscheduled' && 'Unscheduled'}
+                              </span>
+                            )}
+                          </div>
                         </div>
 
                         {/* Location address */}
-                        <div className="pt-1 flex items-start gap-1 text-[10px] text-slate-450 leading-relaxed font-mono">
-                          <MapPin className="w-3 h-3 text-slate-500 shrink-0 mt-0.5" />
-                          <span className="truncate flex-1" title={log.location?.address}>
-                            {log.location?.address || 'Unknown coordinates'}
-                          </span>
+                        <div className="pt-1 flex flex-col gap-0.5 text-[10px] text-slate-450 leading-relaxed font-mono">
+                          <div className="flex items-start gap-1">
+                            <MapPin className="w-3 h-3 text-slate-500 shrink-0 mt-0.5" />
+                            <span className="truncate flex-1" title={log.location?.address}>
+                              {log.location?.address || 'Unknown coordinates'}
+                            </span>
+                          </div>
+                          {isPunchIn && log.geofenceStatus && log.geofenceStatus.assignedProjectName && (
+                            <div className="text-[9.5px] text-slate-500 pl-4">
+                              Assigned Target: <span className="text-slate-400 font-semibold">{log.geofenceStatus.assignedProjectName}</span>
+                            </div>
+                          )}
                         </div>
 
                         {/* Date and actions */}
@@ -944,7 +1148,6 @@ export default function Attendance() {
 
           </div>
         </div>
-        )}
 
       </div>
 

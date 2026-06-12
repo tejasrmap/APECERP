@@ -12,6 +12,21 @@ import { collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc, Timestamp } 
 import { useOutletContext } from 'react-router-dom';
 import { db } from '../firebase';
 
+const getDefaultCoordinates = (siteName: string) => {
+  const name = siteName.toLowerCase();
+  if (name.includes('hubli')) {
+    return { latitude: 15.3647, longitude: 75.1240 };
+  }
+  if (name.includes('koppal')) {
+    return { latitude: 15.3533, longitude: 76.1554 };
+  }
+  if (name.includes('dharwad')) {
+    return { latitude: 15.4589, longitude: 75.0078 };
+  }
+  // Default to Hubli as global fallback
+  return { latitude: 15.3647, longitude: 75.1240 };
+};
+
 export default function Projects() {
   const { setFirestoreError, isDbActionLoading, setIsDbActionLoading, isAdmin } = useOutletContext<any>();
 
@@ -60,6 +75,8 @@ export default function Projects() {
   const [newProjectStatus, setNewProjectStatus] = useState('Active');
   const [newProjectSite, setNewProjectSite] = useState('');
   const [newProjectManager, setNewProjectManager] = useState('');
+  const [newProjectLat, setNewProjectLat] = useState('');
+  const [newProjectLng, setNewProjectLng] = useState('');
   const [isAddingProject, setIsAddingProject] = useState(false);
 
   // Safety fallback timeout to prevent infinite loading state
@@ -109,22 +126,33 @@ export default function Projects() {
     if (!newProjectName || !db || !isAdmin) return;
     setIsDbActionLoading(true);
     try {
+      let latVal = parseFloat(newProjectLat);
+      let lngVal = parseFloat(newProjectLng);
+
+      const defaults = getDefaultCoordinates(newProjectSite || newProjectName || '');
+      if (isNaN(latVal)) latVal = defaults.latitude;
+      if (isNaN(lngVal)) lngVal = defaults.longitude;
+
       await addDoc(collection(db, 'projects'), {
         name: newProjectName,
         status: newProjectStatus,
         site: newProjectSite || 'General Site',
-        manager: newProjectManager || 'Unassigned'
+        manager: newProjectManager || 'Unassigned',
+        latitude: latVal,
+        longitude: lngVal
       });
       // Add activity
       await addDoc(collection(db, 'activities'), {
         title: 'New project registered',
-        desc: `Project "${newProjectName}" was added under ${newProjectSite || 'General Site'}`,
+        desc: `Project "${newProjectName}" was added under ${newProjectSite || 'General Site'} (Coordinates: ${latVal.toFixed(4)}, ${lngVal.toFixed(4)})`,
         type: 'task',
         timestamp: Timestamp.now()
       });
       setNewProjectName('');
       setNewProjectSite('');
       setNewProjectManager('');
+      setNewProjectLat('');
+      setNewProjectLng('');
       setIsAddingProject(false);
     } catch (err) {
       console.error('Error adding project:', err);
@@ -228,6 +256,29 @@ export default function Projects() {
                     value={newProjectSite}
                     onChange={(e) => setNewProjectSite(e.target.value)}
                     placeholder="e.g. Site A"
+                    className="w-full bg-slate-950/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all text-sm shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-400 uppercase ml-1 tracking-wider">Latitude</label>
+                  <input 
+                    type="text" 
+                    value={newProjectLat}
+                    onChange={(e) => setNewProjectLat(e.target.value)}
+                    placeholder="e.g. 15.3647 (Optional)"
+                    className="w-full bg-slate-950/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all text-sm shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-slate-400 uppercase ml-1 tracking-wider">Longitude</label>
+                  <input 
+                    type="text" 
+                    value={newProjectLng}
+                    onChange={(e) => setNewProjectLng(e.target.value)}
+                    placeholder="e.g. 75.1240 (Optional)"
                     className="w-full bg-slate-950/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all text-sm shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
                   />
                 </div>
@@ -434,7 +485,12 @@ export default function Projects() {
                               onClick={() => setExpandedProjectId(expandedProjectId === p.id ? null : p.id)}
                               className="p-4 hidden sm:table-cell font-medium cursor-pointer"
                             >
-                              {p.site}
+                              <div>{p.site}</div>
+                              {p.latitude !== undefined && p.longitude !== undefined && (
+                                <div className="text-[10px] text-slate-500 font-mono mt-0.5">
+                                  {Number(p.latitude).toFixed(4)}, {Number(p.longitude).toFixed(4)}
+                                </div>
+                              )}
                             </td>
                             <td 
                               onClick={() => setExpandedProjectId(expandedProjectId === p.id ? null : p.id)}
@@ -515,6 +571,13 @@ export default function Projects() {
                                          (p.completedMilestones || []).length === milestonesList.length ? 'All safety permits and wiring are completed. Pending final commissioning approvals.' :
                                          'Project is currently in progress. Ensure safety permits are logged under the Safety tab before wiring.'}
                                       </div>
+                                      {p.latitude !== undefined && p.longitude !== undefined && (
+                                        <div className="p-3 bg-slate-950/40 rounded-xl border border-slate-900 text-[11px] leading-relaxed text-slate-400 font-mono">
+                                          <span className="font-bold text-slate-200 block mb-1 font-sans">Geofencing Telemetry</span>
+                                          Latitude: {Number(p.latitude).toFixed(6)}<br />
+                                          Longitude: {Number(p.longitude).toFixed(6)}
+                                        </div>
+                                      )}
                                     </div>
                                   </div>
                                 </div>
