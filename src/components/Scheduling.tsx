@@ -417,11 +417,21 @@ export default function Scheduling() {
     const [shStr, smStr] = startTimeStr.split(':');
     const [ehStr, emStr] = endTimeStr.split(':');
     
+    const parsedStartHour = parseInt(shStr);
+    const startHour = isNaN(parsedStartHour) ? 8 : parsedStartHour;
+    const parsedStartMin = parseInt(smStr);
+    const startMin = isNaN(parsedStartMin) ? 0 : parsedStartMin;
+    
+    const parsedEndHour = parseInt(ehStr);
+    const endHour = isNaN(parsedEndHour) ? 17 : parsedEndHour;
+    const parsedEndMin = parseInt(emStr);
+    const endMin = isNaN(parsedEndMin) ? 0 : parsedEndMin;
+
     const shiftStart = new Date(shift.date);
-    shiftStart.setHours(parseInt(shStr) || 8, parseInt(smStr) || 0, 0, 0);
+    shiftStart.setHours(startHour, startMin, 0, 0);
     
     const shiftEnd = new Date(shift.date);
-    shiftEnd.setHours(parseInt(ehStr) || 17, parseInt(emStr) || 0, 0, 0);
+    shiftEnd.setHours(endHour, endMin, 0, 0);
     
     // Support overnight shifts where end time hour < start time hour
     if (shiftEnd.getTime() < shiftStart.getTime()) {
