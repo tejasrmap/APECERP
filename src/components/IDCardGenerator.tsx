@@ -297,7 +297,7 @@ export default function IDCardGenerator() {
 
               {/* Right Side (Solid Red Column) */}
               <div className="w-[62px] h-full bg-[#c91c1c] flex items-center justify-center relative overflow-hidden select-none">
-                <div className="text-white font-[900] text-sm uppercase whitespace-nowrap tracking-[0.3em]" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                <div className="text-white font-[900] text-sm uppercase whitespace-nowrap tracking-[0.3em]" style={{ writingMode: 'vertical-rl' }}>
                   {selectedEmployee.role}
                 </div>
               </div>
