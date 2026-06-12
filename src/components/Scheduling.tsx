@@ -239,12 +239,19 @@ export default function Scheduling() {
     };
   }, [setFirestoreError]);
 
-  // Auto-verify scheduled shifts based on live punch logs (runs when admin is present to ensure database updates)
+  // Auto-verify scheduled shifts based on live punch logs (runs automatically to ensure database updates)
   useEffect(() => {
-    if (loading || !db || !isAdmin) return;
+    if (loading || !db) return;
 
     // Filter shifts that are currently 'Scheduled' and need verification
-    const scheduledShifts = schedules.filter(s => s.status === 'Scheduled');
+    // Admins can verify any shift; non-admins (technicians) only auto-verify their own shifts
+    const scheduledShifts = schedules.filter(s => {
+      if (s.status !== 'Scheduled') return false;
+      if (isAdmin) return true;
+      const myIds = visibleTeamList.map(t => t.id);
+      return myIds.includes(s.technicianId);
+    });
+    
     if (scheduledShifts.length === 0) return;
 
     const performAutoVerify = async () => {
@@ -256,12 +263,16 @@ export default function Scheduling() {
             await updateDoc(doc(db, 'schedules', shift.id), { status: autoMatch.status });
             
             // Log verification in activities logs
-            await addDoc(collection(db, 'activities'), {
-              title: 'Shift Auto-Verified',
-              desc: `Automatically verified shift for ${shift.technicianName} at ${shift.projectName} as ${autoMatch.status}`,
-              type: 'settings',
-              timestamp: Timestamp.now()
-            });
+            try {
+              await addDoc(collection(db, 'activities'), {
+                title: 'Shift Auto-Verified',
+                desc: `Automatically verified shift for ${shift.technicianName} at ${shift.projectName} as ${autoMatch.status}`,
+                type: 'settings',
+                timestamp: Timestamp.now()
+              });
+            } catch (actErr) {
+              console.warn("Failed to log auto-verify activity:", actErr);
+            }
           } catch (err) {
             console.error(`Failed to auto-verify shift ${shift.id}:`, err);
           }
@@ -275,7 +286,7 @@ export default function Scheduling() {
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, [schedules, attendanceLogs, teamList, loading, isAdmin]);
+  }, [schedules, attendanceLogs, teamList, loading, isAdmin, visibleTeamList]);
 
   // Keep selected shift details in sync with live schedules list
   useEffect(() => {
@@ -399,39 +410,66 @@ export default function Scheduling() {
     const tech = teamList.find(t => t.id === shift.technicianId);
     if (!tech) return { status: 'Scheduled' as const, details: 'No technician details', punchTime: null };
 
-    // Search keys
-    const keys = [];
-    if (tech.employeeId) keys.push(`${shift.date}_${tech.employeeId.toLowerCase()}`);
-    if (tech.email) keys.push(`${shift.date}_${tech.email.toLowerCase()}`);
-    if (tech.name) keys.push(`${shift.date}_${tech.name.toLowerCase()}`);
+    const timeParts = shift.time.split('-');
+    const startTimeStr = timeParts[0]?.trim() || '08:00';
+    const endTimeStr = timeParts[1]?.trim() || '17:00';
+    
+    const [shStr, smStr] = startTimeStr.split(':');
+    const [ehStr, emStr] = endTimeStr.split(':');
+    
+    const shiftStart = new Date(shift.date);
+    shiftStart.setHours(parseInt(shStr) || 8, parseInt(smStr) || 0, 0, 0);
+    
+    const shiftEnd = new Date(shift.date);
+    shiftEnd.setHours(parseInt(ehStr) || 17, parseInt(emStr) || 0, 0, 0);
+    
+    // Support overnight shifts where end time hour < start time hour
+    if (shiftEnd.getTime() < shiftStart.getTime()) {
+      shiftEnd.setDate(shiftEnd.getDate() + 1);
+    }
 
-    // Retrieve from lookup table
+    const windowStartMs = shiftStart.getTime() - 30 * 60 * 1000;
+    const windowEndMs = shiftEnd.getTime();
+
+    // Helper to format date as YYYY-MM-DD
+    const getFormattedDate = (d: Date) => {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    };
+
+    const dateStartStr = getFormattedDate(new Date(windowStartMs));
+    const dateEndStr = getFormattedDate(new Date(windowEndMs));
+    const searchDates = Array.from(new Set([dateStartStr, dateEndStr]));
+
+    // Retrieve punch_ins from lookup table for the relevant dates
     let techPunches: any[] = [];
-    for (const key of keys) {
-      if (attendanceLookup[key]) {
-        techPunches = attendanceLookup[key].filter((l: any) => l.type === 'punch_in');
-        if (techPunches.length > 0) break;
+    for (const searchDate of searchDates) {
+      const keys = [];
+      if (tech.employeeId) keys.push(`${searchDate}_${tech.employeeId.toLowerCase()}`);
+      if (tech.email) keys.push(`${searchDate}_${tech.email.toLowerCase()}`);
+      if (tech.name) keys.push(`${searchDate}_${tech.name.toLowerCase()}`);
+      
+      for (const key of keys) {
+        if (attendanceLookup[key]) {
+          const punches = attendanceLookup[key].filter((l: any) => l.type === 'punch_in');
+          techPunches.push(...punches);
+        }
       }
     }
 
-    const timeParts = shift.time.split('-');
-    const startTimeStr = timeParts[0]?.trim() || '08:00';
-    const [shStr, smStr] = startTimeStr.split(':');
-    const shiftStart = new Date(shift.date);
-    shiftStart.setHours(parseInt(shStr) || 8, parseInt(smStr) || 0, 0, 0);
-
-    const windowStartMs = shiftStart.getTime() - 30 * 60 * 1000;
-
-    // Filter to only include punch-ins that are >= 30 minutes before the shift start
+    // Filter to only include punch-ins within the shift window
     const validPunches = techPunches.filter(p => {
       const punchTime = new Date(p.timestamp).getTime();
-      return punchTime >= windowStartMs;
+      return punchTime >= windowStartMs && punchTime <= windowEndMs;
     });
 
     if (validPunches.length === 0) {
       const now = new Date();
-      if (now.getTime() - shiftStart.getTime() > 2 * 60 * 60 * 1000) {
-        return { status: 'Absent' as const, details: 'No punch-in recorded (Shift started >2h ago)', punchTime: null };
+      const isAbsent = (now.getTime() - shiftStart.getTime() > 2 * 60 * 60 * 1000) || (now.getTime() > windowEndMs);
+      if (isAbsent) {
+        return { status: 'Absent' as const, details: 'No punch-in recorded', punchTime: null };
       }
       return { status: 'Scheduled' as const, details: 'Awaiting punch-in...', punchTime: null };
     }
