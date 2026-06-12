@@ -217,7 +217,7 @@ export default function IDCardGenerator() {
             {/* FRONT SIDE OF ID CARD */}
             <div 
               id="id-card-front"
-              className="id-card-print-block w-[280px] h-[440px] rounded-lg border border-slate-350 bg-white shadow-[0_12px_36px_rgba(0,0,0,0.15)] relative overflow-hidden flex flex-row select-none print:shadow-none print:border-black/50"
+              className="id-card-print-block w-[280px] h-[440px] rounded-lg border border-slate-350 bg-white shadow-[0_12px_36px_rgba(0,0,0,0.15)] relative overflow-hidden flex flex-row select-none print:shadow-none print:border-black/50 font-poppins"
               style={{ contentVisibility: 'auto' }}
             >
               {/* Left Side (White Grid Background) */}
@@ -257,13 +257,13 @@ export default function IDCardGenerator() {
 
                 {/* Employee Name */}
                 <div className="flex flex-col items-center mt-2.5">
-                  <h3 className="text-[17px] font-black text-[#0b2265] text-center tracking-wide leading-tight font-sans">
+                  <h3 className="text-[17px] font-black text-[#0b2265] text-center tracking-wide leading-tight">
                     {selectedEmployee.name}
                   </h3>
                 </div>
 
                 {/* Details List */}
-                <div className="w-full px-1.5 mt-2.5 text-[9.5px] text-slate-800 space-y-1.5 font-sans">
+                <div className="w-full px-1.5 mt-2.5 text-[9.5px] text-slate-800 space-y-1.5">
                   <div className="grid grid-cols-[38px_4px_1fr] gap-x-1 items-start">
                     <span className="font-extrabold text-black">ID No</span>
                     <span className="font-bold text-black">:</span>
@@ -297,7 +297,7 @@ export default function IDCardGenerator() {
 
               {/* Right Side (Solid Red Column) */}
               <div className="w-[62px] h-full bg-[#c91c1c] flex items-center justify-center relative overflow-hidden select-none">
-                <div className="text-white font-[900] text-sm uppercase whitespace-nowrap tracking-[0.3em]" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)', fontFamily: 'sans-serif' }}>
+                <div className="text-white font-[900] text-sm uppercase whitespace-nowrap tracking-[0.3em]" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
                   {selectedEmployee.role}
                 </div>
               </div>
@@ -306,7 +306,7 @@ export default function IDCardGenerator() {
             {/* BACK SIDE OF ID CARD */}
             <div 
               id="id-card-back"
-              className="id-card-print-block w-[280px] h-[440px] rounded-lg border border-slate-350 bg-white shadow-[0_12px_36px_rgba(0,0,0,0.15)] relative overflow-hidden flex flex-row select-none print:shadow-none print:border-black/50"
+              className="id-card-print-block w-[280px] h-[440px] rounded-lg border border-slate-350 bg-white shadow-[0_12px_36px_rgba(0,0,0,0.15)] relative overflow-hidden flex flex-row select-none print:shadow-none print:border-black/50 font-canva"
               style={{ contentVisibility: 'auto' }}
             >
               {/* Left Side (Solid Red Column) */}
