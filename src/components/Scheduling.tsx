@@ -541,7 +541,45 @@ export default function Scheduling() {
     return days;
   }, [selectedDateStr]);
 
-  const selectedDateShifts = schedules.filter(s => s.date === selectedDateStr);
+  // Memoized: Shifts filtered by selected date
+  const selectedDateShifts = React.useMemo(() => {
+    return schedules.filter(s => s.date === selectedDateStr);
+  }, [schedules, selectedDateStr]);
+
+  // Memoized: Shifts pre-grouped by technician ID for the selected date
+  const shiftsByTechLookup = React.useMemo(() => {
+    const lookup: Record<string, Shift[]> = {};
+    selectedDateShifts.forEach(s => {
+      if (!lookup[s.technicianId]) lookup[s.technicianId] = [];
+      lookup[s.technicianId].push(s);
+    });
+    return lookup;
+  }, [selectedDateShifts]);
+
+  // Memoized: Weekly hours lookup dictionary for all technicians
+  const weeklyHoursLookup = React.useMemo(() => {
+    const lookup: Record<string, number> = {};
+    
+    const refDate = new Date(selectedDateStr);
+    const day = refDate.getDay();
+    const diff = refDate.getDate() - day + (day === 0 ? -6 : 1);
+    const monday = new Date(refDate.setDate(diff));
+    monday.setHours(0, 0, 0, 0);
+    
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    sunday.setHours(23, 59, 59, 999);
+
+    schedules.forEach(s => {
+      const shiftDate = new Date(s.date);
+      if (shiftDate >= monday && shiftDate <= sunday) {
+        const hours = calculateShiftHours(s.time);
+        lookup[s.technicianId] = (lookup[s.technicianId] || 0) + hours;
+      }
+    });
+
+    return lookup;
+  }, [schedules, selectedDateStr]);
 
   if (loading) {
     return (
@@ -749,8 +787,8 @@ export default function Scheduling() {
                   {/* Technician Dispatch Timeline List */}
                   <div className="space-y-3">
                     {visibleTeamList.map((tech) => {
-                      const techShifts = selectedDateShifts.filter(s => s.technicianId === tech.id);
-                      const weeklyHours = getWeeklyHoursForTech(tech.id, selectedDateStr);
+                      const techShifts = shiftsByTechLookup[tech.id] || [];
+                      const weeklyHours = weeklyHoursLookup[tech.id] || 0;
                       const isOvertimeLimit = weeklyHours > 48;
 
                       return (
@@ -917,8 +955,8 @@ export default function Scheduling() {
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {visibleTeamList.map((tech) => {
-                  const techShifts = selectedDateShifts.filter(s => s.technicianId === tech.id);
-                  const weeklyHours = getWeeklyHoursForTech(tech.id, selectedDateStr);
+                  const techShifts = shiftsByTechLookup[tech.id] || [];
+                  const weeklyHours = weeklyHoursLookup[tech.id] || 0;
                   const isOvertimeLimit = weeklyHours > 48;
 
                   return (

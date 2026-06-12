@@ -68,7 +68,15 @@ export default function Dashboard() {
       return;
     }
 
+    let unsubProfile: (() => void) | null = null;
+
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      // Clear previous snapshot listener if active to prevent multiple listeners accumulation
+      if (unsubProfile) {
+        unsubProfile();
+        unsubProfile = null;
+      }
+
       if (user && user.email) {
         const email = user.email.toLowerCase();
         
@@ -83,7 +91,7 @@ export default function Dashboard() {
         if (db) {
           try {
             const q = query(collection(db, 'team'), where('email', '==', user.email));
-            const unsubProfile = onSnapshot(q, (snap) => {
+            unsubProfile = onSnapshot(q, (snap) => {
               if (!snap.empty) {
                 const docData = snap.docs[0].data();
                 setUserProfile({ id: snap.docs[0].id, ...docData });
@@ -108,7 +116,6 @@ export default function Dashboard() {
             }, (err) => {
               console.error('Profile listener error:', err);
             });
-            return () => unsubProfile();
           } catch (err) {
             console.error('Error fetching user profile:', err);
           }
@@ -122,7 +129,10 @@ export default function Dashboard() {
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      if (unsubProfile) unsubProfile();
+    };
   }, []);
 
   const navItems = [

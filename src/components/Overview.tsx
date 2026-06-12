@@ -289,7 +289,7 @@ export default function Overview() {
                 {[40, 70, 45, 90, 65, 85, 100, 50, 75, 60, 30, 80].map((h, i) => (
                   <div key={i} className="flex-1 flex flex-col justify-end group h-full relative z-10">
                     <div 
-                      className="w-full bg-gradient-to-t from-cyan-500/20 to-cyan-500 group-hover:from-cyan-500/40 group-hover:to-cyan-405 rounded-t-lg transition-all duration-300 shadow-[0_0_15px_rgba(6,182,212,0.15)] relative border border-white/10 print:bg-slate-300 print:border-slate-400 print:shadow-none"
+                      className="w-full bg-gradient-to-t from-cyan-500/20 to-cyan-500 group-hover:from-cyan-500/40 group-hover:to-cyan-400 rounded-t-lg transition-all duration-300 shadow-[0_0_15px_rgba(6,182,212,0.15)] relative border border-white/10 print:bg-slate-300 print:border-slate-400 print:shadow-none"
                       style={{ height: `${h}%` }}
                     >
                     </div>
