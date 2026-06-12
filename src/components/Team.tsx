@@ -10,14 +10,16 @@ import {
   Calendar,
   Award,
   Shield,
-  X
+  X,
+  Printer
 } from 'lucide-react';
 import { collection, onSnapshot, doc, deleteDoc, addDoc, Timestamp } from 'firebase/firestore';
-import { useOutletContext } from 'react-router-dom';
+import { useOutletContext, useNavigate } from 'react-router-dom';
 import { db } from '../firebase';
 
 export default function Team() {
   const { setFirestoreError, isDbActionLoading, setIsDbActionLoading, isAdmin } = useOutletContext<any>();
+  const navigate = useNavigate();
 
   const [teamList, setTeamList] = useState<any[]>([]);
   const [isTeamLoading, setIsTeamLoading] = useState(true);
@@ -355,6 +357,20 @@ export default function Team() {
                   </div>
                 </div>
               </div>
+
+              {/* Action: Open in ID Printer Console */}
+              {isAdmin && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigate(`/dashboard/id-generator?empId=${selectedProfile.employeeId || selectedProfile.id}`);
+                  }}
+                  className="flex w-full items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-cyan-500/20 to-cyan-500/5 hover:from-cyan-500/30 hover:to-cyan-500/10 text-cyan-400 border border-cyan-500/30 hover:border-cyan-500/50 font-bold text-xs transition-all shadow-sm cursor-pointer select-none active:scale-[0.99]"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  Open in ID Card Printer Console
+                </button>
+              )}
 
               {/* General details */}
               <div className="grid grid-cols-2 gap-4 text-xs bg-slate-950/40 p-4 rounded-xl border border-slate-900/60 font-mono">
