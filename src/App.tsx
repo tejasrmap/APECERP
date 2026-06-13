@@ -20,6 +20,7 @@ const Attendance   = lazy(() => import('./components/Attendance'));
 const Reports      = lazy(() => import('./components/Reports'));
 const Leaves       = lazy(() => import('./components/Leaves'));
 const LiveTracking = lazy(() => import('./components/LiveTracking'));
+const MyProfile    = lazy(() => import('./components/MyProfile'));
 
 const PageLoader = () => (
   <div className="absolute inset-0 flex items-center justify-center bg-[#070a13]/50 z-30">
@@ -50,6 +51,9 @@ export default function App() {
           } />
           <Route path="settings" element={
             <Suspense fallback={<PageLoader />}><Settings /></Suspense>
+          } />
+          <Route path="my-profile" element={
+            <Suspense fallback={<PageLoader />}><MyProfile /></Suspense>
           } />
           <Route path="team-control" element={
             <Suspense fallback={<PageLoader />}><TeamControl /></Suspense>

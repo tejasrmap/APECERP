@@ -19,7 +19,8 @@ import {
   Clock,
   FileText,
   CalendarRange,
-  Map
+  Map,
+  User
 } from 'lucide-react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { auth, db } from '../firebase';
@@ -160,6 +161,7 @@ export default function Dashboard() {
 
   const navItems = [
     { name: 'Dashboard', icon: LayoutDashboard },
+    { name: 'My Profile', icon: User },
     { name: 'Projects', icon: Activity },
     { name: 'Scheduling', icon: Calendar },
     { name: 'Workforce', icon: Users },
@@ -185,6 +187,7 @@ export default function Dashboard() {
     if (path === '/dashboard/attendance') return 'Attendance';
     if (path === '/dashboard/reports') return 'Reports';
     if (path === '/dashboard/leaves') return 'Leaves';
+    if (path === '/dashboard/my-profile') return 'My Profile';
 
     return 'Dashboard';
   };
@@ -194,6 +197,7 @@ export default function Dashboard() {
     if (tabName === 'Dashboard') return '/dashboard';
     if (tabName === 'Team Control') return '/dashboard/team-control';
     if (tabName === 'Live Tracking') return '/dashboard/live-tracking';
+    if (tabName === 'My Profile') return '/dashboard/my-profile';
 
     return `/dashboard/${tabName.toLowerCase()}`;
   };
