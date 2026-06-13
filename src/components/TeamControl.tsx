@@ -2216,23 +2216,18 @@ export default function TeamControl() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse text-xs">
-                  <thead>
-                    <tr className="border-b border-slate-800 bg-slate-955/45 uppercase tracking-wider text-slate-400 font-semibold">
+                  <thead>                    <tr className="border-b border-slate-800 bg-slate-955/45 uppercase tracking-wider text-slate-400 font-semibold">
+                      <th className="p-4 text-center">S.No</th>
                       <th className="p-4">Employee ID</th>
                       <th className="p-4">Name</th>
                       <th className="p-4">Role / Branch</th>
-                      <th className="p-4">PAN</th>
-                      <th className="p-4">Bank Details</th>
-                      <th className="p-4">ESI Number</th>
-                      <th className="p-4">PF Number</th>
-                      <th className="p-4">Aadhar Number</th>
                       <th className="p-4">Access Priority</th>
                       <th className="p-4">Status</th>
                       <th className="p-4 text-center">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/50 text-sm text-slate-355">
-                    {teamList.map((m) => {
+                    {teamList.map((m, index) => {
                       const isMemberAdmin = m.accessRole === 'Admin' || m.roleType === 'Admin' || [
                         'admin@apecpowersolutions.com',
                         'managingdirector@apecpowersolutions.com'
@@ -2248,6 +2243,7 @@ export default function TeamControl() {
 
                       return (
                         <tr key={m.id} className="hover:bg-slate-900/30 transition-colors">
+                          <td className="p-4 text-center font-mono text-xs text-slate-400">{index + 1}</td>
                           <td className="p-4 font-mono text-xs text-slate-450">{m.employeeId || 'APEC-MEMBER'}</td>
                           <td className="p-4 font-bold text-slate-100 flex items-center gap-2.5">
                             {m.photoUrl ? (
@@ -2263,14 +2259,6 @@ export default function TeamControl() {
                             <div className="font-medium text-slate-205 truncate max-w-[150px]">{m.role}</div>
                             <div className="text-[10px] text-slate-500 font-mono mt-0.5">{m.branch || m.department || 'Vijayawada'}</div>
                           </td>
-                          <td className="p-4 font-mono text-xs text-slate-400">{m.pan || 'N/A'}</td>
-                          <td className="p-4">
-                            <div className="font-mono text-xs text-slate-200">{m.bankAccountNumber || 'N/A'}</div>
-                            <div className="text-[10px] text-slate-500 font-mono mt-0.5">{m.bankIfsc || 'N/A'}</div>
-                          </td>
-                          <td className="p-4 font-mono text-xs text-slate-400">{m.esiNumber || 'N/A'}</td>
-                          <td className="p-4 font-mono text-xs text-slate-400">{m.pfNumber || 'N/A'}</td>
-                          <td className="p-4 font-mono text-xs text-slate-400">{m.aadharNumber || 'N/A'}</td>
                           <td className="p-4">
                             <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                               isMemberAdmin 
