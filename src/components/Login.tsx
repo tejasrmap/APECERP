@@ -184,12 +184,24 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#070a13] flex flex-col justify-center items-center p-4 relative overflow-hidden font-sans selection:bg-cyan-500/15 selection:text-cyan-400">
+    <div className="min-h-screen w-full bg-[#05070c] flex flex-col justify-center items-center p-4 relative overflow-hidden font-sans selection:bg-cyan-500/15 selection:text-cyan-400">
       {/* Background Ambience */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-cyan-900/15 rounded-full blur-[120px] opacity-70" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-rose-950/10 rounded-full blur-[140px] opacity-70" />
-        <div className="absolute inset-0 cyber-grid opacity-60"></div>
+        {/* Vibrant Gradient Blobs */}
+        <div className="absolute top-[-20%] left-[-20%] w-[60%] h-[60%] bg-gradient-to-br from-cyan-500/15 via-cyan-500/5 to-transparent rounded-full blur-[120px] will-change-transform" />
+        <div className="absolute bottom-[-20%] right-[-20%] w-[70%] h-[70%] bg-gradient-to-br from-rose-500/10 via-rose-500/2 to-transparent rounded-full blur-[140px] will-change-transform" />
+        
+        {/* Tech Dotted Grid */}
+        <div 
+          className="absolute inset-0 opacity-40" 
+          style={{ 
+            backgroundImage: 'radial-gradient(rgba(6, 182, 212, 0.15) 1px, transparent 1px)', 
+            backgroundSize: '24px 24px' 
+          }} 
+        />
+        
+        {/* Vignette fade to center */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_30%,#05070c_80%)]" />
       </div>
 
       <motion.div
