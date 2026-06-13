@@ -37,7 +37,7 @@ interface ActiveEmployee {
   email: string;
   employeeId: string;
   photoUrl: string | null;
-  department: string;
+  branch: string;
   role: string;
   lastPunchTime: Date;
   latitude: number;
@@ -167,7 +167,7 @@ export default function LiveTracking() {
           email: email,
           employeeId: teamMember?.employeeId || latestPunch.employeeId || 'N/A',
           photoUrl: latestPunch.photoUrl || teamMember?.photoUrl || null,
-          department: teamMember?.department || 'Field Service',
+          branch: teamMember?.branch || teamMember?.department || 'Vijayawada',
           role: teamMember?.role || 'Technician',
           lastPunchTime: latestPunch.timestamp,
           latitude: latestPunch.location?.latitude || 15.3647,
@@ -304,7 +304,7 @@ export default function LiveTracking() {
     return (
       emp.name.toLowerCase().includes(term) ||
       emp.employeeId.toLowerCase().includes(term) ||
-      emp.department.toLowerCase().includes(term) ||
+      (emp.branch || '').toLowerCase().includes(term) ||
       emp.address.toLowerCase().includes(term) ||
       (emp.assignedProjectName || '').toLowerCase().includes(term)
     );

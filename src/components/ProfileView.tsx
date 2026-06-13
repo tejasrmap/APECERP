@@ -41,7 +41,9 @@ export default function ProfileView() {
           email: 'r.sharma@apecpowersolutions.com',
           role: 'Lead Grid Engineer',
           employeeId: 'APEC-2026-009',
-          department: 'Grid Automation',
+          branch: 'Vijayawada',
+          esiNumber: '31123456780001001',
+          pfNumber: 'AP/HYD/1234567/890',
           status: 'Active',
           phone: '+91 94481 02941',
           joinedDate: '2025-01-15',
@@ -307,7 +309,7 @@ export default function ProfileView() {
                   
                   <div className="flex items-center gap-1.5 mt-2.5 text-slate-400">
                     <Briefcase className="w-3.5 h-3.5 shrink-0" />
-                    <span className="text-xs font-medium">{profile.department || 'Operations'}</span>
+                    <span className="text-xs font-medium">{profile.branch || profile.department || 'Vijayawada'}</span>
                   </div>
 
                   <hr className="border-slate-800 w-full my-6" />
@@ -367,8 +369,10 @@ export default function ProfileView() {
                 {[
                   { icon: Phone, label: 'Contact Phone', value: profile.phone || 'N/A' },
                   { icon: Mail, label: 'Official Email', value: profile.email || 'N/A', truncate: true },
-                  { icon: Briefcase, label: 'Department', value: profile.department || 'Operations' },
+                  { icon: Briefcase, label: 'Branch', value: profile.branch || profile.department || 'Vijayawada' },
                   { icon: Calendar, label: 'Joined Date', value: profile.joinedDate ? new Date(profile.joinedDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A' },
+                  { icon: Shield, label: 'ESI Number', value: profile.esiNumber || 'N/A' },
+                  { icon: Shield, label: 'PF Number', value: profile.pfNumber || 'N/A' },
                 ].map(({ icon: Icon, label, value, truncate }: any) => (
                   <div key={label} className="bg-[#1E293B] border border-slate-800 rounded-xl p-5 space-y-2 hover:border-slate-700 transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between">
                     <div className="flex items-center gap-2.5">

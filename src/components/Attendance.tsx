@@ -317,9 +317,9 @@ export default function Attendance() {
       } else {
         // Fallback default mockup team list
         const fallbackTeam = [
-          { id: 'admin-1', name: 'Admin User', email: 'admin@apecpowersolutions.com', employeeId: 'APEC-0001', department: 'Operations Control', role: 'System Administrator' },
-          { id: 'md-1', name: 'Managing Director', email: 'managingdirector@apecpowersolutions.com', employeeId: 'APEC-0002', department: 'Executive Board', role: 'Managing Director' },
-          { id: 'tech-1', name: 'Rahul Sharma', email: 'rahul@apecpowersolutions.com', employeeId: 'APEC-1002', department: 'Solar Installation', role: 'Lead Field Engineer' }
+          { id: 'admin-1', name: 'Admin User', email: 'admin@apecpowersolutions.com', employeeId: 'APEC-0001', branch: 'Vijayawada', role: 'System Administrator' },
+          { id: 'md-1', name: 'Managing Director', email: 'managingdirector@apecpowersolutions.com', employeeId: 'APEC-0002', branch: 'Vijayawada', role: 'Managing Director' },
+          { id: 'tech-1', name: 'Rahul Sharma', email: 'rahul@apecpowersolutions.com', employeeId: 'APEC-1002', branch: 'Karimnagar', role: 'Lead Field Engineer' }
         ];
         setTeamList(fallbackTeam);
         localStorage.setItem('apec_team_members', JSON.stringify(fallbackTeam));
@@ -356,7 +356,7 @@ export default function Attendance() {
         name: activeName,
         email: activeEmail,
         employeeId: activeEmpId,
-        department: userProfile?.department || 'Operations',
+        branch: userProfile?.branch || userProfile?.department || 'Vijayawada',
         role: userProfile?.role || 'Staff Member'
       });
     }
@@ -800,8 +800,8 @@ export default function Attendance() {
                   <p className="text-[9.5px] text-slate-500 truncate">{selectedUser.email}</p>
                 </div>
                 <div className="text-right">
-                  <span className="inline-block px-2 py-0.5 bg-slate-950 border border-slate-900 rounded text-[9px] font-bold text-rose-500 uppercase tracking-widest leading-none">
-                    {selectedUser.department?.split(' ')[0] || 'Operations'}
+                  <span className="inline-block px-2 py-0.5 bg-slate-955 border border-slate-900 rounded text-[9px] font-bold text-rose-500 uppercase tracking-widest leading-none">
+                    {selectedUser.branch || selectedUser.department || 'Vijayawada'}
                   </span>
                 </div>
               </div>

@@ -94,10 +94,10 @@ export default function Team() {
       const nameMatch = m.name?.toLowerCase().includes(term) || false;
       const emailMatch = m.email?.toLowerCase().includes(term) || false;
       const roleMatch = m.role?.toLowerCase().includes(term) || false;
-      const deptMatch = m.department?.toLowerCase().includes(term) || false;
+      const branchMatch = (m.branch || m.department)?.toLowerCase().includes(term) || false;
       const skillMatch = m.skills?.some((s: string) => s.toLowerCase().includes(term)) || false;
       const empIdMatch = m.employeeId?.toLowerCase().includes(term) || false;
-      return nameMatch || emailMatch || roleMatch || deptMatch || skillMatch || empIdMatch;
+      return nameMatch || emailMatch || roleMatch || branchMatch || skillMatch || empIdMatch;
     });
   }, [teamList, searchTerm]);
 
@@ -121,7 +121,7 @@ export default function Team() {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search name, role, department, skills..."
+            placeholder="Search name, role, branch, skills..."
             className="w-full bg-slate-900/60 border border-slate-800 rounded-xl py-2 pl-10 pr-4 text-xs focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 text-slate-100 placeholder:text-slate-500 transition-all shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
           />
         </div>
@@ -201,7 +201,7 @@ export default function Team() {
                 <div className="space-y-1.5 mt-4 pt-3 border-t border-slate-900 text-xs font-mono">
                   <div className="flex items-center gap-1.5 text-slate-400">
                     <Briefcase className="w-3.5 h-3.5 text-slate-605 shrink-0 text-slate-600" />
-                    <span className="truncate">{m.department || 'Operations'}</span>
+                    <span className="truncate">{m.branch || m.department || 'Vijayawada'}</span>
                   </div>
                   <div className="flex items-center gap-1.5 text-slate-400">
                     <Phone className="w-3.5 h-3.5 text-slate-605 shrink-0 text-slate-600" />
@@ -340,7 +340,7 @@ export default function Team() {
                   <div className="min-w-0">
                     <h4 className="text-sm font-bold text-slate-100 truncate">{selectedProfile.name}</h4>
                     <p className="text-[10px] text-rose-500 font-bold truncate leading-tight">{selectedProfile.role}</p>
-                    <p className="text-[9px] text-slate-500 font-mono truncate mt-0.5">{selectedProfile.department || 'Operations'}</p>
+                    <p className="text-[9px] text-slate-500 font-mono truncate mt-0.5">{selectedProfile.branch || selectedProfile.department || 'Vijayawada'}</p>
                   </div>
                 </div>
 
@@ -362,21 +362,29 @@ export default function Team() {
               {/* General details */}
               <div className="grid grid-cols-2 gap-4 text-xs bg-slate-950/40 p-4 rounded-xl border border-slate-900/60 font-mono">
                 <div className="space-y-1">
-                  <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Department</span>
+                  <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Branch</span>
                   <span className="text-slate-355 font-bold flex items-center gap-1.5">
                     <Briefcase className="w-3.5 h-3.5 text-cyan-500" />
-                    {selectedProfile.department || 'Operations'}
+                    {selectedProfile.branch || selectedProfile.department || 'Vijayawada'}
                   </span>
                 </div>
                 <div className="space-y-1">
                   <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Status</span>
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                    selectedProfile.status === 'Active' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
+                    selectedProfile.status === 'Active' ? 'bg-green-500/10 text-green-450 border border-green-500/20' :
                     selectedProfile.status === 'Site Visit' ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' :
                     'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                   } border`}>
                     {selectedProfile.status || 'Active'}
                   </span>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-slate-500 block uppercase tracking-wider text-[9px]">ESI Number</span>
+                  <span className="text-slate-350 font-bold block truncate">{selectedProfile.esiNumber || 'N/A'}</span>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-slate-500 block uppercase tracking-wider text-[9px]">PF Number</span>
+                  <span className="text-slate-350 font-bold block truncate">{selectedProfile.pfNumber || 'N/A'}</span>
                 </div>
                 <div className="space-y-1">
                   <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Email Address</span>

@@ -40,7 +40,9 @@ export default function TeamControl() {
   const [newStatus, setNewStatus] = useState('Active');
   const [newPhone, setNewPhone] = useState('');
   const [newEmployeeId, setNewEmployeeId] = useState('');
-  const [newDepartment, setNewDepartment] = useState('Operations Control');
+  const [newBranch, setNewBranch] = useState('Vijayawada');
+  const [newEsiNumber, setNewEsiNumber] = useState('');
+  const [newPfNumber, setNewPfNumber] = useState('');
   const [newJoinedDate, setNewJoinedDate] = useState(new Date().toISOString().slice(0, 10));
   const [newSkills, setNewSkills] = useState('');
   const [newAvatar, setNewAvatar] = useState('cyan');
@@ -55,13 +57,15 @@ export default function TeamControl() {
   
   // Profile Edit States
   const [isEditingProfile, setIsEditingProfile] = useState(false);
-  const [openEditDropdown, setOpenEditDropdown] = useState<'dept' | 'priority' | 'status' | 'avatar' | null>(null);
+  const [openEditDropdown, setOpenEditDropdown] = useState<'branch' | 'priority' | 'status' | 'avatar' | null>(null);
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [editRole, setEditRole] = useState('');
   const [editPhone, setEditPhone] = useState('');
   const [editEmployeeId, setEditEmployeeId] = useState('');
-  const [editDepartment, setEditDepartment] = useState('');
+  const [editBranch, setEditBranch] = useState('');
+  const [editEsiNumber, setEditEsiNumber] = useState('');
+  const [editPfNumber, setEditPfNumber] = useState('');
   const [editStatus, setEditStatus] = useState('');
   const [editJoinedDate, setEditJoinedDate] = useState('');
   const [editSkills, setEditSkills] = useState('');
@@ -124,7 +128,7 @@ export default function TeamControl() {
   
   const [isAddingUser, setIsAddingUser] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
-  const [openDropdown, setOpenDropdown] = useState<'dept' | 'priority' | 'status' | 'avatar' | null>(null);
+  const [openDropdown, setOpenDropdown] = useState<'branch' | 'priority' | 'status' | 'avatar' | null>(null);
 
 
 
@@ -157,7 +161,9 @@ export default function TeamControl() {
         role: editRole.trim() || 'Staff Member',
         phone: editPhone.trim() || 'N/A',
         employeeId: empId,
-        department: editDepartment,
+        branch: editBranch,
+        esiNumber: editEsiNumber.trim() || 'N/A',
+        pfNumber: editPfNumber.trim() || 'N/A',
         status: editStatus,
         joinedDate: editJoinedDate,
         skills: formattedSkills,
@@ -251,7 +257,9 @@ export default function TeamControl() {
         status: newStatus,
         phone: newPhone || 'N/A',
         employeeId: empId,
-        department: newDepartment,
+        branch: newBranch,
+        esiNumber: newEsiNumber.trim() || 'N/A',
+        pfNumber: newPfNumber.trim() || 'N/A',
         joinedDate: newJoinedDate,
         skills: formattedSkills,
         avatar: newAvatar,
@@ -266,7 +274,7 @@ export default function TeamControl() {
       // Log activity
       await addDoc(collection(db, 'activities'), {
         title: 'Team member added',
-        desc: `"${newName}" was registered as an ERP user with role "${newRole || 'Staff Member'}" in ${newDepartment}`,
+        desc: `"${newName}" was registered as an ERP user with role "${newRole || 'Staff Member'}" in ${newBranch} Branch`,
         type: 'task',
         timestamp: Timestamp.now()
       });
@@ -278,7 +286,9 @@ export default function TeamControl() {
       setNewStatus('Active');
       setNewPhone('');
       setNewEmployeeId('');
-      setNewDepartment('Operations Control');
+      setNewBranch('Vijayawada');
+      setNewEsiNumber('');
+      setNewPfNumber('');
       setNewJoinedDate(new Date().toISOString().slice(0, 10));
       setNewSkills('');
       setNewAvatar('cyan');
@@ -472,10 +482,10 @@ export default function TeamControl() {
                 </div>
               </div>
 
-              {/* Section 2: Role & Department */}
+              {/* Section 2: Role, Branch & IDs */}
               <div className="space-y-3 p-4 bg-slate-955/20 rounded-xl border border-white/5">
                 <h5 className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest border-b border-slate-900/60 pb-1.5 mb-3">
-                  2. Role & Department
+                  2. Role, Branch & IDs
                 </h5>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="space-y-1">
@@ -489,17 +499,17 @@ export default function TeamControl() {
                     />
                   </div>
                   <div className="space-y-1 relative">
-                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Department</label>
+                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Branch</label>
                     <button
                       type="button"
-                      onClick={() => setOpenDropdown(openDropdown === 'dept' ? null : 'dept')}
+                      onClick={() => setOpenDropdown(openDropdown === 'branch' ? null : 'branch')}
                       className="w-full bg-slate-955/60 border border-slate-805 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:border-cyan-500/50 text-xs flex justify-between items-center transition-all shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] focus:ring-1 focus:ring-cyan-500/10 cursor-pointer text-left"
                     >
-                      <span>{newDepartment}</span>
-                      <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${openDropdown === 'dept' ? 'rotate-180' : ''}`} />
+                      <span>{newBranch}</span>
+                      <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${openDropdown === 'branch' ? 'rotate-180' : ''}`} />
                     </button>
                     <AnimatePresence>
-                      {openDropdown === 'dept' && (
+                      {openDropdown === 'branch' && (
                         <motion.div
                           initial={{ opacity: 0, y: 5 }}
                           animate={{ opacity: 1, y: 0 }}
@@ -507,27 +517,27 @@ export default function TeamControl() {
                           className="absolute z-30 w-full mt-1 bg-[#090d16]/95 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl overflow-hidden p-1 space-y-0.5"
                         >
                           {[
-                            "Operations Control",
-                            "Solar Installation",
-                            "High Voltage Substations",
-                            "Grid Automation",
-                            "Safety & Compliance"
-                          ].map((dept) => (
+                            "Vijayawada",
+                            "Karimnagar",
+                            "Hyderabad",
+                            "Visakhapatnam",
+                            "Tirupati"
+                          ].map((branch) => (
                             <button
-                              key={dept}
+                              key={branch}
                               type="button"
                               onClick={() => {
-                                setNewDepartment(dept);
+                                setNewBranch(branch);
                                 setOpenDropdown(null);
                               }}
                               className={`w-full text-left px-3 py-2 text-xs rounded-lg transition-colors flex items-center justify-between ${
-                                newDepartment === dept 
+                                newBranch === branch 
                                   ? 'bg-cyan-500/10 text-cyan-400 font-semibold' 
                                   : 'text-slate-300 hover:bg-slate-800/40 hover:text-slate-100'
                               }`}
                             >
-                              <span>{dept}</span>
-                              {newDepartment === dept && <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />}
+                              <span>{branch}</span>
+                              {newBranch === branch && <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />}
                             </button>
                           ))}
                         </motion.div>
@@ -542,6 +552,26 @@ export default function TeamControl() {
                       onChange={(e) => setNewEmployeeId(e.target.value)}
                       placeholder="APEC-2026-042 (Optional)"
                       className="w-full bg-slate-955/60 border border-slate-850 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">ESI Number</label>
+                    <input 
+                      type="text" 
+                      value={newEsiNumber}
+                      onChange={(e) => setNewEsiNumber(e.target.value)}
+                      placeholder="e.g. 31123456780001001"
+                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">PF Number</label>
+                    <input 
+                      type="text" 
+                      value={newPfNumber}
+                      onChange={(e) => setNewPfNumber(e.target.value)}
+                      placeholder="e.g. AP/HYD/1234567/890"
+                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
                     />
                   </div>
                 </div>
@@ -794,7 +824,9 @@ export default function TeamControl() {
                     <tr className="border-b border-slate-800 bg-slate-955/45 uppercase tracking-wider text-slate-400 font-semibold">
                       <th className="p-4">Employee ID</th>
                       <th className="p-4">Name</th>
-                      <th className="p-4">Role / Department</th>
+                      <th className="p-4">Role / Branch</th>
+                      <th className="p-4">ESI Number</th>
+                      <th className="p-4">PF Number</th>
                       <th className="p-4">Access Priority</th>
                       <th className="p-4">Status</th>
                       <th className="p-4 text-center">Actions</th>
@@ -830,8 +862,10 @@ export default function TeamControl() {
                           </td>
                           <td className="p-4">
                             <div className="font-medium text-slate-205 truncate max-w-[150px]">{m.role}</div>
-                            <div className="text-[10px] text-slate-500 font-mono mt-0.5">{m.department || 'Operations'}</div>
+                            <div className="text-[10px] text-slate-500 font-mono mt-0.5">{m.branch || m.department || 'Vijayawada'}</div>
                           </td>
+                          <td className="p-4 font-mono text-xs text-slate-400">{m.esiNumber || 'N/A'}</td>
+                          <td className="p-4 font-mono text-xs text-slate-400">{m.pfNumber || 'N/A'}</td>
                           <td className="p-4">
                             <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                               isMemberAdmin 
@@ -926,7 +960,9 @@ export default function TeamControl() {
                       setEditRole(selectedProfile.role || '');
                       setEditPhone(selectedProfile.phone || '');
                       setEditEmployeeId(selectedProfile.employeeId || '');
-                      setEditDepartment(selectedProfile.department || 'Operations Control');
+                      setEditBranch(selectedProfile.branch || selectedProfile.department || 'Vijayawada');
+                      setEditEsiNumber(selectedProfile.esiNumber || '');
+                      setEditPfNumber(selectedProfile.pfNumber || '');
                       setEditStatus(selectedProfile.status || 'Active');
                       setEditJoinedDate(selectedProfile.joinedDate || '');
                       setEditSkills(selectedProfile.skills ? selectedProfile.skills.join(', ') : '');
@@ -1037,7 +1073,7 @@ export default function TeamControl() {
                   <div className="min-w-0">
                     <h4 className="text-sm font-bold text-slate-100 truncate">{isEditingProfile ? (editName || 'New Profile') : selectedProfile.name}</h4>
                     <p className="text-[10px] text-rose-500 font-bold truncate leading-tight">{isEditingProfile ? (editRole || 'Staff Member') : selectedProfile.role}</p>
-                    <p className="text-[9px] text-slate-500 font-mono truncate mt-0.5">{isEditingProfile ? editDepartment : (selectedProfile.department || 'Operations')}</p>
+                    <p className="text-[9px] text-slate-500 font-mono truncate mt-0.5">{isEditingProfile ? editBranch : (selectedProfile.branch || selectedProfile.department || 'Vijayawada')}</p>
                   </div>
                 </div>
 
@@ -1151,25 +1187,25 @@ export default function TeamControl() {
                     </div>
                   </div>
 
-                  {/* Section 2: Department, Status & Details */}
+                  {/* Section 2: Branch, Status & Details */}
                   <div className="space-y-3 p-4 bg-slate-955/20 rounded-xl border border-white/5">
                     <h5 className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest border-b border-slate-900/60 pb-1.5 mb-2">
                       2. Access & Operations
                     </h5>
                     <div className="grid grid-cols-2 gap-4">
-                      {/* Department Select */}
+                      {/* Branch Select */}
                       <div className="space-y-1 relative">
-                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Department</label>
+                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Branch</label>
                         <button
                           type="button"
-                          onClick={() => setOpenEditDropdown(openEditDropdown === 'dept' ? null : 'dept')}
+                          onClick={() => setOpenEditDropdown(openEditDropdown === 'branch' ? null : 'branch')}
                           className="w-full bg-slate-955/60 border border-slate-800 text-slate-100 rounded-xl py-2 px-3 focus:outline-none focus:border-cyan-500/50 text-xs flex justify-between items-center transition-all cursor-pointer text-left"
                         >
-                          <span>{editDepartment}</span>
-                          <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${openEditDropdown === 'dept' ? 'rotate-180' : ''}`} />
+                          <span>{editBranch}</span>
+                          <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${openEditDropdown === 'branch' ? 'rotate-180' : ''}`} />
                         </button>
                         <AnimatePresence>
-                          {openEditDropdown === 'dept' && (
+                          {openEditDropdown === 'branch' && (
                             <motion.div
                               initial={{ opacity: 0, y: 5 }}
                               animate={{ opacity: 1, y: 0 }}
@@ -1177,32 +1213,54 @@ export default function TeamControl() {
                               className="absolute z-30 w-full mt-1 bg-[#090d16]/95 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl overflow-hidden p-1 space-y-0.5"
                             >
                               {[
-                                "Operations Control",
-                                "Solar Installation",
-                                "High Voltage Substations",
-                                "Grid Automation",
-                                "Safety & Compliance"
-                              ].map((dept) => (
+                                "Vijayawada",
+                                "Karimnagar",
+                                "Hyderabad",
+                                "Visakhapatnam",
+                                "Tirupati"
+                              ].map((branch) => (
                                 <button
-                                  key={dept}
+                                  key={branch}
                                   type="button"
                                   onClick={() => {
-                                    setEditDepartment(dept);
+                                    setEditBranch(branch);
                                     setOpenEditDropdown(null);
                                   }}
                                   className={`w-full text-left px-3 py-2 text-xs rounded-lg transition-colors flex items-center justify-between ${
-                                    editDepartment === dept 
+                                    editBranch === branch 
                                       ? 'bg-cyan-500/10 text-cyan-400 font-semibold' 
                                       : 'text-slate-300 hover:bg-slate-800/40 hover:text-slate-100'
                                   }`}
                                 >
-                                  <span>{dept}</span>
-                                  {editDepartment === dept && <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />}
+                                  <span>{branch}</span>
+                                  {editBranch === branch && <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />}
                                 </button>
                               ))}
                             </motion.div>
                           )}
                         </AnimatePresence>
+                      </div>
+
+                      {/* ESI Number */}
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">ESI Number</label>
+                        <input 
+                          type="text" 
+                          value={editEsiNumber}
+                          onChange={(e) => setEditEsiNumber(e.target.value)}
+                          className="w-full bg-slate-955/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/10 transition-all font-mono"
+                        />
+                      </div>
+
+                      {/* PF Number */}
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">PF Number</label>
+                        <input 
+                          type="text" 
+                          value={editPfNumber}
+                          onChange={(e) => setEditPfNumber(e.target.value)}
+                          className="w-full bg-slate-955/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/10 transition-all font-mono"
+                        />
                       </div>
 
                       {/* Status Select */}
@@ -1404,10 +1462,10 @@ export default function TeamControl() {
                 <>
                   <div className="grid grid-cols-2 gap-4 text-xs bg-slate-955/45 p-4 rounded-xl border border-slate-900/60 font-mono">
                     <div className="space-y-1">
-                      <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Department</span>
+                      <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Branch</span>
                       <span className="text-slate-350 font-bold flex items-center gap-1.5">
                         <Briefcase className="w-3.5 h-3.5 text-cyan-500" />
-                        {selectedProfile.department || 'Operations'}
+                        {selectedProfile.branch || selectedProfile.department || 'Vijayawada'}
                       </span>
                     </div>
                     <div className="space-y-1">
@@ -1419,6 +1477,14 @@ export default function TeamControl() {
                       } border`}>
                         {selectedProfile.status || 'Active'}
                       </span>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-slate-500 block uppercase tracking-wider text-[9px]">ESI Number</span>
+                      <span className="text-slate-350 font-bold block truncate">{selectedProfile.esiNumber || 'N/A'}</span>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-slate-500 block uppercase tracking-wider text-[9px]">PF Number</span>
+                      <span className="text-slate-350 font-bold block truncate">{selectedProfile.pfNumber || 'N/A'}</span>
                     </div>
                     <div className="space-y-1">
                       <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Email Address</span>
