@@ -1551,6 +1551,7 @@ export default function TeamControl() {
                       <th className="p-4">Employee ID</th>
                       <th className="p-4">Name</th>
                       <th className="p-4">Role / Branch</th>
+                      <th className="p-4">Phone</th>
                       <th className="p-4">Access Priority</th>
                       <th className="p-4">Status</th>
                       <th className="p-4 text-center">Actions</th>
@@ -1588,6 +1589,9 @@ export default function TeamControl() {
                           <td className="p-4">
                             <div className="font-medium text-slate-205 truncate max-w-[150px]">{m.role}</div>
                             <div className="text-[10px] text-slate-500 font-mono mt-0.5">{m.branch || m.department || 'Vijayawada'}</div>
+                          </td>
+                          <td className="p-4 font-mono text-xs text-slate-400">
+                            {m.phone || 'N/A'}
                           </td>
                           <td className="p-4">
                             <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
