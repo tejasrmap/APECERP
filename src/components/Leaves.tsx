@@ -10,7 +10,8 @@ import {
   Search,
   User,
   AlertCircle,
-  FileText
+  FileText,
+  ChevronDown
 } from 'lucide-react';
 import { collection, onSnapshot, addDoc, doc, updateDoc, Timestamp, query, where, orderBy } from 'firebase/firestore';
 import { useOutletContext } from 'react-router-dom';
@@ -39,6 +40,18 @@ export default function Leaves() {
   // Filter & Search States
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'Pending' | 'Approved' | 'Rejected'>('all');
+  const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsFilterDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Load leaves data
   useEffect(() => {
@@ -411,17 +424,72 @@ export default function Leaves() {
                 />
               </div>
 
-              <div className="w-full sm:w-56">
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value as any)}
-                  className="w-full bg-slate-900/60 border border-slate-800 text-slate-300 rounded-xl py-3 px-4 text-xs focus:outline-none focus:border-cyan-500 cursor-pointer shadow-[0_2px_8px_rgba(0,0,0,0.15)]"
+              <div className="w-full sm:w-56 relative" ref={dropdownRef}>
+                <button
+                  type="button"
+                  onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
+                  className="w-full bg-slate-900/60 border border-slate-800 text-slate-305 rounded-xl py-3 px-4 text-xs focus:outline-none focus:border-cyan-500 cursor-pointer flex justify-between items-center shadow-[0_2px_8px_rgba(0,0,0,0.15)] select-none text-left"
                 >
-                  <option value="all" className="bg-slate-950 text-slate-200">All Leaves</option>
-                  <option value="Pending" className="bg-slate-955 text-slate-200">Pending Only</option>
-                  <option value="Approved" className="bg-slate-955 text-slate-200">Approved Only</option>
-                  <option value="Rejected" className="bg-slate-955 text-slate-200">Rejected Only</option>
-                </select>
+                  <span>
+                    {statusFilter === 'all' && 'All Leaves'}
+                    {statusFilter === 'Pending' && 'Pending Only'}
+                    {statusFilter === 'Approved' && 'Approved Only'}
+                    {statusFilter === 'Rejected' && 'Rejected Only'}
+                  </span>
+                  <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${isFilterDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {isFilterDropdownOpen && (
+                  <div className="absolute top-[calc(100%+6px)] right-0 left-0 bg-[#0d1423]/95 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl py-1.5 z-25 overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setStatusFilter('all');
+                        setIsFilterDropdownOpen(false);
+                      }}
+                      className={`w-full px-4 py-2.5 text-xs text-left cursor-pointer hover:bg-white/5 transition-colors select-none block ${
+                        statusFilter === 'all' ? 'text-cyan-400 font-bold bg-cyan-500/5' : 'text-slate-300'
+                      }`}
+                    >
+                      All Leaves
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setStatusFilter('Pending');
+                        setIsFilterDropdownOpen(false);
+                      }}
+                      className={`w-full px-4 py-2.5 text-xs text-left cursor-pointer hover:bg-white/5 transition-colors select-none block ${
+                        statusFilter === 'Pending' ? 'text-cyan-400 font-bold bg-cyan-500/5' : 'text-slate-300'
+                      }`}
+                    >
+                      Pending Only
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setStatusFilter('Approved');
+                        setIsFilterDropdownOpen(false);
+                      }}
+                      className={`w-full px-4 py-2.5 text-xs text-left cursor-pointer hover:bg-white/5 transition-colors select-none block ${
+                        statusFilter === 'Approved' ? 'text-cyan-400 font-bold bg-cyan-500/5' : 'text-slate-300'
+                      }`}
+                    >
+                      Approved Only
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setStatusFilter('Rejected');
+                        setIsFilterDropdownOpen(false);
+                      }}
+                      className={`w-full px-4 py-2.5 text-xs text-left cursor-pointer hover:bg-white/5 transition-colors select-none block ${
+                        statusFilter === 'Rejected' ? 'text-cyan-400 font-bold bg-cyan-500/5' : 'text-slate-300'
+                      }`}
+                    >
+                      Rejected Only
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
