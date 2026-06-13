@@ -311,7 +311,7 @@ export default function Dashboard() {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
                       transition={{ duration: 0.15 }}
-                      className="absolute right-0 mt-2 w-80 glass-card p-4 rounded-2xl shadow-2xl z-40 border border-white/10 space-y-3 max-h-96 overflow-y-auto"
+                      className="absolute right-0 mt-2 w-80 bg-[#0e1422] p-4 rounded-2xl shadow-2xl z-40 border border-white/10 space-y-3 max-h-96 overflow-y-auto"
                     >
                       <div className="flex justify-between items-center pb-2 border-b border-slate-800">
                         <span className="text-xs font-bold text-slate-100 uppercase tracking-wider">Control Room Alerts</span>
