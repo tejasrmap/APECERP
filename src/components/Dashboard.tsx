@@ -174,13 +174,25 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="h-[100dvh] w-full bg-[#070a13] flex font-sans text-slate-200 overflow-hidden relative selection:bg-cyan-500/15 selection:text-cyan-400">
+    <div className="h-[100dvh] w-full bg-[#05070c] flex font-sans text-slate-200 overflow-hidden relative selection:bg-cyan-500/15 selection:text-cyan-400">
       
-      {/* Background Ambience — each blob promoted to its own GPU compositing layer */}
+      {/* Background Ambience */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-25%] left-[-15%] w-[60%] h-[60%] bg-cyan-950/15 rounded-full blur-[100px]" style={{ willChange: 'transform', transform: 'translateZ(0)' }} />
-        <div className="absolute bottom-[-25%] right-[-15%] w-[70%] h-[70%] bg-rose-950/10 rounded-full blur-[120px]" style={{ willChange: 'transform', transform: 'translateZ(0)' }} />
-        <div className="absolute inset-0 cyber-grid opacity-30"></div>
+        {/* Vibrant Gradient Blobs */}
+        <div className="absolute top-[-25%] left-[-15%] w-[60%] h-[60%] bg-gradient-to-br from-cyan-500/15 via-cyan-500/5 to-transparent rounded-full blur-[100px] will-change-transform" />
+        <div className="absolute bottom-[-25%] right-[-15%] w-[70%] h-[70%] bg-gradient-to-br from-rose-500/10 via-rose-500/2 to-transparent rounded-full blur-[120px] will-change-transform" />
+        
+        {/* Tech Dotted Grid */}
+        <div 
+          className="absolute inset-0 opacity-25" 
+          style={{ 
+            backgroundImage: 'radial-gradient(rgba(6, 182, 212, 0.15) 1px, transparent 1px)', 
+            backgroundSize: '24px 24px' 
+          }} 
+        />
+        
+        {/* Vignette fade to center */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_30%,#05070c_80%)]" />
       </div>
 
       {/* Mobile Sidebar Overlay */}
