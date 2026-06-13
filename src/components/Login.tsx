@@ -357,8 +357,11 @@ export default function Login() {
                 <form onSubmit={handleSendOtp} className="space-y-4 flex-1 flex flex-col justify-center">
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">Phone Number</label>
-                    <div className="relative">
-                      <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                    <div className="relative flex items-center">
+                      <Phone className="absolute left-3.5 w-5 h-5 text-slate-500" />
+                      <span className="absolute left-11 text-sm text-slate-400 font-semibold select-none border-r border-slate-800/80 pr-2.5">
+                        +91
+                      </span>
                       <input
                         type="tel"
                         value={phone}
@@ -366,13 +369,14 @@ export default function Login() {
                           setPhone(e.target.value);
                           setErrorMsg('');
                         }}
-                        placeholder="+91 XXXXX XXXXX"
+                        placeholder="76750 52828"
                         required
                         disabled={isLoading}
-                        className="w-full bg-slate-950/40 border border-slate-800 text-slate-100 rounded-xl py-3.5 pl-11 pr-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/25 transition-all placeholder:text-slate-550 disabled:opacity-50 text-sm shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
+                        style={{ paddingLeft: '88px' }}
+                        className="w-full bg-slate-950/40 border border-slate-800 text-slate-100 rounded-xl py-3.5 pr-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/25 transition-all placeholder:text-slate-600 disabled:opacity-50 text-sm shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
                       />
                     </div>
-                    <p className="text-[10px] text-slate-500 ml-1">Include country code prefix (e.g. +91 for India).</p>
+                    <p className="text-[10px] text-slate-500 ml-1">Enter your 10-digit registered mobile number.</p>
                   </div>
 
                   {errorMsg && (
