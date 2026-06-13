@@ -22,6 +22,7 @@ export default function ProtectedRoute() {
       if (user) {
         if (db && user.email) {
           const emailLower = user.email.toLowerCase();
+          const isVirtual = emailLower.endsWith('@apec-erp.local');
           const isAdminEmail = 
             emailLower === 'admin@apecpowersolutions.com' ||
             emailLower === 'managingdirector@apecpowersolutions.com';
@@ -30,9 +31,51 @@ export default function ProtectedRoute() {
             setAuthenticated(true);
           } else {
             try {
-              const q = query(collection(db, 'team'), where('email', '==', user.email));
-              const snap = await getDocs(q);
-              if (!snap.empty) {
+              let matched = false;
+
+              if (isVirtual) {
+                const cleanUserPhone = emailLower.split('@')[0];
+                const phoneCandidates = [
+                  '+' + cleanUserPhone,
+                  cleanUserPhone,
+                  cleanUserPhone.slice(-10),
+                ].filter(Boolean);
+
+                let matchedDoc = null;
+                for (const candidate of phoneCandidates) {
+                  const q = query(collection(db, 'team'), where('phone', '==', candidate));
+                  const snap = await getDocs(q);
+                  if (!snap.empty) {
+                    matchedDoc = snap.docs[0];
+                    break;
+                  }
+                }
+
+                if (!matchedDoc && cleanUserPhone.length >= 10) {
+                  const allSnap = await getDocs(collection(db, 'team'));
+                  const loginLast10 = cleanUserPhone.slice(-10);
+                  for (const docSnap of allSnap.docs) {
+                    const phoneVal = docSnap.data().phone;
+                    const storedClean = (phoneVal !== undefined && phoneVal !== null ? String(phoneVal) : '').replace(/[\s+-]/g, '');
+                    if (storedClean.length >= 10 && storedClean.slice(-10) === loginLast10) {
+                      matchedDoc = docSnap;
+                      break;
+                    }
+                  }
+                }
+
+                if (matchedDoc) {
+                  matched = true;
+                }
+              } else {
+                const q = query(collection(db, 'team'), where('email', '==', emailLower));
+                const snap = await getDocs(q);
+                if (!snap.empty) {
+                  matched = true;
+                }
+              }
+
+              if (matched) {
                 setAuthenticated(true);
               } else {
                 // Sign out if not in the team database
@@ -42,6 +85,10 @@ export default function ProtectedRoute() {
               }
             } catch (err) {
               console.error('Error checking team authorization:', err);
+              try {
+                await auth.signOut();
+              } catch (_) {}
+              localStorage.removeItem('isAuthenticated');
               setAuthenticated(false);
             }
           }
