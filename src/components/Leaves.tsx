@@ -280,33 +280,39 @@ export default function Leaves() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="p-4 rounded-xl glass-card border border-white/10 flex items-center gap-4 relative overflow-hidden">
-          <div className="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
-            <Clock className="w-5 h-5" />
+        {/* Pending Card */}
+        <div className="p-5 rounded-2xl glass-card border border-white/10 hover:border-amber-500/30 flex items-center gap-4 relative overflow-hidden transition-all duration-300 hover:-translate-y-1 group hover:shadow-[0_8px_30px_rgba(245,158,11,0.08)]">
+          <div className="absolute inset-0 bg-gradient-to-br from-amber-500/0 via-amber-500/0 to-amber-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 group-hover:scale-110 transition-transform duration-300">
+            <Clock className="w-5.5 h-5.5" />
           </div>
-          <div>
-            <p className="text-[10px] uppercase font-mono text-slate-450 tracking-wider font-semibold">Pending Requests</p>
-            <h3 className="text-2xl font-extrabold text-slate-100 mt-0.5">{stats.pending}</h3>
-          </div>
-        </div>
-
-        <div className="p-4 rounded-xl glass-card border border-white/10 flex items-center gap-4 relative overflow-hidden">
-          <div className="w-10 h-10 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
-            <Calendar className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-[10px] uppercase font-mono text-slate-450 tracking-wider font-semibold">Active Leaves Today</p>
-            <h3 className="text-2xl font-extrabold text-slate-100 mt-0.5">{stats.activeToday}</h3>
+          <div className="relative z-10">
+            <p className="text-[10px] uppercase font-mono text-slate-500 tracking-wider font-bold">Pending Requests</p>
+            <h3 className="text-3xl font-black text-slate-100 mt-0.5">{stats.pending}</h3>
           </div>
         </div>
 
-        <div className="p-4 rounded-xl glass-card border border-white/10 flex items-center gap-4 relative overflow-hidden">
-          <div className="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-            <CheckCircle2 className="w-5 h-5" />
+        {/* Active Leaves Card */}
+        <div className="p-5 rounded-2xl glass-card border border-white/10 hover:border-cyan-500/30 flex items-center gap-4 relative overflow-hidden transition-all duration-300 hover:-translate-y-1 group hover:shadow-[0_8px_30px_rgba(6,182,212,0.08)]">
+          <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/0 via-cyan-500/0 to-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition-transform duration-300">
+            <Calendar className="w-5.5 h-5.5" />
           </div>
-          <div>
-            <p className="text-[10px] uppercase font-mono text-slate-450 tracking-wider font-semibold">Approved Requests</p>
-            <h3 className="text-2xl font-extrabold text-slate-100 mt-0.5">{stats.approved}</h3>
+          <div className="relative z-10">
+            <p className="text-[10px] uppercase font-mono text-slate-500 tracking-wider font-bold">Active Leaves Today</p>
+            <h3 className="text-3xl font-black text-slate-100 mt-0.5">{stats.activeToday}</h3>
+          </div>
+        </div>
+
+        {/* Approved Card */}
+        <div className="p-5 rounded-2xl glass-card border border-white/10 hover:border-emerald-500/30 flex items-center gap-4 relative overflow-hidden transition-all duration-300 hover:-translate-y-1 group hover:shadow-[0_8px_30px_rgba(16,185,129,0.08)]">
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/0 via-emerald-500/0 to-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform duration-300">
+            <CheckCircle2 className="w-5.5 h-5.5" />
+          </div>
+          <div className="relative z-10">
+            <p className="text-[10px] uppercase font-mono text-slate-500 tracking-wider font-bold">Approved Requests</p>
+            <h3 className="text-3xl font-black text-slate-100 mt-0.5">{stats.approved}</h3>
           </div>
         </div>
       </div>
@@ -319,9 +325,9 @@ export default function Leaves() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="max-w-xl glass-card p-6 rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.3)] mx-auto w-full"
+            className="max-w-xl glass-card p-6 rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.3)] mx-auto w-full border border-white/10"
           >
-            <h4 className="text-sm font-bold text-slate-100 mb-4">New Leave Application</h4>
+            <h4 className="text-sm font-bold text-slate-105 mb-4">New Leave Application</h4>
             <form onSubmit={handleApplyLeave} className="space-y-4">
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -375,7 +381,7 @@ export default function Leaves() {
               </div>
 
               {formError && (
-                <div className="p-3 bg-rose-950/20 border border-rose-500/20 rounded-xl text-rose-500 text-xs flex items-center gap-2">
+                <div className="p-3 bg-rose-955/20 border border-rose-500/20 rounded-xl text-rose-500 text-xs flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>{formError}</span>
                 </div>
@@ -384,7 +390,7 @@ export default function Leaves() {
               <button
                 type="submit"
                 disabled={isDbActionLoading}
-                className="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-955 rounded-xl text-xs font-bold uppercase tracking-wider shadow-[0_4px_14px_rgba(6,182,212,0.2)] hover:shadow-lg transition-all flex items-center justify-center gap-2"
+                className="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-955 rounded-xl text-xs font-bold uppercase tracking-wider shadow-[0_4px_14px_rgba(6,182,212,0.2)] hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 {isDbActionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Submit Application'}
               </button>
@@ -393,34 +399,34 @@ export default function Leaves() {
         ) : (
           <div className="space-y-6">
             {/* Filter Panel */}
-            <div className="grid grid-cols-1 sm:grid-cols-12 gap-4 bg-slate-950/20 p-4 rounded-xl border border-white/5">
-              <div className="sm:col-span-8 relative">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+            <div className="flex flex-col sm:flex-row gap-4 bg-slate-950/40 p-4 rounded-2xl border border-white/5 shadow-md">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-450" />
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder={isUserAdmin ? "Search employee name, reason, or type..." : "Search reason, type..."}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-xl py-2.5 pl-10 pr-4 text-xs focus:outline-none focus:border-cyan-500 text-slate-100 placeholder:text-slate-500 transition-all"
+                  className="w-full bg-slate-900/60 border border-slate-800 rounded-xl py-3 pl-10 pr-4 text-xs focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 text-slate-100 placeholder:text-slate-500 transition-all shadow-[0_2px_8px_rgba(0,0,0,0.15)]"
                 />
               </div>
 
-              <div className="sm:col-span-4">
+              <div className="w-full sm:w-56">
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value as any)}
-                  className="w-full bg-slate-900 border border-slate-800 text-slate-300 rounded-xl py-2.5 px-3 text-xs focus:outline-none focus:border-cyan-500 cursor-pointer"
+                  className="w-full bg-slate-900/60 border border-slate-800 text-slate-300 rounded-xl py-3 px-4 text-xs focus:outline-none focus:border-cyan-500 cursor-pointer shadow-[0_2px_8px_rgba(0,0,0,0.15)]"
                 >
-                  <option value="all">All Leaves</option>
-                  <option value="Pending">Pending Only</option>
-                  <option value="Approved">Approved Only</option>
-                  <option value="Rejected">Rejected Only</option>
+                  <option value="all" className="bg-slate-950 text-slate-200">All Leaves</option>
+                  <option value="Pending" className="bg-slate-955 text-slate-200">Pending Only</option>
+                  <option value="Approved" className="bg-slate-955 text-slate-200">Approved Only</option>
+                  <option value="Rejected" className="bg-slate-955 text-slate-200">Rejected Only</option>
                 </select>
               </div>
             </div>
 
             {/* Leaves List */}
-            <div className="glass-card rounded-2xl overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.3)]">
+            <div className="glass-card rounded-2xl overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.4)] border border-white/10">
               {filteredLeaves.length === 0 ? (
                 <div className="py-20 text-center flex flex-col items-center">
                   <FileText className="w-14 h-14 text-slate-700 mb-3" />
@@ -431,73 +437,79 @@ export default function Leaves() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="border-b border-slate-800 bg-slate-950/45 text-xs uppercase tracking-wider text-slate-400 font-semibold">
-                        {isUserAdmin && <th className="p-4">Employee</th>}
-                        <th className="p-4">Leave Type</th>
-                        <th className="p-4">Duration</th>
-                        <th className="p-4 hidden md:table-cell">Reason</th>
-                        <th className="p-4">Status</th>
-                        {isUserAdmin && <th className="p-4 text-center">Action Review</th>}
+                      <tr className="border-b border-slate-800 bg-slate-950/60 text-[10px] uppercase tracking-wider text-slate-400 font-black">
+                        {isUserAdmin && <th className="p-4 px-6">Employee</th>}
+                        <th className="p-4 px-6">Leave Type</th>
+                        <th className="p-4 px-6">Duration</th>
+                        <th className="p-4 px-6 hidden md:table-cell">Reason</th>
+                        <th className="p-4 px-6">Status</th>
+                        {isUserAdmin && <th className="p-4 px-6 text-center">Action Review</th>}
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800/50 text-sm text-slate-300">
+                    <tbody className="divide-y divide-slate-800/40 text-xs text-slate-300">
                       {filteredLeaves.map((leave) => {
                         const isPending = leave.status === 'Pending';
+                        
+                        // Dynamic initials color gradient
+                        const colors = ['from-cyan-500 to-blue-500', 'from-purple-500 to-indigo-500', 'from-emerald-500 to-teal-500', 'from-amber-500 to-orange-500', 'from-rose-500 to-red-500'];
+                        const charCode = (leave.employeeName?.charCodeAt(0) || 0) + (leave.employeeName?.charCodeAt(1) || 0);
+                        const gradient = colors[charCode % colors.length];
+
                         return (
                           <tr key={leave.id} className="hover:bg-slate-900/30 transition-colors">
                             {isUserAdmin && (
-                              <td className="p-4">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-7 h-7 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-200 shrink-0">
+                              <td className="p-4 px-6">
+                                <div className="flex items-center gap-3">
+                                  <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${gradient} flex items-center justify-center text-[10.5px] font-black text-slate-950 shrink-0 shadow-md`}>
                                     {leave.employeeName?.slice(0, 2).toUpperCase()}
                                   </div>
                                   <div className="min-w-0">
                                     <p className="font-bold text-slate-100 text-xs truncate">{leave.employeeName}</p>
-                                    <p className="text-[9px] text-slate-550 font-mono leading-none tracking-wide">{leave.employeeCode || 'APEC-MEMBER'}</p>
+                                    <p className="text-[9px] text-slate-500 font-mono leading-none mt-0.5 tracking-wide">{leave.employeeCode || 'APEC-MEMBER'}</p>
                                   </div>
                                 </div>
                               </td>
                             )}
-                            <td className="p-4">
+                            <td className="p-4 px-6">
                               <span className="font-bold text-slate-150">{leave.leaveType}</span>
                             </td>
-                            <td className="p-4 font-medium font-mono text-xs">
+                            <td className="p-4 px-6 font-medium font-mono text-xs">
                               <div>{leave.startDate}</div>
-                              <div className="text-[9.5px] text-slate-500">to {leave.endDate}</div>
+                              <div className="text-[10px] text-slate-500 mt-0.5">to {leave.endDate}</div>
                             </td>
-                            <td className="p-4 hidden md:table-cell text-xs max-w-xs truncate" title={leave.reason}>
+                            <td className="p-4 px-6 hidden md:table-cell text-xs max-w-xs truncate" title={leave.reason}>
                               {leave.reason}
                             </td>
-                            <td className="p-4">
-                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
-                                leave.status === 'Approved' ? 'bg-green-955/40 text-green-400 border-green-500/25' :
-                                leave.status === 'Rejected' ? 'bg-rose-955/40 text-rose-455 border-rose-500/25' :
-                                'bg-amber-955/40 text-amber-400 border-amber-500/25'
+                            <td className="p-4 px-6">
+                              <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold border ${
+                                leave.status === 'Approved' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                                leave.status === 'Rejected' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' :
+                                'bg-amber-500/10 text-amber-400 border-amber-500/20'
                               }`}>
                                 {leave.status}
                               </span>
                             </td>
                             {isUserAdmin && (
-                              <td className="p-4 text-center">
+                              <td className="p-4 px-6 text-center">
                                 {isPending ? (
                                   <div className="flex justify-center gap-2">
                                     <button
                                       onClick={() => handleUpdateStatus(leave.id, 'Approved')}
-                                      className="p-1 px-2.5 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500 hover:text-slate-955 text-[10px] font-bold transition-all"
+                                      className="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500 hover:text-slate-950 hover:shadow-[0_0_12px_rgba(16,185,129,0.3)] text-[10px] font-extrabold uppercase tracking-wider transition-all duration-200 cursor-pointer"
                                       disabled={isDbActionLoading}
                                     >
                                       Approve
                                     </button>
                                     <button
                                       onClick={() => handleUpdateStatus(leave.id, 'Rejected')}
-                                      className="p-1 px-2.5 rounded bg-rose-500/15 border border-rose-500/30 text-rose-400 hover:bg-rose-500 hover:text-white text-[10px] font-bold transition-all"
+                                      className="px-3 py-1.5 rounded-lg bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500 hover:text-white hover:shadow-[0_0_12px_rgba(244,63,94,0.3)] text-[10px] font-extrabold uppercase tracking-wider transition-all duration-200 cursor-pointer"
                                       disabled={isDbActionLoading}
                                     >
                                       Reject
                                     </button>
                                   </div>
                                 ) : (
-                                  <span className="text-[10px] text-slate-500 font-semibold font-mono">Reviewed</span>
+                                  <span className="text-[10px] text-slate-500 font-extrabold uppercase tracking-widest font-mono">Reviewed</span>
                                 )}
                               </td>
                             )}
