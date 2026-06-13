@@ -83,7 +83,8 @@ export default function MyProfile() {
           const allSnap = await getDocs(collection(db, 'team'));
           const loginLast10 = cleanPhone.slice(-10);
           for (const docSnap of allSnap.docs) {
-            const stored = (docSnap.data().phone || '').replace(/[\s+-]/g, '');
+            const phoneVal = docSnap.data().phone;
+            const stored = (phoneVal !== undefined && phoneVal !== null ? String(phoneVal) : '').replace(/[\s+-]/g, '');
             if (stored.length >= 10 && stored.slice(-10) === loginLast10) {
               setProfile({ id: docSnap.id, ...docSnap.data() });
               setLoading(false);

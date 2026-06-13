@@ -208,7 +208,8 @@ export default function Login() {
             const allSnap = await getDocs(collection(db, 'team'));
             const loginLast10 = cleanUserPhone.slice(-10);
             for (const docSnap of allSnap.docs) {
-              const storedClean = (docSnap.data().phone || '').replace(/[\s+-]/g, '');
+              const phoneVal = docSnap.data().phone;
+              const storedClean = (phoneVal !== undefined && phoneVal !== null ? String(phoneVal) : '').replace(/[\s+-]/g, '');
               if (storedClean.length >= 10 && storedClean.slice(-10) === loginLast10) {
                 isAllowed = true;
                 break;

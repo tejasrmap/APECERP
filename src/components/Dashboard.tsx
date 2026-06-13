@@ -118,12 +118,40 @@ export default function Dashboard() {
                     setIsAdmin(false);
                   }
                 } else if (user.phoneNumber) {
-                  // Fallback for sanitized phone number checks in database
-                  const q2 = query(collection(db, 'team'), where('phone', '==', '+' + cleanUserPhone));
-                  getDocs(q2).then(fallbackSnap => {
-                    if (!fallbackSnap.empty) {
-                      const docData = fallbackSnap.docs[0].data();
-                      setUserProfile({ id: fallbackSnap.docs[0].id, ...docData });
+                  // 3-phase fallback for sanitized/formatted phone numbers
+                  const phoneCandidates = [
+                    user.phoneNumber,
+                    '+' + cleanUserPhone,
+                    cleanUserPhone,
+                    cleanUserPhone.slice(-10),
+                  ].filter(Boolean);
+
+                  const searchCandidates = async () => {
+                    for (const candidate of phoneCandidates) {
+                      const q2 = query(collection(db, 'team'), where('phone', '==', candidate));
+                      const fallbackSnap = await getDocs(q2);
+                      if (!fallbackSnap.empty) {
+                        return fallbackSnap.docs[0];
+                      }
+                    }
+                    if (cleanUserPhone.length >= 10) {
+                      const allSnap = await getDocs(collection(db, 'team'));
+                      const loginLast10 = cleanUserPhone.slice(-10);
+                      for (const docSnap of allSnap.docs) {
+                        const phoneVal = docSnap.data().phone;
+                        const storedClean = (phoneVal !== undefined && phoneVal !== null ? String(phoneVal) : '').replace(/[\s+-]/g, '');
+                        if (storedClean.length >= 10 && storedClean.slice(-10) === loginLast10) {
+                          return docSnap;
+                        }
+                      }
+                    }
+                    return null;
+                  };
+
+                  searchCandidates().then(matchedDoc => {
+                    if (matchedDoc) {
+                      const docData = matchedDoc.data();
+                      setUserProfile({ id: matchedDoc.id, ...docData });
                       if (docData.accessRole === 'Admin' || docData.roleType === 'Admin') {
                         setIsAdmin(true);
                       } else if (!isAdminEmail && !isAdminPhone) {
@@ -132,7 +160,7 @@ export default function Dashboard() {
                     } else if (!isAdminEmail && !isAdminPhone) {
                       setIsAdmin(false);
                     }
-                  }).catch(e => console.error("Sanitized phone lookup fallback failed:", e));
+                  }).catch(e => console.error("3-phase phone lookup fallback failed:", e));
                 } else if (!isAdminEmail && !isAdminPhone) {
                   setIsAdmin(false);
                 }
@@ -293,15 +321,15 @@ export default function Dashboard() {
               <div className="w-9 h-9 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center text-xs font-bold text-slate-205 border border-slate-750 shadow-sm shrink-0">
                 {userProfile?.name 
                   ? userProfile.name.slice(0, 2).toUpperCase() 
-                  : (auth?.currentUser?.email ? auth.currentUser.email.slice(0, 2).toUpperCase() : 'AD')}
+                  : (auth?.currentUser?.email ? auth.currentUser.email.slice(0, 2).toUpperCase() : (auth?.currentUser?.phoneNumber ? 'EM' : 'AD'))}
               </div>
             )}
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-slate-100 truncate">
-                {userProfile?.name || auth?.currentUser?.displayName || 'Admin User'}
+                {userProfile?.name || auth?.currentUser?.displayName || (auth?.currentUser?.phoneNumber ? 'Employee' : 'Admin User')}
               </p>
               <p className="text-xs text-slate-400 truncate">
-                {userProfile?.email || auth?.currentUser?.email || 'admin@apecpowersolutions.com'}
+                {userProfile?.email || auth?.currentUser?.email || auth?.currentUser?.phoneNumber || 'admin@apecpowersolutions.com'}
               </p>
             </div>
           </div>
