@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { auth, db } from '../firebase';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, getDocs } from 'firebase/firestore';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -79,45 +79,66 @@ export default function Dashboard() {
         unsubProfile = null;
       }
 
-      if (user && user.email) {
-        const email = user.email.toLowerCase();
+      if (user) {
+        const email = user.email ? user.email.toLowerCase() : '';
+        const userPhone = user.phoneNumber || '';
+        const cleanUserPhone = userPhone.replace(/[\s+-]/g, '');
         
         // Check hardcoded admins first
-        if (
+        const isAdminEmail = 
           email === 'admin@apecpowersolutions.com' ||
-          email === 'managingdirector@apecpowersolutions.com'
-        ) {
+          email === 'managingdirector@apecpowersolutions.com';
+
+        const isAdminPhone = 
+          userPhone === '+918499903275' || 
+          cleanUserPhone === '918499903275';
+
+        if (isAdminEmail || isAdminPhone) {
           setIsAdmin(true);
         }
 
         if (db) {
           try {
-            const q = query(collection(db, 'team'), where('email', '==', user.email));
-            unsubProfile = onSnapshot(q, (snap) => {
-              if (!snap.empty) {
-                const docData = snap.docs[0].data();
-                setUserProfile({ id: snap.docs[0].id, ...docData });
-                if (docData.accessRole === 'Admin' || docData.roleType === 'Admin') {
-                  setIsAdmin(true);
-                } else if (
-                  email !== 'admin@apecpowersolutions.com' &&
-                  email !== 'managingdirector@apecpowersolutions.com'
-                ) {
-                  // If not in hardcoded admin list and not marked as admin in DB
+            let q = null;
+            if (user.email) {
+              q = query(collection(db, 'team'), where('email', '==', user.email));
+            } else if (user.phoneNumber) {
+              q = query(collection(db, 'team'), where('phone', '==', user.phoneNumber));
+            }
+
+            if (q) {
+              unsubProfile = onSnapshot(q, (snap) => {
+                if (!snap.empty) {
+                  const docData = snap.docs[0].data();
+                  setUserProfile({ id: snap.docs[0].id, ...docData });
+                  if (docData.accessRole === 'Admin' || docData.roleType === 'Admin') {
+                    setIsAdmin(true);
+                  } else if (!isAdminEmail && !isAdminPhone) {
+                    setIsAdmin(false);
+                  }
+                } else if (user.phoneNumber) {
+                  // Fallback for sanitized phone number checks in database
+                  const q2 = query(collection(db, 'team'), where('phone', '==', '+' + cleanUserPhone));
+                  getDocs(q2).then(fallbackSnap => {
+                    if (!fallbackSnap.empty) {
+                      const docData = fallbackSnap.docs[0].data();
+                      setUserProfile({ id: fallbackSnap.docs[0].id, ...docData });
+                      if (docData.accessRole === 'Admin' || docData.roleType === 'Admin') {
+                        setIsAdmin(true);
+                      } else if (!isAdminEmail && !isAdminPhone) {
+                        setIsAdmin(false);
+                      }
+                    } else if (!isAdminEmail && !isAdminPhone) {
+                      setIsAdmin(false);
+                    }
+                  }).catch(e => console.error("Sanitized phone lookup fallback failed:", e));
+                } else if (!isAdminEmail && !isAdminPhone) {
                   setIsAdmin(false);
                 }
-              } else {
-                // Not found in team collection (but maybe firebase auth worked)
-                if (
-                  email !== 'admin@apecpowersolutions.com' &&
-                  email !== 'managingdirector@apecpowersolutions.com'
-                ) {
-                  setIsAdmin(false);
-                }
-              }
-            }, (err) => {
-              console.error('Profile listener error:', err);
-            });
+              }, (err) => {
+                console.error('Profile listener error:', err);
+              });
+            }
           } catch (err) {
             console.error('Error fetching user profile:', err);
           }

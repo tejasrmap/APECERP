@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { User, Lock, LogIn, ArrowRight, CheckCircle2, Loader2, Shield } from 'lucide-react';
+import { Phone, ArrowRight, CheckCircle2, Loader2, Shield, MessageSquare, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from 'firebase/auth';
+import { RecaptchaVerifier, signInWithPhoneNumber, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth, db } from '../firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 
 export default function Login() {
   const navigate = useNavigate();
-  const [step, setStep] = useState<'credentials' | 'success'>('credentials');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [step, setStep] = useState<'phone' | 'otp' | 'success'>('phone');
+  const [phone, setPhone] = useState('');
+  const [otp, setOtp] = useState('');
+  const [confirmationResult, setConfirmationResult] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -27,32 +28,57 @@ export default function Login() {
     }
 
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user && user.email) {
-        const emailLower = user.email.toLowerCase();
+      if (user) {
+        let isAllowed = false;
+        
+        // 1. Check if user is admin
+        const emailLower = user.email ? user.email.toLowerCase() : '';
+        const userPhone = user.phoneNumber || '';
+        const cleanUserPhone = userPhone.replace(/[\s+-]/g, '');
+        
         const isAdminEmail = 
           emailLower === 'admin@apecpowersolutions.com' ||
           emailLower === 'managingdirector@apecpowersolutions.com';
+          
+        const isAdminPhone = 
+          userPhone === '+918499903275' || 
+          cleanUserPhone === '918499903275';
 
-        if (isAdminEmail) {
-          localStorage.setItem('isAuthenticated', 'true');
-          navigate('/dashboard');
+        if (isAdminEmail || isAdminPhone) {
+          isAllowed = true;
         } else if (db) {
           try {
-            const q = query(collection(db, 'team'), where('email', '==', user.email));
-            const snap = await getDocs(q);
-            if (!snap.empty) {
-              localStorage.setItem('isAuthenticated', 'true');
-              navigate('/dashboard');
-            } else {
-              await auth.signOut();
-              localStorage.removeItem('isAuthenticated');
+            // Check by email (for Google Auth logins)
+            if (user.email) {
+              const q = query(collection(db, 'team'), where('email', '==', user.email));
+              const snap = await getDocs(q);
+              if (!snap.empty) isAllowed = true;
+            }
+            // Check by phone number (for OTP logins)
+            if (!isAllowed && user.phoneNumber) {
+              const q = query(collection(db, 'team'), where('phone', '==', user.phoneNumber));
+              const snap = await getDocs(q);
+              if (!snap.empty) {
+                isAllowed = true;
+              } else {
+                const q2 = query(collection(db, 'team'), where('phone', '==', '+' + cleanUserPhone));
+                const snap2 = await getDocs(q2);
+                if (!snap2.empty) isAllowed = true;
+              }
             }
           } catch (err) {
             console.error('Error auto-redirecting user:', err);
           }
         } else {
+          isAllowed = true;
+        }
+
+        if (isAllowed) {
           localStorage.setItem('isAuthenticated', 'true');
           navigate('/dashboard');
+        } else {
+          await auth.signOut();
+          localStorage.removeItem('isAuthenticated');
         }
       }
       setCheckingAuth(false);
@@ -61,50 +87,110 @@ export default function Login() {
     return () => unsubscribe();
   }, [navigate]);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) return;
+    if (!phone) return;
+
+    // Ensure phone number starts with country code prefix (e.g. +91)
+    let formattedPhone = phone.trim();
+    if (!formattedPhone.startsWith('+')) {
+      if (formattedPhone.length === 10) {
+        formattedPhone = '+91' + formattedPhone;
+      } else {
+        setErrorMsg('Please include the country code (e.g. +91XXXXXXXXXX).');
+        return;
+      }
+    }
+
     setIsLoading(true);
     setErrorMsg('');
 
     try {
       if (!auth) {
-        // Fallback for development/no auth config
-        const lowerEmail = email.toLowerCase();
-        if (
-          (lowerEmail === 'admin@apecpowersolutions.com' && password === 'admin') ||
-          (lowerEmail === 'managingdirector@apecpowersolutions.com' && password === 'admin')
-        ) {
-          setStep('success');
-          setTimeout(() => {
-            localStorage.setItem('isAuthenticated', 'true');
-            navigate('/dashboard');
-          }, 2000);
+        // Fallback for development/offline mode
+        if (formattedPhone === '+919999999999' || formattedPhone === '+919448102941') {
+          setConfirmationResult({ mock: true, phone: formattedPhone });
+          setStep('otp');
+          alert('Offline Mode: Use OTP verification code 123456');
           return;
         }
         throw new Error('Firebase authentication is not configured in this environment.');
       }
 
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      // Initialize RecaptchaVerifier
+      const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+        size: 'invisible'
+      });
 
-      // Check if user is in 'team' database
-      if (db && user && user.email) {
-        const emailLower = user.email.toLowerCase();
-        const isAdminEmail = 
-          emailLower === 'admin@apecpowersolutions.com' ||
-          emailLower === 'managingdirector@apecpowersolutions.com';
+      const confirmation = await signInWithPhoneNumber(auth, formattedPhone, verifier);
+      setConfirmationResult(confirmation);
+      setStep('otp');
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg(err.message || 'Failed to send OTP code. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-        if (!isAdminEmail) {
-          const q = query(collection(db, 'team'), where('email', '==', user.email));
-          const snap = await getDocs(q);
-          if (snap.empty) {
-            await auth.signOut();
-            throw new Error('Access denied. This email is not registered as a team member.');
-          }
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otp || !confirmationResult) return;
+
+    setIsLoading(true);
+    setErrorMsg('');
+
+    try {
+      let user = null;
+
+      if (confirmationResult.mock) {
+        // Offline mock verification
+        if (otp === '123456') {
+          user = { phoneNumber: confirmationResult.phone };
+        } else {
+          throw new Error('Invalid OTP verification code.');
         }
+      } else {
+        const userCredential = await confirmationResult.confirm(otp);
+        user = userCredential.user;
       }
-      
+
+      // Check if user's phone number is registered in team database
+      let isAllowed = false;
+      const userPhone = user.phoneNumber || '';
+      const cleanUserPhone = userPhone.replace(/[\s+-]/g, '');
+
+      // Hardcoded Admin numbers
+      const adminPhones = [
+        '+918499903275', // MD phone
+        '+919999999999'  // Test phone
+      ];
+
+      if (adminPhones.includes(userPhone) || adminPhones.includes('+' + cleanUserPhone)) {
+        isAllowed = true;
+      } else if (db) {
+        // Check by exact phone field match
+        const q = query(collection(db, 'team'), where('phone', '==', userPhone));
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          isAllowed = true;
+        } else {
+          // Check by sanitized number format match
+          const q2 = query(collection(db, 'team'), where('phone', '==', '+' + cleanUserPhone));
+          const snap2 = await getDocs(q2);
+          if (!snap2.empty) isAllowed = true;
+        }
+      } else {
+        isAllowed = true;
+      }
+
+      if (!isAllowed) {
+        if (auth && !confirmationResult.mock) {
+          await auth.signOut();
+        }
+        throw new Error('Access denied. This phone number is not registered as a team member.');
+      }
+
       setStep('success');
       setTimeout(() => {
         localStorage.setItem('isAuthenticated', 'true');
@@ -112,19 +198,7 @@ export default function Login() {
       }, 2000);
     } catch (err: any) {
       console.error(err);
-      if (
-        err.code === 'auth/invalid-credential' || 
-        err.code === 'auth/user-not-found' || 
-        err.code === 'auth/wrong-password'
-      ) {
-        setErrorMsg('Invalid email or password.');
-      } else if (err.code === 'auth/missing-password') {
-        setErrorMsg('Password is required.');
-      } else if (err.code === 'auth/too-many-requests') {
-        setErrorMsg('Too many unsuccessful login attempts. Please try again later.');
-      } else {
-        setErrorMsg(err.message || 'Authentication failed.');
-      }
+      setErrorMsg(err.message || 'OTP verification failed. Please check the code.');
     } finally {
       setIsLoading(false);
     }
@@ -185,6 +259,10 @@ export default function Login() {
 
   return (
     <div className="min-h-screen w-full bg-[#05070c] flex flex-col justify-center items-center p-4 relative overflow-hidden font-sans selection:bg-cyan-500/15 selection:text-cyan-400">
+      
+      {/* Invisible Recaptcha Container */}
+      <div id="recaptcha-container"></div>
+
       {/* Background Ambience */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         {/* Vibrant Gradient Blobs */}
@@ -215,9 +293,9 @@ export default function Login() {
 
         <div className="p-5 sm:p-8 min-h-[460px] flex flex-col justify-center">
           <AnimatePresence mode="wait">
-            {step === 'credentials' ? (
+            {step === 'phone' ? (
               <motion.div
-                key="login-credentials"
+                key="login-phone"
                 initial={{ opacity: 0, x: -15 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 15 }}
@@ -237,46 +315,28 @@ export default function Login() {
                     />
                   </div>
                   <h2 className="text-2xl font-bold text-slate-100 tracking-tight">APEC ERP Portal</h2>
-                  <p className="text-sm text-slate-400 mt-1">Sign in to access your dashboard</p>
+                  <p className="text-sm text-slate-400 mt-1">Sign in with phone number OTP</p>
                 </div>
 
-                <form onSubmit={handleLogin} className="space-y-4 flex-1 flex flex-col justify-center">
+                <form onSubmit={handleSendOtp} className="space-y-4 flex-1 flex flex-col justify-center">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">Email Address</label>
+                    <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">Phone Number</label>
                     <div className="relative">
-                      <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                      <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                       <input
-                        type="email"
-                        value={email}
+                        type="tel"
+                        value={phone}
                         onChange={(e) => {
-                          setEmail(e.target.value);
+                          setPhone(e.target.value);
                           setErrorMsg('');
                         }}
-                        placeholder="yourname@apec.com"
+                        placeholder="+91 XXXXX XXXXX"
                         required
                         disabled={isLoading}
-                        className="w-full bg-slate-950/40 border border-slate-800 text-slate-100 rounded-xl py-3.5 pl-11 pr-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/25 transition-all placeholder:text-slate-500 disabled:opacity-50 text-sm shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
+                        className="w-full bg-slate-950/40 border border-slate-800 text-slate-100 rounded-xl py-3.5 pl-11 pr-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/25 transition-all placeholder:text-slate-550 disabled:opacity-50 text-sm shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
                       />
                     </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">Password</label>
-                    <div className="relative">
-                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-                      <input
-                        type="password"
-                        value={password}
-                        onChange={(e) => {
-                          setPassword(e.target.value);
-                          setErrorMsg('');
-                        }}
-                        placeholder="••••••••"
-                        required
-                        disabled={isLoading}
-                        className="w-full bg-slate-950/40 border border-slate-800 text-slate-100 rounded-xl py-3.5 pl-11 pr-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/25 transition-all placeholder:text-slate-500 disabled:opacity-50 text-sm shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
-                      />
-                    </div>
+                    <p className="text-[10px] text-slate-500 ml-1">Include country code prefix (e.g. +91 for India).</p>
                   </div>
 
                   {errorMsg && (
@@ -288,14 +348,14 @@ export default function Login() {
                   <div className="space-y-4 pt-2">
                     <button
                       type="submit"
-                      disabled={isLoading || !email || !password}
+                      disabled={isLoading || !phone}
                       className="w-full bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-950 font-extrabold py-3.5 rounded-xl transition-all relative overflow-hidden group flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed shadow-[0_4px_14px_rgba(6,182,212,0.3)] hover:shadow-[0_4px_20px_rgba(6,182,212,0.45)]"
                     >
                       {isLoading ? (
-                        <Loader2 className="w-5 h-5 animate-spin text-slate-950" />
+                        <Loader2 className="w-5 h-5 animate-spin text-slate-955" />
                       ) : (
                         <>
-                          Sign In
+                          Send Verification OTP
                           <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                         </>
                       )}
@@ -337,6 +397,82 @@ export default function Login() {
                   </div>
                 </form>
               </motion.div>
+            ) : step === 'otp' ? (
+              <motion.div
+                key="login-otp"
+                initial={{ opacity: 0, x: 15 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -15 }}
+                transition={{ duration: 0.25 }}
+                className="flex-1 flex flex-col justify-center"
+              >
+                <div className="text-center mb-6">
+                  {/* Message Icon */}
+                  <div className="w-16 h-16 rounded-full bg-slate-900/80 border border-slate-700/80 flex items-center justify-center mx-auto mb-4 shadow-md overflow-hidden p-0.5">
+                    <MessageSquare className="w-6 h-6 text-cyan-400" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-slate-100 tracking-tight">Enter Verification Code</h2>
+                  <p className="text-sm text-slate-400 mt-1">We sent an SMS with a 6-digit OTP to your phone.</p>
+                </div>
+
+                <form onSubmit={handleVerifyOtp} className="space-y-4 flex-1 flex flex-col justify-center">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">OTP Verification Code</label>
+                    <div className="relative">
+                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                      <input
+                        type="text"
+                        value={otp}
+                        onChange={(e) => {
+                          setOtp(e.target.value.replace(/\D/g, ''));
+                          setErrorMsg('');
+                        }}
+                        placeholder="••••••"
+                        maxLength={6}
+                        required
+                        disabled={isLoading}
+                        className="w-full bg-slate-950/40 border border-slate-800 text-slate-100 rounded-xl py-3.5 pl-11 pr-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/25 transition-all placeholder:text-slate-650 disabled:opacity-50 text-sm tracking-[0.2em] font-extrabold text-center shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
+                      />
+                    </div>
+                  </div>
+
+                  {errorMsg && (
+                    <div className="text-rose-550 text-xs font-semibold text-center bg-rose-950/20 py-2.5 px-3 rounded-xl border border-rose-500/20">
+                      {errorMsg}
+                    </div>
+                  )}
+
+                  <div className="space-y-3 pt-2">
+                    <button
+                      type="submit"
+                      disabled={isLoading || otp.length < 6}
+                      className="w-full bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-950 font-extrabold py-3.5 rounded-xl transition-all relative overflow-hidden group flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed shadow-[0_4px_14px_rgba(6,182,212,0.3)] hover:shadow-[0_4px_20px_rgba(6,182,212,0.45)]"
+                    >
+                      {isLoading ? (
+                        <Loader2 className="w-5 h-5 animate-spin text-slate-955" />
+                      ) : (
+                        <>
+                          Verify OTP & Sign In
+                          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                        </>
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setStep('phone');
+                        setErrorMsg('');
+                        setOtp('');
+                      }}
+                      disabled={isLoading}
+                      className="w-full bg-transparent hover:bg-slate-900/60 border border-slate-800/80 text-slate-400 hover:text-slate-200 py-3 rounded-xl transition-all text-xs font-bold"
+                    >
+                      Go Back
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
             ) : (
               <motion.div
                 key="login-success"
@@ -369,7 +505,7 @@ export default function Login() {
           {step !== 'success' && (
             <div className="mt-8 text-center border-t border-slate-800 pt-4">
               <p className="text-[11px] text-slate-500 flex items-center justify-center gap-1.5 font-medium">
-                <Shield className="w-3.5 h-3.5 text-slate-500" /> Secure Admin Access Only
+                <Shield className="w-3.5 h-3.5 text-slate-500" /> Secure OTP Verification Portal
               </p>
             </div>
           )}
