@@ -182,17 +182,31 @@ export default function Login() {
         isAdminUser = true;
         redirectPath = '/dashboard';
       } else if (db) {
-        // Try each phone candidate format against the 'team' collection
+        // ── Phase 1: Fast indexed queries with all phone format variants ──
         for (const candidate of phoneCandidates) {
           if (isAllowed) break;
           try {
             const q = query(collection(db, 'team'), where('phone', '==', candidate));
             const snap = await getDocs(q);
-            if (!snap.empty) {
-              isAllowed = true;
-              break;
+            if (!snap.empty) { isAllowed = true; break; }
+          } catch (_) { /* skip format */ }
+        }
+
+        // ── Phase 2: Normalized full-scan fallback ──
+        // Matches regardless of how the admin typed the number (spaces, dashes,
+        // leading 0, no country code, +91 prefix, etc.) by comparing last 10 digits.
+        if (!isAllowed && cleanUserPhone.length >= 10) {
+          try {
+            const allSnap = await getDocs(collection(db, 'team'));
+            const loginLast10 = cleanUserPhone.slice(-10);
+            for (const docSnap of allSnap.docs) {
+              const storedClean = (docSnap.data().phone || '').replace(/[\s+-]/g, '');
+              if (storedClean.length >= 10 && storedClean.slice(-10) === loginLast10) {
+                isAllowed = true;
+                break;
+              }
             }
-          } catch (_) { /* skip failed format */ }
+          } catch (_) { /* ignore scan errors */ }
         }
       } else {
         isAllowed = true;
