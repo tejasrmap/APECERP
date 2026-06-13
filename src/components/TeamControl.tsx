@@ -390,9 +390,9 @@ export default function TeamControl() {
                 "aadharNumber": "335532765657",
                 "joinedDate": "2025-02-01",
                 "skills": [
+                        "M.Tech",
                         "Electrical Engineering",
-                        "Operations Management",
-                        "M.Tech"
+                        "Operations Management"
                 ],
                 "avatar": "cyan",
                 "photoUrl": "",
@@ -400,17 +400,17 @@ export default function TeamControl() {
                 "emergencyPhone": "N/A",
                 "bloodGroup": "N/A",
                 "medicalConditions": "None",
-                "fatherName": "Father of Panduga Praveen Kumar",
+                "fatherName": "Panduga Rama Swamy",
                 "maritalStatus": "Married",
                 "gender": "Male",
                 "qualification": "M.Tech",
-                "dob": "1990-01-01",
-                "pan": "ABCDE1234F",
-                "presentAddress": "123 Street Area, Karimnagar Branch",
-                "permanentAddress": "123 Street Area, Karimnagar Branch",
+                "dob": "1989-12-17",
+                "pan": "BZMPP1693J",
+                "presentAddress": "10-4-795, Butti Raja Ram Colony, Karimnagar",
+                "permanentAddress": "10-4-795, Butti Raja Ram Colony, Karimnagar",
                 "bankAccountName": "Panduga Praveen Kumar",
-                "bankAccountNumber": "999999999999",
-                "bankIfsc": "IFSC0000000"
+                "bankAccountNumber": "50100383345340",
+                "bankIfsc": "HDFC0004342"
         },
         {
                 "name": "Undinti Uday Kumar",
@@ -427,8 +427,8 @@ export default function TeamControl() {
                 "joinedDate": "2025-02-01",
                 "skills": [
                         "Electrical Engineering",
-                        "B.Tech",
-                        "Operations Management"
+                        "Operations Management",
+                        "B.Tech"
                 ],
                 "avatar": "blue",
                 "photoUrl": "",
@@ -436,17 +436,17 @@ export default function TeamControl() {
                 "emergencyPhone": "N/A",
                 "bloodGroup": "N/A",
                 "medicalConditions": "None",
-                "fatherName": "Father of Undinti Uday Kumar",
+                "fatherName": "Undinti Ashok",
                 "maritalStatus": "Married",
                 "gender": "Male",
                 "qualification": "B.Tech",
-                "dob": "1990-01-01",
-                "pan": "ABCDE1234F",
-                "presentAddress": "123 Street Area, Karimnagar Branch",
-                "permanentAddress": "123 Street Area, Karimnagar Branch",
-                "bankAccountName": "Undinti Uday Kumar",
-                "bankAccountNumber": "999999999999",
-                "bankIfsc": "IFSC0000000"
+                "dob": "1997-09-21",
+                "pan": "AKZPU9648K",
+                "presentAddress": "7-74/1, Sanjeev nagar, Manakondur,Karimnagr",
+                "permanentAddress": "7-74/1, Sanjeev nagar, Manakondur,Karimnagar",
+                "bankAccountName": "Undiniti Uday Kumar",
+                "bankAccountNumber": "73610100255014",
+                "bankIfsc": "UBIN0807362"
         },
         {
                 "name": "Mandala Srinivas",
@@ -470,17 +470,17 @@ export default function TeamControl() {
                 "emergencyPhone": "N/A",
                 "bloodGroup": "N/A",
                 "medicalConditions": "None",
-                "fatherName": "Father of Mandala Srinivas",
+                "fatherName": "Mandala Ananthaiah",
                 "maritalStatus": "Married",
                 "gender": "Male",
                 "qualification": "7th",
-                "dob": "1990-01-01",
-                "pan": "ABCDE1234F",
-                "presentAddress": "123 Street Area, Karimnagar Branch",
-                "permanentAddress": "123 Street Area, Karimnagar Branch",
+                "dob": "10-08-1987",
+                "pan": "DZZPM8817G",
+                "presentAddress": "1-5-124, Gandi Nagar, Veulavada, Karimnagar",
+                "permanentAddress": "1-5-124, Gandi Nagar, Veulavada, Karimnagar",
                 "bankAccountName": "Mandala Srinivas",
-                "bankAccountNumber": "999999999999",
-                "bankIfsc": "IFSC0000000"
+                "bankAccountNumber": "62310100312090",
+                "bankIfsc": "UBIN0806234"
         },
         {
                 "name": "Milkuri Chandu",
@@ -504,17 +504,17 @@ export default function TeamControl() {
                 "emergencyPhone": "N/A",
                 "bloodGroup": "N/A",
                 "medicalConditions": "None",
-                "fatherName": "Father of Milkuri Chandu",
+                "fatherName": "Milkuri Raja Mallu",
                 "maritalStatus": "Un-Married",
                 "gender": "Male",
                 "qualification": "Inter",
-                "dob": "1990-01-01",
-                "pan": "ABCDE1234F",
-                "presentAddress": "123 Street Area, Karimnagar Branch",
-                "permanentAddress": "123 Street Area, Karimnagar Branch",
+                "dob": "1997-01-01",
+                "pan": "CJVPC4825K",
+                "presentAddress": "7-103,46, Manakondur, Karimnagar",
+                "permanentAddress": "7-103,46, Manakondur, Karimnagar",
                 "bankAccountName": "Milkuri Chandu",
-                "bankAccountNumber": "999999999999",
-                "bankIfsc": "IFSC0000000"
+                "bankAccountNumber": "24840100026973",
+                "bankIfsc": "BARB0KARIMX"
         },
         {
                 "name": "Ullendula Vamshi",
@@ -538,17 +538,17 @@ export default function TeamControl() {
                 "emergencyPhone": "N/A",
                 "bloodGroup": "N/A",
                 "medicalConditions": "None",
-                "fatherName": "Father of Ullendula Vamshi",
+                "fatherName": "Ullendula Mallesham",
                 "maritalStatus": "Married",
                 "gender": "Male",
                 "qualification": "Inter",
-                "dob": "1990-01-01",
-                "pan": "ABCDE1234F",
-                "presentAddress": "123 Street Area, Karimnagar Branch",
-                "permanentAddress": "123 Street Area, Karimnagar Branch",
+                "dob": "1998-01-01",
+                "pan": "BZPPV2257R",
+                "presentAddress": "6-15/10, Laxmipur, Malkapur,Karimnagar",
+                "permanentAddress": "6-15/10, Laxmipur, Malkapur,Karimnagar",
                 "bankAccountName": "Ullendula Vamshi",
-                "bankAccountNumber": "999999999999",
-                "bankIfsc": "IFSC0000000"
+                "bankAccountNumber": "50100349717378",
+                "bankIfsc": "HDFC0000518"
         },
         {
                 "name": "Ravuri Anand Kumar",
@@ -564,8 +564,8 @@ export default function TeamControl() {
                 "aadharNumber": "7295 8056 8933",
                 "joinedDate": "2025-06-01",
                 "skills": [
-                        "Electrical Installations",
-                        "Intermediate & ITI"
+                        "Intermediate & ITI",
+                        "Electrical Installations"
                 ],
                 "avatar": "blue",
                 "photoUrl": "",
@@ -573,17 +573,17 @@ export default function TeamControl() {
                 "emergencyPhone": "N/A",
                 "bloodGroup": "N/A",
                 "medicalConditions": "None",
-                "fatherName": "Father of Ravuri Anand Kumar",
+                "fatherName": "Ravuri Chinappa",
                 "maritalStatus": "Married",
                 "gender": "Male",
                 "qualification": "Intermediate & ITI",
-                "dob": "1990-01-01",
-                "pan": "ABCDE1234F",
-                "presentAddress": "123 Street Area, Karimnagar Branch",
-                "permanentAddress": "123 Street Area, Karimnagar Branch",
+                "dob": "30/07/1979",
+                "pan": "ANSPR0798R",
+                "presentAddress": "1-307,Santhi peta,Phirangipuram, Guntur",
+                "permanentAddress": "1-307,Santhi peta,Phirangipuram, Guntur - 522529",
                 "bankAccountName": "Ravuri Anand Kumar",
-                "bankAccountNumber": "999999999999",
-                "bankIfsc": "IFSC0000000"
+                "bankAccountNumber": "31458935772",
+                "bankIfsc": "SBIN0008294"
         },
         {
                 "name": "Vutham Madhu",
@@ -607,17 +607,17 @@ export default function TeamControl() {
                 "emergencyPhone": "N/A",
                 "bloodGroup": "N/A",
                 "medicalConditions": "None",
-                "fatherName": "Father of Vutham Madhu",
+                "fatherName": "Vutam mallesham",
                 "maritalStatus": "Married",
                 "gender": "Male",
                 "qualification": "Intermediate",
-                "dob": "1990-01-01",
-                "pan": "ABCDE1234F",
-                "presentAddress": "123 Street Area, Karimnagar Branch",
-                "permanentAddress": "123 Street Area, Karimnagar Branch",
+                "dob": "14/07/1990",
+                "pan": "IYLPM7082M",
+                "presentAddress": "6-31, bandalingampalle, yellareddipet, karimnagar",
+                "permanentAddress": "6-31, bandalingampalle, yellareddipet, karimnagar",
                 "bankAccountName": "Vutham Madhu",
-                "bankAccountNumber": "999999999999",
-                "bankIfsc": "IFSC0000000"
+                "bankAccountNumber": "235810100079098",
+                "bankIfsc": "ANDB0002358"
         },
         {
                 "name": "Undinti Abhishek",
@@ -633,8 +633,8 @@ export default function TeamControl() {
                 "aadharNumber": "6010 0111 2694",
                 "joinedDate": "2026-03-05",
                 "skills": [
-                        "Electrical Installations",
-                        "ITI Electrician"
+                        "ITI Electrician",
+                        "Electrical Installations"
                 ],
                 "avatar": "gold",
                 "photoUrl": "",
@@ -642,17 +642,17 @@ export default function TeamControl() {
                 "emergencyPhone": "N/A",
                 "bloodGroup": "N/A",
                 "medicalConditions": "None",
-                "fatherName": "Father of Undinti Abhishek",
+                "fatherName": "Undinti Sanjeev",
                 "maritalStatus": "Un-Married",
                 "gender": "Male",
                 "qualification": "ITI Electrician",
-                "dob": "1990-01-01",
-                "pan": "ABCDE1234F",
-                "presentAddress": "123 Street Area, Karimnagar Branch",
-                "permanentAddress": "123 Street Area, Karimnagar Branch",
+                "dob": "18/05/2004",
+                "pan": "FGRPA9406G",
+                "presentAddress": "6-67, Sanjeev nagar, Manakondur,Karimnagar",
+                "permanentAddress": "6-67, Sanjeev nagar, Manakondur,Karimnagar",
                 "bankAccountName": "Undinti Abhishek",
-                "bankAccountNumber": "999999999999",
-                "bankIfsc": "IFSC0000000"
+                "bankAccountNumber": "455802120001806",
+                "bankIfsc": "UBIN0545589"
         },
         {
                 "name": "Nimmathi ShivaVardhan",
@@ -668,8 +668,8 @@ export default function TeamControl() {
                 "aadharNumber": "5423 9092 7233",
                 "joinedDate": "2026-02-16",
                 "skills": [
-                        "Electrical Installations",
-                        "ITI Electrician"
+                        "ITI Electrician",
+                        "Electrical Installations"
                 ],
                 "avatar": "cyan",
                 "photoUrl": "",
@@ -677,17 +677,17 @@ export default function TeamControl() {
                 "emergencyPhone": "N/A",
                 "bloodGroup": "N/A",
                 "medicalConditions": "None",
-                "fatherName": "Father of Nimmathi ShivaVardhan",
+                "fatherName": "Nimmathi Srinivas",
                 "maritalStatus": "Un-Married",
                 "gender": "Male",
                 "qualification": "ITI Electrician",
-                "dob": "1990-01-01",
-                "pan": "ABCDE1234F",
-                "presentAddress": "123 Street Area, Karimnagar Branch",
-                "permanentAddress": "123 Street Area, Karimnagar Branch",
+                "dob": "2006-11-12",
+                "pan": "TVDPS5867L",
+                "presentAddress": "5-6-284, maruthi nagar, Karimnagar",
+                "permanentAddress": "5-6-284, maruthi nagar, Karimnagar",
                 "bankAccountName": "Nimmathi ShivaVardhan",
-                "bankAccountNumber": "999999999999",
-                "bankIfsc": "IFSC0000000"
+                "bankAccountNumber": "112312010000701",
+                "bankIfsc": "UBIN0811238"
         },
         {
                 "name": "Pulla Vijay",
@@ -703,8 +703,8 @@ export default function TeamControl() {
                 "aadharNumber": "2572 0526 4735",
                 "joinedDate": "2026-01-08",
                 "skills": [
-                        "Electrical Installations",
-                        "ITI Electrician"
+                        "ITI Electrician",
+                        "Electrical Installations"
                 ],
                 "avatar": "blue",
                 "photoUrl": "",
@@ -712,17 +712,17 @@ export default function TeamControl() {
                 "emergencyPhone": "N/A",
                 "bloodGroup": "N/A",
                 "medicalConditions": "None",
-                "fatherName": "Father of Pulla Vijay",
+                "fatherName": "Pulla Pochaiah",
                 "maritalStatus": "Un-Married",
                 "gender": "Male",
                 "qualification": "ITI Electrician",
-                "dob": "1990-01-01",
-                "pan": "ABCDE1234F",
-                "presentAddress": "123 Street Area, Karimnagar Branch",
-                "permanentAddress": "123 Street Area, Karimnagar Branch",
+                "dob": "18/06/2004",
+                "pan": "CLUPV7648M",
+                "presentAddress": "6-4-157,kishan nagar, Karimnagar",
+                "permanentAddress": "6-110, kothakummugudem, luxettipet mandal, Mancherial",
                 "bankAccountName": "Pulla Vijay",
-                "bankAccountNumber": "999999999999",
-                "bankIfsc": "IFSC0000000"
+                "bankAccountNumber": "42387855001",
+                "bankIfsc": "SBIN0020130"
         },
         {
                 "name": "Jakkula Vijay",
@@ -738,8 +738,8 @@ export default function TeamControl() {
                 "aadharNumber": "2748 4236 8932",
                 "joinedDate": "2026-03-21",
                 "skills": [
-                        "Electrical Installations",
-                        "ITI Electrician"
+                        "ITI Electrician",
+                        "Electrical Installations"
                 ],
                 "avatar": "red",
                 "photoUrl": "",
@@ -747,17 +747,17 @@ export default function TeamControl() {
                 "emergencyPhone": "N/A",
                 "bloodGroup": "N/A",
                 "medicalConditions": "None",
-                "fatherName": "Father of Jakkula Vijay",
+                "fatherName": "Jukkula Kanakaiah",
                 "maritalStatus": "Un-Married",
                 "gender": "Male",
                 "qualification": "ITI Electrician",
-                "dob": "1990-01-01",
-                "pan": "ABCDE1234F",
-                "presentAddress": "123 Street Area, Karimnagar Branch",
-                "permanentAddress": "123 Street Area, Karimnagar Branch",
+                "dob": "27/12/2004",
+                "pan": "CHDPV4347M",
+                "presentAddress": "12-74, Chintakunta, shanthinagar, karimnar",
+                "permanentAddress": "12-74, Chintakunta, shanthinagar, karimnar",
                 "bankAccountName": "Jakkula Vijay",
-                "bankAccountNumber": "999999999999",
-                "bankIfsc": "IFSC0000000"
+                "bankAccountNumber": "37175486553",
+                "bankIfsc": "SBIN0021786"
         },
         {
                 "name": "Tadkapelly Anil",
@@ -773,8 +773,8 @@ export default function TeamControl() {
                 "aadharNumber": "4516 9236 7271",
                 "joinedDate": "2026-03-10",
                 "skills": [
-                        "Electrical Installations",
-                        "ITI Electrician"
+                        "ITI Electrician",
+                        "Electrical Installations"
                 ],
                 "avatar": "gold",
                 "photoUrl": "",
@@ -782,17 +782,17 @@ export default function TeamControl() {
                 "emergencyPhone": "N/A",
                 "bloodGroup": "N/A",
                 "medicalConditions": "None",
-                "fatherName": "Father of Tadkapelly Anil",
+                "fatherName": "Tadkapelly Narayana",
                 "maritalStatus": "Un-Married",
                 "gender": "Male",
                 "qualification": "ITI Electrician",
-                "dob": "1990-01-01",
-                "pan": "ABCDE1234F",
-                "presentAddress": "123 Street Area, Karimnagar Branch",
-                "permanentAddress": "123 Street Area, Karimnagar Branch",
+                "dob": "1998-10-10",
+                "pan": "BQMPT0775L",
+                "presentAddress": "7-103/8, Rajeev Nagar colony, Manakondur, Karimnagar",
+                "permanentAddress": "7-103/8, Rajeev Nagar colony, Manakondur, Karimnagar",
                 "bankAccountName": "Tadkapelly Anil",
-                "bankAccountNumber": "999999999999",
-                "bankIfsc": "IFSC0000000"
+                "bankAccountNumber": "251110100037940",
+                "bankIfsc": "UBIN0825115"
         },
         {
                 "name": "Gujula Ajay Charan",
@@ -808,8 +808,8 @@ export default function TeamControl() {
                 "aadharNumber": "3539 0118 8852",
                 "joinedDate": "2026-04-01",
                 "skills": [
-                        "Electrical Installations",
-                        "ITI Electrician"
+                        "ITI Electrician",
+                        "Electrical Installations"
                 ],
                 "avatar": "cyan",
                 "photoUrl": "",
@@ -817,17 +817,17 @@ export default function TeamControl() {
                 "emergencyPhone": "N/A",
                 "bloodGroup": "N/A",
                 "medicalConditions": "None",
-                "fatherName": "Father of Gujula Ajay Charan",
+                "fatherName": "Gujula Raju",
                 "maritalStatus": "Un-Married",
                 "gender": "Male",
                 "qualification": "ITI Electrician",
-                "dob": "1990-01-01",
-                "pan": "ABCDE1234F",
-                "presentAddress": "123 Street Area, Karimnagar Branch",
-                "permanentAddress": "123 Street Area, Karimnagar Branch",
+                "dob": "2003-04-10",
+                "pan": "DSTPG9678C",
+                "presentAddress": "3-62/1, Guttududdenapalli, manakondur, Karimnagar",
+                "permanentAddress": "3-62/1, Guttududdenapalli, manakondur, Karimnagar",
                 "bankAccountName": "Gujula Ajay Charan",
-                "bankAccountNumber": "999999999999",
-                "bankIfsc": "IFSC0000000"
+                "bankAccountNumber": "43213190568",
+                "bankIfsc": "SBIN0063785"
         },
         {
                 "name": "Vonteddu Ajay Kumar",
@@ -851,17 +851,17 @@ export default function TeamControl() {
                 "emergencyPhone": "N/A",
                 "bloodGroup": "N/A",
                 "medicalConditions": "None",
-                "fatherName": "Father of Vonteddu Ajay Kumar",
+                "fatherName": "Vonteddu Babu",
                 "maritalStatus": "Un-Married",
                 "gender": "Male",
                 "qualification": "E.E.T Vocational",
-                "dob": "1990-01-01",
-                "pan": "ABCDE1234F",
-                "presentAddress": "123 Street Area, Karimnagar Branch",
-                "permanentAddress": "123 Street Area, Karimnagar Branch",
+                "dob": "1997-09-02",
+                "pan": "BZUPV5909D",
+                "presentAddress": "4-95/1, Mandulapalli, Chegurti, Karimnagar",
+                "permanentAddress": "4-95/1, Mandulapalli, Chegurti, Karimnagar",
                 "bankAccountName": "Vonteddu Ajay Kumar",
-                "bankAccountNumber": "999999999999",
-                "bankIfsc": "IFSC0000000"
+                "bankAccountNumber": "6485251765",
+                "bankIfsc": "IDIB000D091"
         },
         {
                 "name": "Peruri Tony Babu",
@@ -878,8 +878,8 @@ export default function TeamControl() {
                 "joinedDate": "2024-11-01",
                 "skills": [
                         "Electrical Engineering",
-                        "B.Tech",
-                        "Operations Management"
+                        "Operations Management",
+                        "B.Tech"
                 ],
                 "avatar": "red",
                 "photoUrl": "",
@@ -887,17 +887,17 @@ export default function TeamControl() {
                 "emergencyPhone": "N/A",
                 "bloodGroup": "N/A",
                 "medicalConditions": "None",
-                "fatherName": "Father of Peruri Tony Babu",
+                "fatherName": "Perui George Stevenson",
                 "maritalStatus": "Un-Married",
                 "gender": "Male",
                 "qualification": "B.Tech",
-                "dob": "1990-01-01",
-                "pan": "ABCDE1234F",
-                "presentAddress": "123 Street Area, Vijayawada Branch",
-                "permanentAddress": "123 Street Area, Vijayawada Branch",
+                "dob": "1996-09-10",
+                "pan": "DPIPP4103R",
+                "presentAddress": "15-4-51/1, NTR colony, Narsapuram, West Godavari",
+                "permanentAddress": "15-4-51/1, NTR colony, Narsapuram, West Godavari",
                 "bankAccountName": "Peruri Tony Babu",
-                "bankAccountNumber": "999999999999",
-                "bankIfsc": "IFSC0000000"
+                "bankAccountNumber": "20224315236",
+                "bankIfsc": "SBIN0003362"
         },
         {
                 "name": "Kambham Naveen Kumar",
@@ -914,8 +914,8 @@ export default function TeamControl() {
                 "joinedDate": "2025-02-01",
                 "skills": [
                         "B.com",
-                        "Taxation",
-                        "Accounting & Finance"
+                        "Accounting & Finance",
+                        "Taxation"
                 ],
                 "avatar": "gold",
                 "photoUrl": "",
@@ -923,17 +923,17 @@ export default function TeamControl() {
                 "emergencyPhone": "N/A",
                 "bloodGroup": "N/A",
                 "medicalConditions": "None",
-                "fatherName": "Father of Kambham Naveen Kumar",
+                "fatherName": "Kambham Nanchariah",
                 "maritalStatus": "Married",
                 "gender": "Male",
                 "qualification": "B.com",
-                "dob": "1990-01-01",
-                "pan": "ABCDE1234F",
-                "presentAddress": "123 Street Area, Vijayawada Branch",
-                "permanentAddress": "123 Street Area, Vijayawada Branch",
-                "bankAccountName": "Kambham Naveen Kumar",
-                "bankAccountNumber": "999999999999",
-                "bankIfsc": "IFSC0000000"
+                "dob": "1975-02-07",
+                "pan": "AVTPK8708P",
+                "presentAddress": "6-112, flat no 203, sai siddhartha towers, kanuru, vijayawada",
+                "permanentAddress": "6-112, flat no 203, sai siddhartha towers, kanuru, vijayawada",
+                "bankAccountName": "Kambham Nanchariah",
+                "bankAccountNumber": "1091140005858",
+                "bankIfsc": "HDFC0000109"
         },
         {
                 "name": "Mareedu Kishore",
@@ -959,17 +959,17 @@ export default function TeamControl() {
                 "emergencyPhone": "N/A",
                 "bloodGroup": "N/A",
                 "medicalConditions": "None",
-                "fatherName": "Father of Mareedu Kishore",
+                "fatherName": "Mareedu Venkataramaiah",
                 "maritalStatus": "Married",
                 "gender": "Male",
                 "qualification": "MBA",
-                "dob": "1990-01-01",
-                "pan": "ABCDE1234F",
-                "presentAddress": "123 Street Area, Vijayawada Branch",
-                "permanentAddress": "123 Street Area, Vijayawada Branch",
+                "dob": "14/06/1984",
+                "pan": "BNJPK9597H",
+                "presentAddress": "56-10-55, opp krishna tulasi empire, incometax colony,vijayawada",
+                "permanentAddress": "56-10-55, opp krishna tulasi empire, incometax colony,vijayawada",
                 "bankAccountName": "Mareedu Kishore",
-                "bankAccountNumber": "999999999999",
-                "bankIfsc": "IFSC0000000"
+                "bankAccountNumber": "50100544726180",
+                "bankIfsc": "HDFC00090662"
         },
         {
                 "name": "Vinukonda Bapuji",
@@ -993,17 +993,17 @@ export default function TeamControl() {
                 "emergencyPhone": "N/A",
                 "bloodGroup": "N/A",
                 "medicalConditions": "None",
-                "fatherName": "Father of Vinukonda Bapuji",
+                "fatherName": "Vinukonda Chinna",
                 "maritalStatus": "Married",
                 "gender": "Male",
                 "qualification": "BA.Liff",
-                "dob": "1990-01-01",
-                "pan": "ABCDE1234F",
-                "presentAddress": "123 Street Area, Vijayawada Branch",
-                "permanentAddress": "123 Street Area, Vijayawada Branch",
+                "dob": "23/05/1977",
+                "pan": "AFQPV8466G",
+                "presentAddress": "7-111, Harijanavada, Edupugallu,vijayawada",
+                "permanentAddress": "7-111, Harijanavada, Edupugallu,vijayawada",
                 "bankAccountName": "Vinukonda Bapuji",
-                "bankAccountNumber": "999999999999",
-                "bankIfsc": "IFSC0000000"
+                "bankAccountNumber": "34310100000520",
+                "bankIfsc": "UBIN0827461"
         }
     ];
 
