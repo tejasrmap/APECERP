@@ -96,13 +96,21 @@ export default function Login() {
     e.preventDefault();
     if (!phone) return;
 
-    // Ensure phone number starts with country code prefix (e.g. +91)
-    let formattedPhone = phone.trim();
-    if (!formattedPhone.startsWith('+')) {
-      if (formattedPhone.length === 10) {
-        formattedPhone = '+91' + formattedPhone;
+    // Ensure phone number is normalized to E.164 format (strip spaces, dashes, etc.)
+    const rawPhone = phone.trim();
+    const hasPlus = rawPhone.startsWith('+');
+    const cleanDigits = rawPhone.replace(/\D/g, ''); // keep only digits
+
+    let formattedPhone = '';
+    if (hasPlus) {
+      formattedPhone = '+' + cleanDigits;
+    } else {
+      if (cleanDigits.length === 10) {
+        formattedPhone = '+91' + cleanDigits;
+      } else if (cleanDigits.length === 12 && cleanDigits.startsWith('91')) {
+        formattedPhone = '+' + cleanDigits;
       } else {
-        setErrorMsg('Please include the country code (e.g. +91XXXXXXXXXX).');
+        setErrorMsg('Please enter a valid 10-digit phone number or include the country code (e.g. +91XXXXXXXXXX).');
         return;
       }
     }
