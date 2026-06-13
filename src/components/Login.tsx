@@ -2,16 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Phone, ArrowRight, CheckCircle2, Loader2, Shield, MessageSquare, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { RecaptchaVerifier, signInWithPhoneNumber, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { auth, db } from '../firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, Timestamp } from 'firebase/firestore';
 
 export default function Login() {
   const navigate = useNavigate();
-  const [step, setStep] = useState<'phone' | 'otp' | 'success'>('phone');
+  const [step, setStep] = useState<'phone' | 'success'>('phone');
   const [phone, setPhone] = useState('');
-  const [otp, setOtp] = useState('');
-  const [confirmationResult, setConfirmationResult] = useState<any>(null);
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -34,52 +33,85 @@ export default function Login() {
 
         const emailLower = user.email ? user.email.toLowerCase() : '';
         const userPhone = user.phoneNumber || '';
-        const cleanUserPhone = userPhone.replace(/[\s+-]/g, '');
-        const phoneCandidates = [
-          userPhone,
-          '+' + cleanUserPhone,
-          cleanUserPhone,
-          cleanUserPhone.slice(-10),
-        ].filter(Boolean);
+        
+        let cleanUserPhone = '';
+        if (emailLower.endsWith('@apec-erp.local')) {
+          cleanUserPhone = emailLower.split('@')[0];
+        } else {
+          cleanUserPhone = userPhone.replace(/[\s+-]/g, '');
+        }
 
         const isAdminEmail =
           emailLower === 'admin@apecpowersolutions.com' ||
           emailLower === 'managingdirector@apecpowersolutions.com';
         const adminPhones = ['+918499903275', '918499903275', '8499903275', '+919999999999'];
-        const isAdminPhone = adminPhones.some(ap => phoneCandidates.includes(ap));
+        const isAdminPhone = adminPhones.includes(cleanUserPhone) || (cleanUserPhone && adminPhones.includes('+' + cleanUserPhone));
 
         if (isAdminEmail || isAdminPhone) {
           isAllowed = true;
           isAdminUser = true;
-        } else if (db) {
+        }
+
+        if (!isAllowed && db && cleanUserPhone) {
           try {
-            // Check by email (Google Auth)
-            if (user.email) {
-              const q = query(collection(db, 'team'), where('email', '==', user.email));
+            // Find employee profile in Firestore
+            const phoneCandidates = [
+              '+' + cleanUserPhone,
+              cleanUserPhone,
+              cleanUserPhone.slice(-10),
+            ].filter(Boolean);
+
+            let matchedDoc = null;
+            for (const candidate of phoneCandidates) {
+              const q = query(collection(db, 'team'), where('phone', '==', candidate));
               const snap = await getDocs(q);
-              if (!snap.empty) isAllowed = true;
+              if (!snap.empty) {
+                matchedDoc = snap.docs[0];
+                break;
+              }
             }
-            // Check by phone (OTP logins) — try all format variants
-            if (!isAllowed && user.phoneNumber) {
-              for (const candidate of phoneCandidates) {
-                if (isAllowed) break;
-                try {
-                  const q = query(collection(db, 'team'), where('phone', '==', candidate));
-                  const snap = await getDocs(q);
-                  if (!snap.empty) isAllowed = true;
-                } catch (_) { /* skip */ }
+            if (!matchedDoc && cleanUserPhone.length >= 10) {
+              const allSnap = await getDocs(collection(db, 'team'));
+              const loginLast10 = cleanUserPhone.slice(-10);
+              for (const docSnap of allSnap.docs) {
+                const phoneVal = docSnap.data().phone;
+                const storedClean = (phoneVal !== undefined && phoneVal !== null ? String(phoneVal) : '').replace(/[\s+-]/g, '');
+                if (storedClean.length >= 10 && storedClean.slice(-10) === loginLast10) {
+                  matchedDoc = docSnap;
+                  break;
+                }
+              }
+            }
+
+            if (matchedDoc) {
+              isAllowed = true;
+              const docData = matchedDoc.data();
+              if (docData.accessRole === 'Admin' || docData.roleType === 'Admin') {
+                isAdminUser = true;
               }
             }
           } catch (err) {
             console.error('Error auto-redirecting user:', err);
           }
-        } else {
-          isAllowed = true;
+        } else if (emailLower && !emailLower.endsWith('@apec-erp.local') && db) {
+          // Check by email (Google Auth)
+          try {
+            const q = query(collection(db, 'team'), where('email', '==', emailLower));
+            const snap = await getDocs(q);
+            if (!snap.empty) {
+              isAllowed = true;
+              const docData = snap.docs[0].data();
+              if (docData.accessRole === 'Admin' || docData.roleType === 'Admin') {
+                isAdminUser = true;
+              }
+            }
+          } catch (err) {
+            console.error('Error auto-redirecting user by email:', err);
+          }
         }
 
         if (isAllowed) {
           localStorage.setItem('isAuthenticated', 'true');
-          // Admins → Overview dashboard; Employees → their My Profile page
           navigate(isAdminUser ? '/dashboard' : '/dashboard/my-profile');
         } else {
           await auth.signOut();
@@ -92,26 +124,25 @@ export default function Login() {
     return () => unsubscribe();
   }, [navigate]);
 
-  const handleSendOtp = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!phone) return;
+    if (!phone || !password) return;
 
-    // Ensure phone number is normalized to E.164 format (strip spaces, dashes, etc.)
+    // Ensure phone number is normalized to clean digits
     const rawPhone = phone.trim();
     const hasPlus = rawPhone.startsWith('+');
     const cleanDigits = rawPhone.replace(/\D/g, ''); // keep only digits
 
-    let formattedPhone = '';
+    let cleanUserPhone = '';
     if (hasPlus) {
-      formattedPhone = '+' + cleanDigits;
+      cleanUserPhone = cleanDigits;
     } else {
       if (cleanDigits.length === 10) {
-        formattedPhone = '+91' + cleanDigits;
+        cleanUserPhone = '91' + cleanDigits;
       } else if (cleanDigits.length === 12 && cleanDigits.startsWith('91')) {
-        formattedPhone = '+' + cleanDigits;
+        cleanUserPhone = cleanDigits;
       } else {
-        setErrorMsg('Please enter a valid 10-digit phone number or include the country code (e.g. +91XXXXXXXXXX).');
-        return;
+        cleanUserPhone = cleanDigits;
       }
     }
 
@@ -121,121 +152,103 @@ export default function Login() {
     try {
       if (!auth) {
         // Fallback for development/offline mode
-        if (formattedPhone === '+919999999999' || formattedPhone === '+919448102941') {
-          setConfirmationResult({ mock: true, phone: formattedPhone });
-          setStep('otp');
-          alert('Offline Mode: Use OTP verification code 123456');
+        if (cleanUserPhone === '918499903275' && password === 'admin') {
+          setStep('success');
+          setTimeout(() => {
+            localStorage.setItem('isAuthenticated', 'true');
+            navigate('/dashboard');
+          }, 2000);
           return;
         }
         throw new Error('Firebase authentication is not configured in this environment.');
       }
 
-      // Initialize RecaptchaVerifier
-      const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        size: 'invisible'
-      });
-
-      const confirmation = await signInWithPhoneNumber(auth, formattedPhone, verifier);
-      setConfirmationResult(confirmation);
-      setStep('otp');
-    } catch (err: any) {
-      console.error(err);
-      setErrorMsg(err.message || 'Failed to send OTP code. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!otp || !confirmationResult) return;
-
-    setIsLoading(true);
-    setErrorMsg('');
-
-    try {
-      let user = null;
-
-      if (confirmationResult.mock) {
-        // Offline mock verification
-        if (otp === '123456') {
-          user = { phoneNumber: confirmationResult.phone };
-        } else {
-          throw new Error('Invalid OTP verification code.');
-        }
-      } else {
-        const userCredential = await confirmationResult.confirm(otp);
-        user = userCredential.user;
+      // Check Firestore to verify credentials
+      if (!db) {
+        throw new Error('Database is not configured in this environment.');
       }
 
-      // Check if user's phone number is registered in team database
-      let isAllowed = false;
-      let isAdminUser = false;
-      let redirectPath = '/dashboard/my-profile'; // default for employees
-      const userPhone = user.phoneNumber || '';
-      // Normalize: strip all spaces, dashes, plus signs → raw digits
-      const cleanUserPhone = userPhone.replace(/[\s+-]/g, '');
-      // Build candidate phone formats to try against Firestore
       const phoneCandidates = [
-        userPhone,                         // e.g. +918499903275
-        '+' + cleanUserPhone,              // e.g. +918499903275 (re-prefixed)
-        cleanUserPhone,                    // e.g. 918499903275
-        cleanUserPhone.slice(-10),         // last 10 digits e.g. 8499903275
+        '+' + cleanUserPhone,
+        cleanUserPhone,
+        cleanUserPhone.slice(-10),
       ].filter(Boolean);
 
-      // Hardcoded Admin numbers
-      const adminPhones = ['+918499903275', '918499903275', '8499903275', '+919999999999'];
-      if (adminPhones.some(ap => phoneCandidates.includes(ap))) {
-        isAllowed = true;
-        isAdminUser = true;
-        redirectPath = '/dashboard';
-      } else if (db) {
-        // ── Phase 1: Fast indexed queries with all phone format variants ──
-        for (const candidate of phoneCandidates) {
-          if (isAllowed) break;
-          try {
-            const q = query(collection(db, 'team'), where('phone', '==', candidate));
-            const snap = await getDocs(q);
-            if (!snap.empty) { isAllowed = true; break; }
-          } catch (_) { /* skip format */ }
+      let matchedDoc = null;
+      for (const candidate of phoneCandidates) {
+        const q = query(collection(db, 'team'), where('phone', '==', candidate));
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          matchedDoc = snap.docs[0];
+          break;
         }
-
-        // ── Phase 2: Normalized full-scan fallback ──
-        // Matches regardless of how the admin typed the number (spaces, dashes,
-        // leading 0, no country code, +91 prefix, etc.) by comparing last 10 digits.
-        if (!isAllowed && cleanUserPhone.length >= 10) {
-          try {
-            const allSnap = await getDocs(collection(db, 'team'));
-            const loginLast10 = cleanUserPhone.slice(-10);
-            for (const docSnap of allSnap.docs) {
-              const phoneVal = docSnap.data().phone;
-              const storedClean = (phoneVal !== undefined && phoneVal !== null ? String(phoneVal) : '').replace(/[\s+-]/g, '');
-              if (storedClean.length >= 10 && storedClean.slice(-10) === loginLast10) {
-                isAllowed = true;
-                break;
-              }
-            }
-          } catch (_) { /* ignore scan errors */ }
-        }
-      } else {
-        isAllowed = true;
       }
 
-      if (!isAllowed) {
-        if (auth && !confirmationResult.mock) {
-          await auth.signOut();
+      if (!matchedDoc && cleanUserPhone.length >= 10) {
+        const allSnap = await getDocs(collection(db, 'team'));
+        const loginLast10 = cleanUserPhone.slice(-10);
+        for (const docSnap of allSnap.docs) {
+          const phoneVal = docSnap.data().phone;
+          const storedClean = (phoneVal !== undefined && phoneVal !== null ? String(phoneVal) : '').replace(/[\s+-]/g, '');
+          if (storedClean.length >= 10 && storedClean.slice(-10) === loginLast10) {
+            matchedDoc = docSnap;
+            break;
+          }
         }
+      }
+
+      if (!matchedDoc) {
         throw new Error('Access denied. This phone number is not registered as a team member.');
       }
+
+      const employeeData = matchedDoc.data();
+      const storedPassword = (employeeData.password || '').trim();
+
+      if (!storedPassword) {
+        throw new Error('No portal login password has been configured for your account. Please ask the administrator to set your password in Team Control.');
+      }
+
+      if (password.trim() !== storedPassword) {
+        throw new Error('Incorrect password. Please try again.');
+      }
+
+      // 4. Authenticate with Firebase Auth via virtual email and master password
+      const virtualEmail = `${cleanUserPhone}@apec-erp.local`;
+      const masterPassword = `APEC_${cleanUserPhone}_Secure_Auth_Pass!`;
+
+      try {
+        await signInWithEmailAndPassword(auth, virtualEmail, masterPassword);
+      } catch (signInErr: any) {
+        if (signInErr.code === 'auth/user-not-found' || signInErr.code === 'auth/invalid-credential' || signInErr.code === 'auth/wrong-password') {
+          // Create the virtual email account on first time login
+          try {
+            await createUserWithEmailAndPassword(auth, virtualEmail, masterPassword);
+          } catch (createErr: any) {
+            console.error('Error creating virtual account:', createErr);
+            throw new Error('Portal synchronization error. Please contact the administrator.');
+          }
+        } else {
+          throw signInErr;
+        }
+      }
+
+      // Log activity
+      await addDoc(collection(db, 'activities'), {
+        title: 'User logged in',
+        desc: `"${employeeData.name}" logged into the operations terminal`,
+        type: 'settings',
+        timestamp: Timestamp.now()
+      });
 
       setStep('success');
       setTimeout(() => {
         localStorage.setItem('isAuthenticated', 'true');
-        navigate(isAdminUser ? '/dashboard' : redirectPath);
+        const isAdminUser = employeeData.accessRole === 'Admin' || employeeData.roleType === 'Admin';
+        navigate(isAdminUser ? '/dashboard' : '/dashboard/my-profile');
       }, 2000);
     } catch (err: any) {
       console.error(err);
-      setErrorMsg(err.message || 'OTP verification failed. Please check the code.');
+      setErrorMsg(err.message || 'Verification failed. Please check credentials.');
     } finally {
       setIsLoading(false);
     }
@@ -352,10 +365,10 @@ export default function Login() {
                     />
                   </div>
                   <h2 className="text-2xl font-bold text-slate-100 tracking-tight">APEC ERP Portal</h2>
-                  <p className="text-sm text-slate-400 mt-1">Sign in with phone number OTP</p>
+                  <p className="text-sm text-slate-400 mt-1">Sign in with phone number & password</p>
                 </div>
 
-                <form onSubmit={handleSendOtp} className="space-y-4 flex-1 flex flex-col justify-center">
+                <form onSubmit={handleLogin} className="space-y-4 flex-1 flex flex-col justify-center">
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">Phone Number</label>
                     <div className="relative flex items-center">
@@ -374,10 +387,30 @@ export default function Login() {
                         required
                         disabled={isLoading}
                         style={{ paddingLeft: '88px' }}
-                        className="w-full bg-slate-950/40 border border-slate-800 text-slate-100 rounded-xl py-3.5 pr-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/25 transition-all placeholder:text-slate-600 disabled:opacity-50 text-sm shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
+                        className="w-full bg-slate-950/40 border border-slate-800 text-slate-100 rounded-xl py-3.5 pr-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/25 transition-all placeholder:text-slate-650 disabled:opacity-50 text-sm shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
                       />
                     </div>
                     <p className="text-[10px] text-slate-500 ml-1">Enter your 10-digit registered mobile number.</p>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">Password</label>
+                    <div className="relative flex items-center">
+                      <Lock className="absolute left-3.5 w-5 h-5 text-slate-500" />
+                      <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => {
+                          setPassword(e.target.value);
+                          setErrorMsg('');
+                        }}
+                        placeholder="••••••••"
+                        required
+                        disabled={isLoading}
+                        className="w-full bg-slate-950/40 border border-slate-800 text-slate-100 rounded-xl py-3.5 pl-11 pr-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/25 transition-all placeholder:text-slate-650 disabled:opacity-50 text-sm shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
+                      />
+                    </div>
+                    <p className="text-[10px] text-slate-500 ml-1">Enter your portal login password.</p>
                   </div>
 
                   {errorMsg && (
@@ -389,14 +422,14 @@ export default function Login() {
                   <div className="space-y-4 pt-2">
                     <button
                       type="submit"
-                      disabled={isLoading || !phone}
-                      className="w-full bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-950 font-extrabold py-3.5 rounded-xl transition-all relative overflow-hidden group flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed shadow-[0_4px_14px_rgba(6,182,212,0.3)] hover:shadow-[0_4px_20px_rgba(6,182,212,0.45)]"
+                      disabled={isLoading || !phone || !password}
+                      className="w-full bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-955 font-extrabold py-3.5 rounded-xl transition-all relative overflow-hidden group flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed shadow-[0_4px_14px_rgba(6,182,212,0.3)] hover:shadow-[0_4px_20px_rgba(6,182,212,0.45)]"
                     >
                       {isLoading ? (
                         <Loader2 className="w-5 h-5 animate-spin text-slate-955" />
                       ) : (
                         <>
-                          Send Verification OTP
+                          Sign In
                           <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                         </>
                       )}
@@ -438,82 +471,6 @@ export default function Login() {
                   </div>
                 </form>
               </motion.div>
-            ) : step === 'otp' ? (
-              <motion.div
-                key="login-otp"
-                initial={{ opacity: 0, x: 15 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -15 }}
-                transition={{ duration: 0.25 }}
-                className="flex-1 flex flex-col justify-center"
-              >
-                <div className="text-center mb-6">
-                  {/* Message Icon */}
-                  <div className="w-16 h-16 rounded-full bg-slate-900/80 border border-slate-700/80 flex items-center justify-center mx-auto mb-4 shadow-md overflow-hidden p-0.5">
-                    <MessageSquare className="w-6 h-6 text-cyan-400" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-slate-100 tracking-tight">Enter Verification Code</h2>
-                  <p className="text-sm text-slate-400 mt-1">We sent an SMS with a 6-digit OTP to your phone.</p>
-                </div>
-
-                <form onSubmit={handleVerifyOtp} className="space-y-4 flex-1 flex flex-col justify-center">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider ml-1">OTP Verification Code</label>
-                    <div className="relative">
-                      <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-                      <input
-                        type="text"
-                        value={otp}
-                        onChange={(e) => {
-                          setOtp(e.target.value.replace(/\D/g, ''));
-                          setErrorMsg('');
-                        }}
-                        placeholder="••••••"
-                        maxLength={6}
-                        required
-                        disabled={isLoading}
-                        className="w-full bg-slate-950/40 border border-slate-800 text-slate-100 rounded-xl py-3.5 pl-11 pr-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/25 transition-all placeholder:text-slate-650 disabled:opacity-50 text-sm tracking-[0.2em] font-extrabold text-center shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
-                      />
-                    </div>
-                  </div>
-
-                  {errorMsg && (
-                    <div className="text-rose-550 text-xs font-semibold text-center bg-rose-950/20 py-2.5 px-3 rounded-xl border border-rose-500/20">
-                      {errorMsg}
-                    </div>
-                  )}
-
-                  <div className="space-y-3 pt-2">
-                    <button
-                      type="submit"
-                      disabled={isLoading || otp.length < 6}
-                      className="w-full bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-950 font-extrabold py-3.5 rounded-xl transition-all relative overflow-hidden group flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed shadow-[0_4px_14px_rgba(6,182,212,0.3)] hover:shadow-[0_4px_20px_rgba(6,182,212,0.45)]"
-                    >
-                      {isLoading ? (
-                        <Loader2 className="w-5 h-5 animate-spin text-slate-955" />
-                      ) : (
-                        <>
-                          Verify OTP & Sign In
-                          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                        </>
-                      )}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setStep('phone');
-                        setErrorMsg('');
-                        setOtp('');
-                      }}
-                      disabled={isLoading}
-                      className="w-full bg-transparent hover:bg-slate-900/60 border border-slate-800/80 text-slate-400 hover:text-slate-200 py-3 rounded-xl transition-all text-xs font-bold"
-                    >
-                      Go Back
-                    </button>
-                  </div>
-                </form>
-              </motion.div>
             ) : (
               <motion.div
                 key="login-success"
@@ -546,7 +503,7 @@ export default function Login() {
           {step !== 'success' && (
             <div className="mt-8 text-center border-t border-slate-800 pt-4">
               <p className="text-[11px] text-slate-500 flex items-center justify-center gap-1.5 font-medium">
-                <Shield className="w-3.5 h-3.5 text-slate-500" /> Secure OTP Verification Portal
+                <Shield className="w-3.5 h-3.5 text-slate-500" /> Secure Password Verification Portal
               </p>
             </div>
           )}

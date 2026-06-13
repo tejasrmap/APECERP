@@ -83,7 +83,14 @@ export default function Dashboard() {
       if (user) {
         const email = user.email ? user.email.toLowerCase() : '';
         const userPhone = user.phoneNumber || '';
-        const cleanUserPhone = userPhone.replace(/[\s+-]/g, '');
+        
+        let cleanUserPhone = '';
+        const isVirtual = email.endsWith('@apec-erp.local');
+        if (isVirtual) {
+          cleanUserPhone = email.split('@')[0];
+        } else {
+          cleanUserPhone = userPhone.replace(/[\s+-]/g, '');
+        }
         
         // Check hardcoded admins first
         const isAdminEmail = 
@@ -101,10 +108,11 @@ export default function Dashboard() {
         if (db) {
           try {
             let q = null;
-            if (user.email) {
+            if (user.email && !isVirtual) {
               q = query(collection(db, 'team'), where('email', '==', user.email));
-            } else if (user.phoneNumber) {
-              q = query(collection(db, 'team'), where('phone', '==', user.phoneNumber));
+            } else if (user.phoneNumber || isVirtual) {
+              const queryPhone = isVirtual ? cleanUserPhone : user.phoneNumber;
+              q = query(collection(db, 'team'), where('phone', '==', queryPhone));
             }
 
             if (q) {
@@ -117,10 +125,10 @@ export default function Dashboard() {
                   } else if (!isAdminEmail && !isAdminPhone) {
                     setIsAdmin(false);
                   }
-                } else if (user.phoneNumber) {
+                } else if (user.phoneNumber || isVirtual) {
                   // 3-phase fallback for sanitized/formatted phone numbers
                   const phoneCandidates = [
-                    user.phoneNumber,
+                    user.phoneNumber || '',
                     '+' + cleanUserPhone,
                     cleanUserPhone,
                     cleanUserPhone.slice(-10),
@@ -321,15 +329,20 @@ export default function Dashboard() {
               <div className="w-9 h-9 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center text-xs font-bold text-slate-205 border border-slate-750 shadow-sm shrink-0">
                 {userProfile?.name 
                   ? userProfile.name.slice(0, 2).toUpperCase() 
-                  : (auth?.currentUser?.email ? auth.currentUser.email.slice(0, 2).toUpperCase() : (auth?.currentUser?.phoneNumber ? 'EM' : 'AD'))}
+                  : (auth?.currentUser?.email && !auth.currentUser.email.endsWith('@apec-erp.local') 
+                      ? auth.currentUser.email.slice(0, 2).toUpperCase() 
+                      : 'EM')}
               </div>
             )}
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-slate-100 truncate">
-                {userProfile?.name || auth?.currentUser?.displayName || (auth?.currentUser?.phoneNumber ? 'Employee' : 'Admin User')}
+                {userProfile?.name || auth?.currentUser?.displayName || ((auth?.currentUser?.phoneNumber || (auth?.currentUser?.email && auth.currentUser.email.endsWith('@apec-erp.local'))) ? 'Employee' : 'Admin User')}
               </p>
               <p className="text-xs text-slate-400 truncate">
-                {userProfile?.email || auth?.currentUser?.email || auth?.currentUser?.phoneNumber || 'admin@apecpowersolutions.com'}
+                {userProfile?.email || 
+                  (auth?.currentUser?.email && auth.currentUser.email.endsWith('@apec-erp.local') 
+                    ? '+' + auth.currentUser.email.split('@')[0] 
+                    : auth?.currentUser?.email || auth?.currentUser?.phoneNumber || 'admin@apecpowersolutions.com')}
               </p>
             </div>
           </div>

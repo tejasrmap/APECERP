@@ -68,6 +68,7 @@ export default function TeamControl() {
   const [newBankAccountName, setNewBankAccountName] = useState('');
   const [newBankAccountNumber, setNewBankAccountNumber] = useState('');
   const [newBankIfsc, setNewBankIfsc] = useState('');
+  const [newPassword, setNewPassword] = useState('');
   
   // Profile Edit States
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -103,6 +104,7 @@ export default function TeamControl() {
   const [editBankAccountName, setEditBankAccountName] = useState('');
   const [editBankAccountNumber, setEditBankAccountNumber] = useState('');
   const [editBankIfsc, setEditBankIfsc] = useState('');
+  const [editPassword, setEditPassword] = useState('');
 
   // Compress image to base64 (fallback when Supabase is unavailable)
   const compressImageToBase64 = (file: File): Promise<string> =>
@@ -212,7 +214,8 @@ export default function TeamControl() {
         permanentAddress: editPermanentAddress.trim() || 'N/A',
         bankAccountName: editBankAccountName.trim() || 'N/A',
         bankAccountNumber: editBankAccountNumber.trim() || 'N/A',
-        bankIfsc: editBankIfsc.trim().toUpperCase() || 'N/A'
+        bankIfsc: editBankIfsc.trim().toUpperCase() || 'N/A',
+        password: editPassword.trim()
       };
 
       await updateDoc(doc(db, 'team', selectedProfile.id), updatedFields);
@@ -320,7 +323,8 @@ export default function TeamControl() {
         permanentAddress: newPermanentAddress.trim() || 'N/A',
         bankAccountName: newBankAccountName.trim() || 'N/A',
         bankAccountNumber: newBankAccountNumber.trim() || 'N/A',
-        bankIfsc: newBankIfsc.trim().toUpperCase() || 'N/A'
+        bankIfsc: newBankIfsc.trim().toUpperCase() || 'N/A',
+        password: newPassword.trim()
       });
 
       // Log activity
@@ -362,6 +366,7 @@ export default function TeamControl() {
       setNewBankAccountName('');
       setNewBankAccountNumber('');
       setNewBankIfsc('');
+      setNewPassword('');
       setIsAddingUser(false);
     } catch (err) {
       console.error('Error adding user:', err);
@@ -1006,6 +1011,17 @@ export default function TeamControl() {
                       className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] uppercase"
                     />
                   </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Portal Login Password</label>
+                    <input 
+                      type="password" 
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Min 6 characters"
+                      required
+                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -1498,6 +1514,16 @@ export default function TeamControl() {
                       className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all uppercase"
                     />
                   </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Portal Login Password</label>
+                    <input 
+                      type="password" 
+                      value={editPassword}
+                      onChange={(e) => setEditPassword(e.target.value)}
+                      placeholder="Enter new password"
+                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -1712,6 +1738,7 @@ export default function TeamControl() {
                       setEditBankAccountName(selectedProfile.bankAccountName || '');
                       setEditBankAccountNumber(selectedProfile.bankAccountNumber || '');
                       setEditBankIfsc(selectedProfile.bankIfsc || '');
+                      setEditPassword(selectedProfile.password || '');
                       setIsEditingProfile(true);
                     }}
                     className="px-2.5 py-1 rounded-lg text-[10px] font-bold text-cyan-400 border border-cyan-500/20 bg-cyan-950/20 hover:bg-cyan-950/40 hover:border-cyan-500/40 transition-all flex items-center gap-1 cursor-pointer"
