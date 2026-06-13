@@ -42,9 +42,7 @@ export default function Login() {
           
         const isAdminPhone = 
           userPhone === '+918499903275' || 
-          cleanUserPhone === '918499903275' ||
-          userPhone === '+917675052828' || 
-          cleanUserPhone === '917675052828';
+          cleanUserPhone === '918499903275';
 
         if (isAdminEmail || isAdminPhone) {
           isAllowed = true;
@@ -165,7 +163,6 @@ export default function Login() {
       // Hardcoded Admin numbers
       const adminPhones = [
         '+918499903275', // MD phone
-        '+917675052828', // Admin phone
         '+919999999999'  // Test phone
       ];
 
