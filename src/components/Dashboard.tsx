@@ -263,7 +263,11 @@ export default function Dashboard() {
             return (
               <button
                 key={item.name}
-                onClick={() => { navigate(getPathForTab(item.name)); setIsSidebarOpen(false); }}
+                onClick={() => {
+                  setFirestoreError(null);
+                  navigate(getPathForTab(item.name));
+                  setIsSidebarOpen(false);
+                }}
                 className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-colors duration-150 ${
                   isActive 
                     ? 'bg-cyan-950/40 text-cyan-400 border border-cyan-500/30 font-medium shadow-md glowing-active' 
@@ -411,7 +415,7 @@ export default function Dashboard() {
         <div className="flex-1 overflow-y-auto p-3 sm:p-6 lg:p-8 relative">
           <div className="max-w-7xl mx-auto h-full flex flex-col">
             {/* Database Connection Warning Banner */}
-            {firestoreError && (
+            {firestoreError && activeTab !== 'My Profile' && (
               <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs flex items-start gap-3 shrink-0 mb-6">
                 <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5 text-amber-500" />
                 <div>
