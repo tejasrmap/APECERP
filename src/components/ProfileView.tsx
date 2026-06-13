@@ -383,9 +383,6 @@ export default function ProfileView() {
                   { icon: Mail, label: 'Official Email', value: profile.email || 'N/A', truncate: true },
                   { icon: Briefcase, label: 'Branch', value: profile.branch || profile.department || 'Vijayawada' },
                   { icon: Calendar, label: 'Joined Date', value: profile.joinedDate ? new Date(profile.joinedDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A' },
-                  { icon: Shield, label: 'ESI Number', value: profile.esiNumber || 'N/A' },
-                  { icon: Shield, label: 'PF Number', value: profile.pfNumber || 'N/A' },
-                  { icon: Shield, label: 'Aadhar Number', value: profile.aadharNumber || 'N/A' },
                 ].map(({ icon: Icon, label, value, truncate }: any) => (
                   <div key={label} className="bg-[#1E293B] border border-slate-800 rounded-xl p-5 space-y-2 hover:border-slate-700 transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between">
                     <div className="flex items-center gap-2.5">
@@ -442,36 +439,7 @@ export default function ProfileView() {
                 </div>
               </motion.div>
 
-              {/* BANK ACCOUNT DETAILS */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.35, delay: 0.12 }}
-                className={`bg-[#1E293B] border border-slate-805 rounded-xl p-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300 ${activeTab === 'contact' ? 'block' : 'hidden md:block'}`}
-              >
-                <div className="flex items-center gap-2 border-b border-slate-805 pb-2.5">
-                  <Shield className="w-4 h-4 text-cyan-400" />
-                  <span className="text-xs font-bold text-slate-100 uppercase tracking-wider">Bank Account Details</span>
-                </div>
-                <div className="grid grid-cols-2 gap-4 text-xs font-mono">
-                  <div>
-                    <span className="text-slate-500 block uppercase tracking-wider text-[9px]">PAN Card</span>
-                    <span className="text-slate-200 font-bold block mt-0.5 select-all">{profile.pan || 'N/A'}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Bank Account Name</span>
-                    <span className="text-slate-200 font-bold block mt-0.5">{profile.bankAccountName || 'N/A'}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Account Number</span>
-                    <span className="text-slate-200 font-bold block mt-0.5 select-all">{profile.bankAccountNumber || 'N/A'}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 block uppercase tracking-wider text-[9px]">IFSC Code</span>
-                    <span className="text-cyan-400 font-bold block mt-0.5 select-all">{profile.bankIfsc || 'N/A'}</span>
-                  </div>
-                </div>
-              </motion.div>
+
 
               {/* SKILLS */}
               {profile.skills && profile.skills.length > 0 && (
