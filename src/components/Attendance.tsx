@@ -22,6 +22,10 @@ import { useOutletContext } from 'react-router-dom';
 import { db, auth } from '../firebase';
 import { supabase } from '../supabase';
 import ImageViewerModal from './ImageViewerModal';
+import { Capacitor, registerPlugin } from '@capacitor/core';
+import { BackgroundGeolocationPlugin } from '@capacitor-community/background-geolocation';
+
+const BackgroundGeolocation = registerPlugin<BackgroundGeolocationPlugin>('BackgroundGeolocation');
 
 const getHaversineDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
   const R = 6371e3; // Earth radius in meters
@@ -72,6 +76,7 @@ export default function Attendance() {
   // Camera & Capture states
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const bgWatcherIdRef = useRef<string | null>(null);
 
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
@@ -426,8 +431,101 @@ export default function Attendance() {
       setIsLogsLoading(false);
     });
 
-    return () => unsub();
   }, []);
+
+  // Sync active background tracker reference on mount
+  useEffect(() => {
+    const savedId = localStorage.getItem('apec_bg_watcher_id');
+    if (savedId) {
+      bgWatcherIdRef.current = savedId;
+    }
+  }, []);
+
+  // Start background location tracking watcher
+  const startBackgroundTracking = async (empId: string, empName: string, empEmail: string) => {
+    if (!Capacitor.isNativePlatform()) return;
+    try {
+      // Prevent duplicate trackers
+      await stopBackgroundTracking();
+
+      const watcherId = await BackgroundGeolocation.addWatcher(
+        {
+          backgroundTitle: "APEC Location Tracking Active",
+          backgroundMessage: "Your location is recorded for active shift verification.",
+          requestPermissions: true,
+          stale: false,
+          distanceFilter: 25 // update location every 25 meters of movement
+        },
+        async (location, error) => {
+          if (error) {
+            console.error('Background geolocation error:', error);
+            return;
+          }
+          if (location && db) {
+            const lat = location.latitude;
+            const lon = location.longitude;
+            const acc = location.accuracy;
+
+            let addressStr = `Coordinates: ${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+            try {
+              const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`, {
+                headers: { 'User-Agent': 'APECERP-Attendance/1.0' }
+              });
+              if (res.ok) {
+                const data = await res.json();
+                if (data && data.display_name) {
+                  addressStr = data.display_name;
+                }
+              }
+            } catch (err) {
+              console.error("Geocoding inside background watcher failed:", err);
+            }
+
+            try {
+              // Add a background location update to the attendance collection
+              await addDoc(collection(db, 'attendance'), {
+                employeeId: empId,
+                userName: empName,
+                userEmail: empEmail,
+                type: 'punch_in', // keep them active on the live dashboard
+                photoUrl: null,   // automatic background punch has no image
+                location: {
+                  latitude: lat,
+                  longitude: lon,
+                  accuracy: acc || 0,
+                  address: addressStr
+                },
+                timestamp: Timestamp.fromDate(new Date())
+              });
+            } catch (fsErr) {
+              console.error("Failed to save background coordinates:", fsErr);
+            }
+          }
+        }
+      );
+
+      bgWatcherIdRef.current = watcherId;
+      localStorage.setItem('apec_bg_watcher_id', watcherId);
+      console.log("Started background tracking. Watcher ID:", watcherId);
+    } catch (err) {
+      console.error("Failed to launch background location watcher:", err);
+    }
+  };
+
+  // Stop background location tracking watcher
+  const stopBackgroundTracking = async () => {
+    const watcherId = bgWatcherIdRef.current || localStorage.getItem('apec_bg_watcher_id');
+    if (watcherId) {
+      try {
+        await BackgroundGeolocation.removeWatcher({ id: watcherId });
+        bgWatcherIdRef.current = null;
+        localStorage.removeItem('apec_bg_watcher_id');
+        console.log("Stopped background tracking. Watcher ID cleared.");
+      } catch (err) {
+        console.error("Failed to remove background watcher:", err);
+      }
+    }
+  };
 
   // Submit attendance punch
   const handlePunch = async (punchType: 'punch_in' | 'punch_out') => {
@@ -533,6 +631,19 @@ export default function Attendance() {
       }
 
       setPunchSuccess({ type: punchType, time: now });
+
+      // Handle mobile background location tracking hooks
+      if (Capacitor.isNativePlatform()) {
+        if (punchType === 'punch_in') {
+          startBackgroundTracking(
+            selectedUser.employeeId || 'APEC-MEMBER',
+            selectedUser.name,
+            selectedUser.email
+          );
+        } else {
+          stopBackgroundTracking();
+        }
+      }
       setCapturedPhoto(null);
       setCoords(null);
       setAddress('');

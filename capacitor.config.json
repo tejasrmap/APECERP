@@ -1,0 +1,9 @@
+{
+  "appId": "com.apecpowersolutions.erp",
+  "appName": "APEC ERP",
+  "webDir": "dist",
+  "server": {
+    "url": "https://erp.apecpowersolutions.com",
+    "cleartext": true
+  }
+}
