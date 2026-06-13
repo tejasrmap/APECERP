@@ -91,7 +91,9 @@ export default function Dashboard() {
 
         const isAdminPhone = 
           userPhone === '+918499903275' || 
-          cleanUserPhone === '918499903275';
+          cleanUserPhone === '918499903275' ||
+          userPhone === '+917675052828' || 
+          cleanUserPhone === '917675052828';
 
         if (isAdminEmail || isAdminPhone) {
           setIsAdmin(true);
