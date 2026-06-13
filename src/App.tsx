@@ -19,7 +19,7 @@ const ProfileView  = lazy(() => import('./components/ProfileView'));
 const Attendance   = lazy(() => import('./components/Attendance'));
 const Reports      = lazy(() => import('./components/Reports'));
 const Leaves       = lazy(() => import('./components/Leaves'));
-const IDCardGenerator = lazy(() => import('./components/IDCardGenerator'));
+
 
 const PageLoader = () => (
   <div className="absolute inset-0 flex items-center justify-center bg-[#070a13]/50 z-30">
@@ -66,9 +66,7 @@ export default function App() {
           <Route path="leaves" element={
             <Suspense fallback={<PageLoader />}><Leaves /></Suspense>
           } />
-          <Route path="id-generator" element={
-            <Suspense fallback={<PageLoader />}><IDCardGenerator /></Suspense>
-          } />
+
         </Route>
       </Route>
     </Routes>
