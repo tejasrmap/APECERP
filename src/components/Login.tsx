@@ -30,40 +30,44 @@ export default function Login() {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         let isAllowed = false;
-        
-        // 1. Check if user is admin
+        let isAdminUser = false;
+
         const emailLower = user.email ? user.email.toLowerCase() : '';
         const userPhone = user.phoneNumber || '';
         const cleanUserPhone = userPhone.replace(/[\s+-]/g, '');
-        
-        const isAdminEmail = 
+        const phoneCandidates = [
+          userPhone,
+          '+' + cleanUserPhone,
+          cleanUserPhone,
+          cleanUserPhone.slice(-10),
+        ].filter(Boolean);
+
+        const isAdminEmail =
           emailLower === 'admin@apecpowersolutions.com' ||
           emailLower === 'managingdirector@apecpowersolutions.com';
-          
-        const isAdminPhone = 
-          userPhone === '+918499903275' || 
-          cleanUserPhone === '918499903275';
+        const adminPhones = ['+918499903275', '918499903275', '8499903275', '+919999999999'];
+        const isAdminPhone = adminPhones.some(ap => phoneCandidates.includes(ap));
 
         if (isAdminEmail || isAdminPhone) {
           isAllowed = true;
+          isAdminUser = true;
         } else if (db) {
           try {
-            // Check by email (for Google Auth logins)
+            // Check by email (Google Auth)
             if (user.email) {
               const q = query(collection(db, 'team'), where('email', '==', user.email));
               const snap = await getDocs(q);
               if (!snap.empty) isAllowed = true;
             }
-            // Check by phone number (for OTP logins)
+            // Check by phone (OTP logins) — try all format variants
             if (!isAllowed && user.phoneNumber) {
-              const q = query(collection(db, 'team'), where('phone', '==', user.phoneNumber));
-              const snap = await getDocs(q);
-              if (!snap.empty) {
-                isAllowed = true;
-              } else {
-                const q2 = query(collection(db, 'team'), where('phone', '==', '+' + cleanUserPhone));
-                const snap2 = await getDocs(q2);
-                if (!snap2.empty) isAllowed = true;
+              for (const candidate of phoneCandidates) {
+                if (isAllowed) break;
+                try {
+                  const q = query(collection(db, 'team'), where('phone', '==', candidate));
+                  const snap = await getDocs(q);
+                  if (!snap.empty) isAllowed = true;
+                } catch (_) { /* skip */ }
               }
             }
           } catch (err) {
@@ -75,7 +79,8 @@ export default function Login() {
 
         if (isAllowed) {
           localStorage.setItem('isAuthenticated', 'true');
-          navigate('/dashboard');
+          // Admins → Overview dashboard; Employees → their My Profile page
+          navigate(isAdminUser ? '/dashboard' : '/dashboard/my-profile');
         } else {
           await auth.signOut();
           localStorage.removeItem('isAuthenticated');
@@ -157,28 +162,37 @@ export default function Login() {
 
       // Check if user's phone number is registered in team database
       let isAllowed = false;
+      let isAdminUser = false;
+      let redirectPath = '/dashboard/my-profile'; // default for employees
       const userPhone = user.phoneNumber || '';
+      // Normalize: strip all spaces, dashes, plus signs → raw digits
       const cleanUserPhone = userPhone.replace(/[\s+-]/g, '');
+      // Build candidate phone formats to try against Firestore
+      const phoneCandidates = [
+        userPhone,                         // e.g. +918499903275
+        '+' + cleanUserPhone,              // e.g. +918499903275 (re-prefixed)
+        cleanUserPhone,                    // e.g. 918499903275
+        cleanUserPhone.slice(-10),         // last 10 digits e.g. 8499903275
+      ].filter(Boolean);
 
       // Hardcoded Admin numbers
-      const adminPhones = [
-        '+918499903275', // MD phone
-        '+919999999999'  // Test phone
-      ];
-
-      if (adminPhones.includes(userPhone) || adminPhones.includes('+' + cleanUserPhone)) {
+      const adminPhones = ['+918499903275', '918499903275', '8499903275', '+919999999999'];
+      if (adminPhones.some(ap => phoneCandidates.includes(ap))) {
         isAllowed = true;
+        isAdminUser = true;
+        redirectPath = '/dashboard';
       } else if (db) {
-        // Check by exact phone field match
-        const q = query(collection(db, 'team'), where('phone', '==', userPhone));
-        const snap = await getDocs(q);
-        if (!snap.empty) {
-          isAllowed = true;
-        } else {
-          // Check by sanitized number format match
-          const q2 = query(collection(db, 'team'), where('phone', '==', '+' + cleanUserPhone));
-          const snap2 = await getDocs(q2);
-          if (!snap2.empty) isAllowed = true;
+        // Try each phone candidate format against the 'team' collection
+        for (const candidate of phoneCandidates) {
+          if (isAllowed) break;
+          try {
+            const q = query(collection(db, 'team'), where('phone', '==', candidate));
+            const snap = await getDocs(q);
+            if (!snap.empty) {
+              isAllowed = true;
+              break;
+            }
+          } catch (_) { /* skip failed format */ }
         }
       } else {
         isAllowed = true;
@@ -194,7 +208,7 @@ export default function Login() {
       setStep('success');
       setTimeout(() => {
         localStorage.setItem('isAuthenticated', 'true');
-        navigate('/dashboard');
+        navigate(isAdminUser ? '/dashboard' : redirectPath);
       }, 2000);
     } catch (err: any) {
       console.error(err);
@@ -496,7 +510,7 @@ export default function Login() {
                 
                 <div className="flex items-center gap-2 text-slate-500 text-xs mt-4">
                   <Loader2 className="w-4 h-4 animate-spin text-cyan-400" />
-                  Loading administrative session...
+                  Redirecting to your profile...
                 </div>
               </motion.div>
             )}
