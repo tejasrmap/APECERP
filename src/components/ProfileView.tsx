@@ -44,6 +44,7 @@ export default function ProfileView() {
           branch: 'Vijayawada',
           esiNumber: '31123456780001001',
           pfNumber: 'AP/HYD/1234567/890',
+          aadharNumber: '1234 5678 9012',
           status: 'Active',
           phone: '+91 94481 02941',
           joinedDate: '2025-01-15',
@@ -53,7 +54,18 @@ export default function ProfileView() {
           emergencyName: 'Priya Sharma (Spouse)',
           emergencyPhone: '+91 94481 87654',
           bloodGroup: 'B+',
-          medicalConditions: 'Allergy to Penicillin'
+          medicalConditions: 'Allergy to Penicillin',
+          fatherName: 'Satish Sharma',
+          maritalStatus: 'Married',
+          gender: 'Male',
+          qualification: 'B.Tech',
+          dob: '1990-05-15',
+          pan: 'ABCDE1234F',
+          presentAddress: 'Flat 402, Sai Towers, Kanuru, Vijayawada',
+          permanentAddress: 'Flat 402, Sai Towers, Kanuru, Vijayawada',
+          bankAccountName: 'Rahul Sharma',
+          bankAccountNumber: '501004342340',
+          bankIfsc: 'HDFC0000109'
         });
         setLoading(false);
       }, 1000);
@@ -373,6 +385,7 @@ export default function ProfileView() {
                   { icon: Calendar, label: 'Joined Date', value: profile.joinedDate ? new Date(profile.joinedDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A' },
                   { icon: Shield, label: 'ESI Number', value: profile.esiNumber || 'N/A' },
                   { icon: Shield, label: 'PF Number', value: profile.pfNumber || 'N/A' },
+                  { icon: Shield, label: 'Aadhar Number', value: profile.aadharNumber || 'N/A' },
                 ].map(({ icon: Icon, label, value, truncate }: any) => (
                   <div key={label} className="bg-[#1E293B] border border-slate-800 rounded-xl p-5 space-y-2 hover:border-slate-700 transition-all duration-300 shadow-sm hover:shadow-md flex flex-col justify-between">
                     <div className="flex items-center gap-2.5">
@@ -384,6 +397,80 @@ export default function ProfileView() {
                     <p className={`text-xs font-semibold text-slate-100 ${truncate ? 'truncate' : ''} mt-1`} title={value}>{value}</p>
                   </div>
                 ))}
+              </motion.div>
+
+              {/* PERSONAL & ADDRESS DETAILS */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, delay: 0.08 }}
+                className={`bg-[#1E293B] border border-slate-800 rounded-xl p-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300 ${activeTab === 'contact' ? 'block' : 'hidden md:block'}`}
+              >
+                <div className="flex items-center gap-2 border-b border-slate-805 pb-2.5">
+                  <User className="w-4 h-4 text-cyan-400" />
+                  <span className="text-xs font-bold text-slate-100 uppercase tracking-wider">Personal & Address Details</span>
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-xs font-mono">
+                  <div>
+                    <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Father's Name</span>
+                    <span className="text-slate-200 font-bold block mt-0.5">{profile.fatherName || 'N/A'}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Gender</span>
+                    <span className="text-slate-200 font-bold block mt-0.5">{profile.gender || 'N/A'}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Date of Birth</span>
+                    <span className="text-slate-200 font-bold block mt-0.5">{profile.dob || 'N/A'}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Marital Status</span>
+                    <span className="text-slate-200 font-bold block mt-0.5">{profile.maritalStatus || 'N/A'}</span>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Qualification</span>
+                    <span className="text-slate-200 font-bold block mt-0.5">{profile.qualification || 'N/A'}</span>
+                  </div>
+                  <div className="col-span-2 border-t border-slate-800 pt-2 mt-1">
+                    <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Present Address</span>
+                    <span className="text-slate-300 block text-xs leading-normal select-all mt-0.5">{profile.presentAddress || 'N/A'}</span>
+                  </div>
+                  <div className="col-span-2 border-t border-slate-800 pt-2 mt-1">
+                    <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Permanent Address</span>
+                    <span className="text-slate-300 block text-xs leading-normal select-all mt-0.5">{profile.permanentAddress || 'N/A'}</span>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* BANK ACCOUNT DETAILS */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, delay: 0.12 }}
+                className={`bg-[#1E293B] border border-slate-805 rounded-xl p-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300 ${activeTab === 'contact' ? 'block' : 'hidden md:block'}`}
+              >
+                <div className="flex items-center gap-2 border-b border-slate-805 pb-2.5">
+                  <Shield className="w-4 h-4 text-cyan-400" />
+                  <span className="text-xs font-bold text-slate-100 uppercase tracking-wider">Bank Account Details</span>
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-xs font-mono">
+                  <div>
+                    <span className="text-slate-500 block uppercase tracking-wider text-[9px]">PAN Card</span>
+                    <span className="text-slate-200 font-bold block mt-0.5 select-all">{profile.pan || 'N/A'}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Bank Account Name</span>
+                    <span className="text-slate-200 font-bold block mt-0.5">{profile.bankAccountName || 'N/A'}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Account Number</span>
+                    <span className="text-slate-200 font-bold block mt-0.5 select-all">{profile.bankAccountNumber || 'N/A'}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block uppercase tracking-wider text-[9px]">IFSC Code</span>
+                    <span className="text-cyan-400 font-bold block mt-0.5 select-all">{profile.bankIfsc || 'N/A'}</span>
+                  </div>
+                </div>
               </motion.div>
 
               {/* SKILLS */}

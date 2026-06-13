@@ -387,6 +387,10 @@ export default function Team() {
                   <span className="text-slate-350 font-bold block truncate">{selectedProfile.pfNumber || 'N/A'}</span>
                 </div>
                 <div className="space-y-1">
+                  <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Aadhar Number</span>
+                  <span className="text-slate-350 font-bold block truncate">{selectedProfile.aadharNumber || 'N/A'}</span>
+                </div>
+                <div className="space-y-1">
                   <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Email Address</span>
                   <span className="text-slate-350 font-bold block truncate">{selectedProfile.email}</span>
                 </div>
@@ -427,6 +431,64 @@ export default function Team() {
                   >
                     Copy Link
                   </button>
+                </div>
+              </div>
+
+              {/* Personal & Address Details */}
+              <div className="space-y-2">
+                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Personal & Address Details</span>
+                <div className="grid grid-cols-2 gap-4 text-xs bg-slate-950/40 p-4 rounded-xl border border-slate-900/60 font-mono">
+                  <div className="space-y-1">
+                    <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Father's Name</span>
+                    <span className="text-slate-350 font-bold block truncate">{selectedProfile.fatherName || 'N/A'}</span>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Gender</span>
+                    <span className="text-slate-350 font-bold block truncate">{selectedProfile.gender || 'N/A'}</span>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Date of Birth</span>
+                    <span className="text-slate-350 font-bold block truncate">{selectedProfile.dob || 'N/A'}</span>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Marital Status</span>
+                    <span className="text-slate-350 font-bold block truncate">{selectedProfile.maritalStatus || 'N/A'}</span>
+                  </div>
+                  <div className="space-y-1 col-span-2">
+                    <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Qualification</span>
+                    <span className="text-slate-355 font-semibold block">{selectedProfile.qualification || 'N/A'}</span>
+                  </div>
+                  <div className="space-y-1 col-span-2 border-t border-slate-900/60 pt-2 mt-1">
+                    <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Present Address</span>
+                    <span className="text-slate-300 block text-xs leading-normal select-all">{selectedProfile.presentAddress || 'N/A'}</span>
+                  </div>
+                  <div className="space-y-1 col-span-2 border-t border-slate-900/60 pt-2 mt-1">
+                    <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Permanent Address</span>
+                    <span className="text-slate-300 block text-xs leading-normal select-all">{selectedProfile.permanentAddress || 'N/A'}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bank Account Details */}
+              <div className="space-y-2">
+                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Bank Account Details & ID</span>
+                <div className="grid grid-cols-2 gap-4 text-xs bg-slate-955/20 p-4 rounded-xl border border-white/5 font-mono">
+                  <div className="space-y-1">
+                    <span className="text-slate-500 block uppercase tracking-wider text-[9px]">PAN Card</span>
+                    <span className="text-slate-200 font-bold block truncate select-all">{selectedProfile.pan || 'N/A'}</span>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Bank Account Name</span>
+                    <span className="text-slate-200 font-bold block truncate">{selectedProfile.bankAccountName || 'N/A'}</span>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Account Number</span>
+                    <span className="text-slate-200 font-bold block truncate select-all">{selectedProfile.bankAccountNumber || 'N/A'}</span>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-slate-500 block uppercase tracking-wider text-[9px]">IFSC Code</span>
+                    <span className="text-cyan-400 font-bold block truncate select-all">{selectedProfile.bankIfsc || 'N/A'}</span>
+                  </div>
                 </div>
               </div>
 
