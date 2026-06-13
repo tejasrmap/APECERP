@@ -275,12 +275,26 @@ export default function Dashboard() {
 
         <div className="p-4 border-t border-slate-800/80">
           <div className="flex items-center gap-3 px-4 py-3 bg-slate-900/40 rounded-xl border border-slate-800/60 mb-4 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]">
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center text-xs font-bold text-slate-200 border border-slate-750 shadow-sm shrink-0">
-              {auth?.currentUser?.email ? auth.currentUser.email.slice(0, 2).toUpperCase() : 'AD'}
-            </div>
+            {userProfile?.photoUrl ? (
+              <img 
+                src={userProfile.photoUrl} 
+                alt={userProfile.name || 'User'} 
+                className="w-9 h-9 rounded-full object-cover border border-slate-750 shadow-sm shrink-0" 
+              />
+            ) : (
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center text-xs font-bold text-slate-205 border border-slate-750 shadow-sm shrink-0">
+                {userProfile?.name 
+                  ? userProfile.name.slice(0, 2).toUpperCase() 
+                  : (auth?.currentUser?.email ? auth.currentUser.email.slice(0, 2).toUpperCase() : 'AD')}
+              </div>
+            )}
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-slate-100 truncate">{auth?.currentUser?.displayName || 'Admin User'}</p>
-              <p className="text-xs text-slate-400 truncate">{auth?.currentUser?.email || 'admin@apecpowersolutions.com'}</p>
+              <p className="text-sm font-semibold text-slate-100 truncate">
+                {userProfile?.name || auth?.currentUser?.displayName || 'Admin User'}
+              </p>
+              <p className="text-xs text-slate-400 truncate">
+                {userProfile?.email || auth?.currentUser?.email || 'admin@apecpowersolutions.com'}
+              </p>
             </div>
           </div>
           <button
