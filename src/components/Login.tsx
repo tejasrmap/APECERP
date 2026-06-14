@@ -2,7 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Phone, ArrowRight, CheckCircle2, Loader2, Shield, MessageSquare, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  onAuthStateChanged, 
+  GoogleAuthProvider, 
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult
+} from 'firebase/auth';
 import { auth, db } from '../firebase';
 import { collection, query, where, getDocs, addDoc, Timestamp } from 'firebase/firestore';
 
@@ -122,6 +130,73 @@ export default function Login() {
     });
 
     return () => unsubscribe();
+  }, [navigate]);
+
+  // Handle redirect result for mobile social logins
+  useEffect(() => {
+    if (!auth || !db) return;
+
+    const handleRedirect = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result && result.user) {
+          setIsLoading(true);
+          const user = result.user;
+          const emailLower = user.email ? user.email.toLowerCase() : '';
+          
+          let isAllowed = false;
+          let isAdminUser = false;
+
+          const isAdminEmail = 
+            emailLower === 'admin@apecpowersolutions.com' ||
+            emailLower === 'managingdirector@apecpowersolutions.com';
+
+          if (isAdminEmail) {
+            isAllowed = true;
+            isAdminUser = true;
+          } else {
+            const q = query(collection(db, 'team'), where('email', '==', emailLower));
+            const snap = await getDocs(q);
+            if (!snap.empty) {
+              isAllowed = true;
+              const docData = snap.docs[0].data();
+              if (docData.accessRole === 'Admin' || docData.roleType === 'Admin') {
+                isAdminUser = true;
+              }
+            }
+          }
+
+          if (isAllowed) {
+            setStep('success');
+            // Log activity
+            await addDoc(collection(db, 'activities'), {
+              title: 'User logged in',
+              desc: `"${user.displayName || emailLower}" logged into the operations terminal via Google redirect`,
+              type: 'settings',
+              timestamp: Timestamp.now()
+            });
+            setTimeout(() => {
+              localStorage.setItem('isAuthenticated', 'true');
+              navigate(isAdminUser ? '/dashboard' : '/dashboard/my-profile');
+            }, 2000);
+          } else {
+            await auth.signOut();
+            setErrorMsg('Access denied. Your Google account is not registered as a team member.');
+          }
+        }
+      } catch (err: any) {
+        console.error('Error handling redirect result:', err);
+        if (err.code === 'auth/web-storage-unsupported' || err.code === 'auth/operation-not-supported-in-this-environment') {
+          setErrorMsg('Google login is not fully supported in this browser environment. Please use Phone Number & Password login.');
+        } else {
+          setErrorMsg(err.message || 'Google sign-in verification failed.');
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    handleRedirect();
   }, [navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -262,31 +337,64 @@ export default function Login() {
         throw new Error('Firebase authentication is not configured in this environment.');
       }
       const provider = new GoogleAuthProvider();
-      const userCredential = await signInWithPopup(auth, provider);
-      const user = userCredential.user;
-      
-      // Check if user is in 'team' database
-      if (db && user && user.email) {
-        const emailLower = user.email.toLowerCase();
-        const isAdminEmail = 
-          emailLower === 'admin@apecpowersolutions.com' ||
-          emailLower === 'managingdirector@apecpowersolutions.com';
+      provider.setCustomParameters({ prompt: 'select_account' });
 
-        if (!isAdminEmail) {
-          const q = query(collection(db, 'team'), where('email', '==', user.email));
-          const snap = await getDocs(q);
-          if (snap.empty) {
-            await auth.signOut();
-            throw new Error('Access denied. Your Google account is not registered as a team member.');
+      // Detect mobile browsers (which block popup windows or partition sessionStorage)
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+      if (isMobile) {
+        // Use redirect on mobile browsers
+        await signInWithRedirect(auth, provider);
+      } else {
+        // Use popup on desktop
+        const userCredential = await signInWithPopup(auth, provider);
+        const user = userCredential.user;
+        
+        let isAllowed = false;
+        let isAdminUser = false;
+
+        if (user && user.email) {
+          const emailLower = user.email.toLowerCase();
+          const isAdminEmail = 
+            emailLower === 'admin@apecpowersolutions.com' ||
+            emailLower === 'managingdirector@apecpowersolutions.com';
+
+          if (isAdminEmail) {
+            isAllowed = true;
+            isAdminUser = true;
+          } else if (db) {
+            const q = query(collection(db, 'team'), where('email', '==', user.email));
+            const snap = await getDocs(q);
+            if (!snap.empty) {
+              isAllowed = true;
+              const docData = snap.docs[0].data();
+              if (docData.accessRole === 'Admin' || docData.roleType === 'Admin') {
+                isAdminUser = true;
+              }
+            }
           }
         }
+        
+        if (isAllowed) {
+          setStep('success');
+          // Log activity
+          if (db && user) {
+            await addDoc(collection(db, 'activities'), {
+              title: 'User logged in',
+              desc: `"${user.displayName || user.email}" logged into the operations terminal via Google popup`,
+              type: 'settings',
+              timestamp: Timestamp.now()
+            });
+          }
+          setTimeout(() => {
+            localStorage.setItem('isAuthenticated', 'true');
+            navigate(isAdminUser ? '/dashboard' : '/dashboard/my-profile');
+          }, 2000);
+        } else {
+          await auth.signOut();
+          throw new Error('Access denied. Your Google account is not registered as a team member.');
+        }
       }
-      
-      setStep('success');
-      setTimeout(() => {
-        localStorage.setItem('isAuthenticated', 'true');
-        navigate('/dashboard');
-      }, 2000);
     } catch (err: any) {
       console.error(err);
       if (err.code === 'auth/popup-closed-by-user') {
@@ -294,7 +402,6 @@ export default function Login() {
       } else {
         setErrorMsg(err.message || 'Google sign-in failed.');
       }
-    } finally {
       setIsLoading(false);
     }
   };
