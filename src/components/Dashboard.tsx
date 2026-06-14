@@ -20,7 +20,8 @@ import {
   FileText,
   CalendarRange,
   Map,
-  User
+  User,
+  ClipboardList
 } from 'lucide-react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { auth, db } from '../firebase';
@@ -199,6 +200,7 @@ export default function Dashboard() {
     { name: 'Dashboard', icon: LayoutDashboard },
     { name: 'My Profile', icon: User },
     { name: 'Projects', icon: Activity },
+    { name: 'Daily Reports', icon: ClipboardList },
     { name: 'Scheduling', icon: Calendar },
     { name: 'Workforce', icon: Users },
     { name: 'Attendance', icon: Clock },
@@ -215,6 +217,7 @@ export default function Dashboard() {
   const getActiveTab = () => {
     const path = location.pathname;
     if (path === '/dashboard/projects') return 'Projects';
+    if (path === '/dashboard/daily-reports') return 'Daily Reports';
     if (path === '/dashboard/scheduling') return 'Scheduling';
     if (path === '/dashboard/workforce') return 'Workforce';
     if (path === '/dashboard/settings') return 'Settings';
@@ -234,6 +237,7 @@ export default function Dashboard() {
     if (tabName === 'Team Control') return '/dashboard/team-control';
     if (tabName === 'Live Tracking') return '/dashboard/live-tracking';
     if (tabName === 'My Profile') return '/dashboard/my-profile';
+    if (tabName === 'Daily Reports') return '/dashboard/daily-reports';
 
     return `/dashboard/${tabName.toLowerCase()}`;
   };
