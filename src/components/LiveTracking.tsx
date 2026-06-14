@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   MapPin, 
@@ -53,6 +53,7 @@ export default function LiveTracking() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeEmployees, setActiveEmployees] = useState<ActiveEmployee[]>([]);
   const [selectedEmpId, setSelectedEmpId] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'on_site' | 'off_site'>('all');
   
   // Real-time listener states
   const [teamList, setTeamList] = useState<any[]>([]);
@@ -183,6 +184,25 @@ export default function LiveTracking() {
     setActiveEmployees(activeList);
   }, [todayPunches, teamList, projectsList, schedulesList]);
 
+  // Memoized filtered employees list
+  const filteredEmployees = useMemo(() => {
+    return activeEmployees.filter(emp => {
+      const term = searchTerm.toLowerCase();
+      const matchesSearch = (
+        emp.name.toLowerCase().includes(term) ||
+        emp.employeeId.toLowerCase().includes(term) ||
+        (emp.branch || '').toLowerCase().includes(term) ||
+        emp.address.toLowerCase().includes(term) ||
+        (emp.assignedProjectName || '').toLowerCase().includes(term)
+      );
+
+      if (!matchesSearch) return false;
+      if (statusFilter === 'on_site') return emp.isVerifiedOnSite;
+      if (statusFilter === 'off_site') return !emp.isVerifiedOnSite;
+      return true;
+    });
+  }, [activeEmployees, searchTerm, statusFilter]);
+
   // 4. Initialize Map
   useEffect(() => {
     if (!mapContainerRef.current) return;
@@ -198,8 +218,8 @@ export default function LiveTracking() {
       zoomControl: false // custom zoom control position
     }).setView([15.3647, 75.1240], 6);
 
-    // Apply CartoDB Dark Matter tile layer (Premium dark aesthetic)
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    // Apply CartoDB Positron tile layer (Premium clean light aesthetic)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
       maxZoom: 20,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
     }).addTo(map);
@@ -218,7 +238,7 @@ export default function LiveTracking() {
     };
   }, []);
 
-  // 5. Update Map Markers when activeEmployees list changes
+  // 5. Update Map Markers when filteredEmployees list changes
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
@@ -229,21 +249,21 @@ export default function LiveTracking() {
     });
     markersRef.current = {};
 
-    if (activeEmployees.length === 0) return;
+    if (filteredEmployees.length === 0) return;
 
     const bounds: L.LatLngBoundsExpression = [];
 
-    activeEmployees.forEach(emp => {
+    filteredEmployees.forEach(emp => {
       const pos: L.LatLngExpression = [emp.latitude, emp.longitude];
       bounds.push(pos);
 
       // Create Custom Popup HTML Content (Sleek Dark Theme)
       const popupContent = `
-        <div class="p-2 min-w-[200px] text-slate-200 bg-[#0e1422] rounded-lg border border-slate-800 font-sans">
+        <div class="p-3.5 min-w-[220px] text-slate-200 bg-[#0e1422]/95 backdrop-blur border border-slate-800 rounded-xl font-sans shadow-2xl">
           <div class="flex items-center gap-2 mb-2">
             ${emp.photoUrl 
-              ? `<img src="${emp.photoUrl}" class="w-8 h-8 rounded-full object-cover border border-cyan-500/30" />`
-              : `<div class="w-8 h-8 rounded-full bg-cyan-950/40 flex items-center justify-center text-[10px] font-bold text-cyan-400 border border-cyan-500/20">${emp.name.slice(0, 2).toUpperCase()}</div>`
+              ? `<img src="${emp.photoUrl}" class="w-9 h-9 rounded-full object-cover border border-cyan-500/30" />`
+              : `<div class="w-9 h-9 rounded-full bg-cyan-950/40 flex items-center justify-center text-xs font-bold text-cyan-400 border border-cyan-500/20">${emp.name.slice(0, 2).toUpperCase()}</div>`
             }
             <div>
               <h4 class="text-xs font-bold text-white leading-none">${emp.name}</h4>
@@ -252,23 +272,47 @@ export default function LiveTracking() {
           </div>
           <div class="space-y-1 text-[10px] text-slate-400 border-t border-slate-800/80 pt-1.5">
             <p><strong class="text-slate-300">Project:</strong> ${emp.assignedProjectName || 'Unassigned'}</p>
-            <p><strong class="text-slate-300">Status:</strong> ${emp.isVerifiedOnSite ? '<span class="text-emerald-400">On-Site</span>' : '<span class="text-rose-455">Off-Site</span>'}</p>
+            <p><strong class="text-slate-300">Status:</strong> ${emp.isVerifiedOnSite ? '<span class="text-emerald-400 font-bold">On-Site</span>' : '<span class="text-rose-400 font-bold">Off-Site</span>'}</p>
             <p><strong class="text-slate-300">Last Punch:</strong> ${emp.lastPunchTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
             <p class="text-[9px] text-slate-500 mt-1 leading-normal italic">${emp.address.slice(0, 80)}...</p>
           </div>
         </div>
       `;
 
-      // Set custom element colors for status
-      const markerOptions = emp.isVerifiedOnSite 
-        ? { title: emp.name } 
-        : { title: emp.name };
+      // Custom Circular Avatar Marker
+      const avatarHtml = `
+        <div class="relative flex items-center justify-center w-10 h-10 rounded-full border-2 shadow-lg transition-all duration-200 transform hover:scale-110 ${
+          emp.isVerifiedOnSite 
+            ? 'border-emerald-500 bg-emerald-950/90 text-emerald-400' 
+            : 'border-rose-500 bg-rose-950/90 text-rose-400'
+        }">
+          ${emp.photoUrl 
+            ? `<img src="${emp.photoUrl}" class="w-full h-full rounded-full object-cover" />`
+            : `<span class="text-xs font-black uppercase tracking-wider">${emp.name.slice(0, 2).toUpperCase()}</span>`
+          }
+          <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border border-slate-900 ${
+            emp.isVerifiedOnSite ? 'bg-emerald-500' : 'bg-rose-500'
+          }"></span>
+        </div>
+      `;
 
-      const marker = L.marker(pos, markerOptions)
+      const avatarIcon = L.divIcon({
+        className: 'custom-avatar-marker',
+        html: avatarHtml,
+        iconSize: [40, 40],
+        iconAnchor: [20, 20],
+        popupAnchor: [0, -20]
+      });
+
+      const marker = L.marker(pos, {
+        icon: avatarIcon,
+        title: emp.name
+      })
         .addTo(map)
         .bindPopup(popupContent, {
           closeButton: false,
-          className: 'leaflet-custom-popup'
+          className: 'leaflet-custom-popup',
+          offset: [0, -10]
         });
 
       // Click event
@@ -280,11 +324,11 @@ export default function LiveTracking() {
       markersRef.current[emp.id] = marker;
     });
 
-    // Fit bounds only on initial render/load to prevent disruptive panning while user interacts
+    // Fit bounds only on initial render/load or filter change to prevent disruptive panning while user interacts
     if (bounds.length > 0 && map.getZoom() <= 7) {
       map.fitBounds(bounds, { padding: [50, 50] });
     }
-  }, [activeEmployees]);
+  }, [filteredEmployees]);
 
   // Center map on selected employee
   const handleSelectEmployee = (emp: ActiveEmployee) => {
@@ -299,16 +343,13 @@ export default function LiveTracking() {
     }
   };
 
-  const filteredEmployees = activeEmployees.filter(emp => {
-    const term = searchTerm.toLowerCase();
-    return (
-      emp.name.toLowerCase().includes(term) ||
-      emp.employeeId.toLowerCase().includes(term) ||
-      (emp.branch || '').toLowerCase().includes(term) ||
-      emp.address.toLowerCase().includes(term) ||
-      (emp.assignedProjectName || '').toLowerCase().includes(term)
-    );
-  });
+  // Fit map to show all filtered employees
+  const handleFitAllBounds = () => {
+    const map = mapInstanceRef.current;
+    if (!map || filteredEmployees.length === 0) return;
+    const bounds: L.LatLngBoundsExpression = filteredEmployees.map(emp => [emp.latitude, emp.longitude]);
+    map.fitBounds(bounds, { padding: [50, 50] });
+  };
 
   return (
     <div className="h-[calc(100vh-8rem)] w-full flex flex-col lg:flex-row gap-6 relative z-10 select-none">
@@ -324,12 +365,12 @@ export default function LiveTracking() {
               Active Transmissions
             </h3>
             <span className="px-2 py-0.5 rounded-full bg-cyan-950/40 border border-cyan-500/30 text-[9px] font-bold text-cyan-400 font-mono">
-              {activeEmployees.length} Online
+              {filteredEmployees.length} Online
             </span>
           </div>
 
           {/* Search bar */}
-          <div className="relative">
+          <div className="relative mb-3">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
             <input
               type="text"
@@ -338,6 +379,40 @@ export default function LiveTracking() {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full bg-slate-950/40 border border-slate-800 rounded-xl py-2 pl-9 pr-3 text-xs focus:outline-none focus:border-cyan-500 text-slate-100 placeholder:text-slate-500 transition-all shadow-inner"
             />
+          </div>
+
+          {/* Status Filter Tabs */}
+          <div className="flex gap-1.5">
+            <button
+              onClick={() => setStatusFilter('all')}
+              className={`flex-1 py-1.5 px-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border cursor-pointer ${
+                statusFilter === 'all'
+                  ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30 shadow-[0_0_8px_rgba(6,182,212,0.1)]'
+                  : 'bg-slate-950/20 text-slate-400 border-slate-900 hover:text-slate-300 hover:border-slate-800'
+              }`}
+            >
+              All ({activeEmployees.length})
+            </button>
+            <button
+              onClick={() => setStatusFilter('on_site')}
+              className={`flex-1 py-1.5 px-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border cursor-pointer ${
+                statusFilter === 'on_site'
+                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30 shadow-[0_0_8px_rgba(16,185,129,0.1)]'
+                  : 'bg-slate-950/20 text-slate-400 border-slate-900 hover:text-slate-300 hover:border-slate-800'
+              }`}
+            >
+              On-Site ({activeEmployees.filter(e => e.isVerifiedOnSite).length})
+            </button>
+            <button
+              onClick={() => setStatusFilter('off_site')}
+              className={`flex-1 py-1.5 px-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border cursor-pointer ${
+                statusFilter === 'off_site'
+                  ? 'bg-rose-500/10 text-rose-455 border-rose-500/30 shadow-[0_0_8px_rgba(239,68,68,0.1)]'
+                  : 'bg-slate-950/20 text-slate-400 border-slate-900 hover:text-slate-300 hover:border-slate-800'
+              }`}
+            >
+              Off-Site ({activeEmployees.filter(e => !e.isVerifiedOnSite).length})
+            </button>
           </div>
         </div>
 
@@ -384,7 +459,7 @@ export default function LiveTracking() {
                       <span className={`text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded leading-none shrink-0 border ${
                         emp.isVerifiedOnSite
                           ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                          : 'bg-rose-500/10 text-rose-455 border-rose-500/20'
+                          : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
                       }`}>
                         {emp.isVerifiedOnSite ? 'On-Site' : 'Off-Site'}
                       </span>
@@ -437,8 +512,20 @@ export default function LiveTracking() {
           <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping shrink-0" />
           <div className="font-sans">
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block leading-none">Map Diagnostics</span>
-            <span className="text-[11px] font-extrabold text-slate-100 mt-1 block">CartoDB Dark Tile Engine Active</span>
+            <span className="text-[11px] font-extrabold text-slate-100 mt-1 block">CartoDB Light Tile Engine Active</span>
           </div>
+        </div>
+
+        {/* Top-Right Quick Map Actions */}
+        <div className="absolute top-4 right-4 z-10 flex gap-2">
+          <button
+            onClick={handleFitAllBounds}
+            className="p-2 px-3 bg-slate-950/85 backdrop-blur hover:bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-xl shadow-lg transition-all flex items-center gap-1.5 text-[11px] font-bold text-slate-200 cursor-pointer"
+            title="Fit map to show all filtered employees"
+          >
+            <Maximize2 className="w-3.5 h-3.5 text-cyan-400" />
+            <span>Fit All</span>
+          </button>
         </div>
       </div>
       

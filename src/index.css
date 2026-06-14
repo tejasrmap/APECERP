@@ -108,5 +108,33 @@ body {
   }
 }
 
+/* Custom Leaflet Popup overrides to remove default white border and backgrounds */
+.leaflet-custom-popup .leaflet-popup-content-wrapper {
+  background: transparent !important;
+  color: inherit !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  border-radius: 12px !important;
+  overflow: hidden;
+  border: none !important;
+}
 
+.leaflet-custom-popup .leaflet-popup-content {
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: inherit !important;
+}
 
+.leaflet-custom-popup .leaflet-popup-tip-container {
+  display: none !important;
+}
+
+.leaflet-custom-popup .leaflet-popup-close-button {
+  display: none !important;
+}
+
+/* Custom avatar marker styles */
+.custom-avatar-marker {
+  background: transparent !important;
+  border: none !important;
+}
