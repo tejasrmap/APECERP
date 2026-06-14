@@ -448,6 +448,15 @@ export default function Attendance() {
       // Prevent duplicate trackers
       await stopBackgroundTracking();
 
+      // Request notification permission on Android 13+ so the foreground service notification can display
+      if ('Notification' in window && (Notification as any).permission !== 'granted') {
+        try {
+          await (Notification as any).requestPermission();
+        } catch (notifErr) {
+          console.error("Failed to request notification permission:", notifErr);
+        }
+      }
+
       const watcherId = await BackgroundGeolocation.addWatcher(
         {
           backgroundTitle: "APEC Location Tracking Active",
@@ -509,6 +518,7 @@ export default function Attendance() {
       console.log("Started background tracking. Watcher ID:", watcherId);
     } catch (err) {
       console.error("Failed to launch background location watcher:", err);
+      alert("Notice: Could not start background location tracking. Please ensure that Location permissions are set to 'Allow all the time' in your phone's settings.");
     }
   };
 
