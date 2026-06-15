@@ -40,6 +40,7 @@ interface ActiveEmployee {
   branch: string;
   role: string;
   lastPunchTime: Date;
+  lastTrackedTime: Date;
   latitude: number;
   longitude: number;
   address: string;
@@ -61,6 +62,7 @@ export default function LiveTracking() {
   const [projectsList, setProjectsList] = useState<any[]>([]);
   const [schedulesList, setSchedulesList] = useState<any[]>([]);
   const [todayTelemetry, setTodayTelemetry] = useState<any[]>([]);
+  const [geocodedAddresses, setGeocodedAddresses] = useState<{ [key: string]: string }>({});
   
   const [loading, setLoading] = useState(true);
 
@@ -189,6 +191,7 @@ export default function LiveTracking() {
           branch: teamMember?.branch || teamMember?.department || 'Vijayawada',
           role: teamMember?.role || 'Technician',
           lastPunchTime: latestPunch.timestamp,
+          lastTrackedTime: latestItem.timestamp,
           latitude: latestItem.location?.latitude || 15.3647,
           longitude: latestItem.location?.longitude || 75.1240,
           address: latestItem.location?.address || 'Background Telemetry',
@@ -202,6 +205,49 @@ export default function LiveTracking() {
 
     setActiveEmployees(activeList);
   }, [todayTelemetry, teamList, projectsList, schedulesList]);
+
+  // Client-side reverse geocoding for background telemetry updates to show real location details on dashboard
+  useEffect(() => {
+    const fetchGeocode = async (emp: ActiveEmployee) => {
+      const lat = emp.latitude;
+      const lon = emp.longitude;
+      const key = `${lat.toFixed(6)},${lon.toFixed(6)}`;
+
+      if (
+        (emp.address === 'Background Telemetry' || !emp.address || emp.address.startsWith('Background')) &&
+        !geocodedAddresses[key]
+      ) {
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`, {
+            headers: {
+              'User-Agent': 'APECERP-LiveTracking/1.0'
+            }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.display_name) {
+              setGeocodedAddresses(prev => ({ ...prev, [key]: data.display_name }));
+            }
+          }
+        } catch (err) {
+          console.error("Client-side reverse geocoding failed:", err);
+        }
+      }
+    };
+
+    // Sequential trigger to respect Nominatim request rate limits (1 req/sec)
+    let delay = 0;
+    activeEmployees.forEach((emp) => {
+      const key = `${emp.latitude.toFixed(6)},${emp.longitude.toFixed(6)}`;
+      if (
+        (emp.address === 'Background Telemetry' || !emp.address || emp.address.startsWith('Background')) &&
+        !geocodedAddresses[key]
+      ) {
+        setTimeout(() => fetchGeocode(emp), delay);
+        delay += 1100; // 1.1s delay between fetches
+      }
+    });
+  }, [activeEmployees, geocodedAddresses]);
 
   // Memoized filtered employees list
   const filteredEmployees = useMemo(() => {
@@ -297,24 +343,32 @@ export default function LiveTracking() {
         polylinesRef.current[emp.id] = polyline;
       }
 
+      // Compute displayAddress
+      const key = `${emp.latitude.toFixed(6)},${emp.longitude.toFixed(6)}`;
+      const displayAddress = geocodedAddresses[key] || 
+        (emp.address === 'Background Telemetry' 
+          ? `Background Telemetry (${emp.latitude.toFixed(4)}, ${emp.longitude.toFixed(4)})` 
+          : emp.address);
+
       // Create Custom Popup HTML Content (Sleek Dark Theme)
       const popupContent = `
         <div class="p-3.5 min-w-[220px] text-slate-200 bg-[#0e1422]/95 backdrop-blur border border-slate-800 rounded-xl font-sans shadow-2xl">
           <div class="flex items-center gap-2 mb-2">
             ${emp.photoUrl 
               ? `<img src="${emp.photoUrl}" class="w-9 h-9 rounded-full object-cover border border-cyan-500/30" />`
-              : `<div class="w-9 h-9 rounded-full bg-cyan-950/40 flex items-center justify-center text-xs font-bold text-cyan-400 border border-cyan-500/20">${emp.name.slice(0, 2).toUpperCase()}</div>`
+              : `<div class="w-9 h-9 rounded-full bg-cyan-950/45 flex items-center justify-center text-xs font-bold text-cyan-400 border border-cyan-500/20">${emp.name.slice(0, 2).toUpperCase()}</div>`
             }
             <div>
               <h4 class="text-xs font-bold text-white leading-none">${emp.name}</h4>
               <span class="text-[9px] text-cyan-400 font-mono font-bold">${emp.employeeId}</span>
             </div>
           </div>
-          <div class="space-y-1 text-[10px] text-slate-400 border-t border-slate-800/80 pt-1.5">
-            <p><strong class="text-slate-300">Project:</strong> ${emp.assignedProjectName || 'Unassigned'}</p>
-            <p><strong class="text-slate-300">Status:</strong> ${emp.isVerifiedOnSite ? '<span class="text-emerald-400 font-bold">On-Site</span>' : '<span class="text-rose-400 font-bold">Off-Site</span>'}</p>
-            <p><strong class="text-slate-300">Last Punch:</strong> ${emp.lastPunchTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-            <p class="text-[9px] text-slate-500 mt-1 leading-normal italic">${emp.address.slice(0, 80)}...</p>
+          <div class="space-y-1 text-[10px] text-slate-450 border-t border-slate-800/80 pt-1.5 font-sans">
+            <p><strong class="text-slate-300 font-semibold">Project:</strong> ${emp.assignedProjectName || 'Unassigned'}</p>
+            <p><strong class="text-slate-300 font-semibold">Status:</strong> ${emp.isVerifiedOnSite ? '<span class="text-emerald-400 font-bold">On-Site</span>' : '<span class="text-rose-400 font-bold">Off-Site</span>'}</p>
+            <p><strong class="text-slate-300 font-semibold">Last Punch:</strong> ${emp.lastPunchTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+            <p><strong class="text-slate-300 font-semibold font-mono text-cyan-400">Last Tracked:</strong> ${emp.lastTrackedTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+            <p class="text-[9px] text-slate-500 mt-1.5 leading-normal italic border-t border-slate-800/60 pt-1">${displayAddress.slice(0, 80)}...</p>
           </div>
         </div>
       `;
@@ -515,17 +569,32 @@ export default function LiveTracking() {
 
                     <p className="text-[9.5px] text-slate-500 leading-normal truncate flex items-center gap-1">
                       <MapPin className="w-3 h-3 text-slate-600 shrink-0" />
-                      {emp.address}
+                      {(() => {
+                        const key = `${emp.latitude.toFixed(6)},${emp.longitude.toFixed(6)}`;
+                        if (geocodedAddresses[key]) {
+                          return geocodedAddresses[key];
+                        }
+                        if (emp.address === 'Background Telemetry') {
+                          return `Background Telemetry (${emp.latitude.toFixed(4)}, ${emp.longitude.toFixed(4)})`;
+                        }
+                        return emp.address;
+                      })()}
                     </p>
 
-                    <div className="flex justify-between items-center text-[8.5px] text-slate-500 font-mono pt-1.5 border-t border-slate-900/60 mt-1">
-                      <span className="flex items-center gap-1">
-                        <Clock className="w-3 h-3 text-slate-600" />
-                        Punched: {emp.lastPunchTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                      {emp.accuracy && (
-                        <span>Acc: &plusmn;{Math.round(emp.accuracy)}m</span>
-                      )}
+                    <div className="flex flex-col gap-1 pt-1.5 border-t border-slate-900/60 mt-1">
+                      <div className="flex justify-between items-center text-[8.5px] text-slate-500 font-mono">
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-slate-600 font-bold shrink-0" />
+                          Punched: {emp.lastPunchTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                        {emp.accuracy && (
+                          <span>Acc: &plusmn;{Math.round(emp.accuracy)}m</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 text-[8.2px] text-cyan-400 font-mono">
+                        <Navigation className="w-3 h-3 text-cyan-500/70 animate-pulse shrink-0" />
+                        <span>Last Tracked: {emp.lastTrackedTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
