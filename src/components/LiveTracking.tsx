@@ -449,7 +449,7 @@ export default function LiveTracking() {
     <div className="h-[calc(100vh-8rem)] w-full flex flex-col lg:flex-row gap-6 relative z-10 select-none">
       
       {/* LEFT PANEL: Live Employee List */}
-      <div className="w-full lg:w-96 flex flex-col glass-card border border-white/10 rounded-2xl shadow-xl overflow-hidden shrink-0">
+      <div className="w-full lg:w-96 h-80 lg:h-full flex flex-col glass-card border border-white/10 rounded-2xl shadow-xl overflow-hidden shrink-0">
         
         {/* Panel Header */}
         <div className="p-4 border-b border-slate-800 bg-[#090d16]/30">
@@ -567,18 +567,20 @@ export default function LiveTracking() {
                       </p>
                     )}
 
-                    <p className="text-[9.5px] text-slate-500 leading-normal truncate flex items-center gap-1">
-                      <MapPin className="w-3 h-3 text-slate-600 shrink-0" />
-                      {(() => {
-                        const key = `${emp.latitude.toFixed(6)},${emp.longitude.toFixed(6)}`;
-                        if (geocodedAddresses[key]) {
-                          return geocodedAddresses[key];
-                        }
-                        if (emp.address === 'Background Telemetry') {
-                          return `Background Telemetry (${emp.latitude.toFixed(4)}, ${emp.longitude.toFixed(4)})`;
-                        }
-                        return emp.address;
-                      })()}
+                    <p className="text-[9.5px] text-slate-500 leading-normal flex items-start gap-1 whitespace-normal break-all">
+                      <MapPin className="w-3 h-3 text-slate-600 shrink-0 mt-0.5" />
+                      <span className="break-words">
+                        {(() => {
+                          const key = `${emp.latitude.toFixed(6)},${emp.longitude.toFixed(6)}`;
+                          if (geocodedAddresses[key]) {
+                            return geocodedAddresses[key];
+                          }
+                          if (emp.address === 'Background Telemetry') {
+                            return `Background Telemetry (${emp.latitude.toFixed(4)}, ${emp.longitude.toFixed(4)})`;
+                          }
+                          return emp.address;
+                        })()}
+                      </span>
                     </p>
 
                     <div className="flex flex-col gap-1 pt-1.5 border-t border-slate-900/60 mt-1">
