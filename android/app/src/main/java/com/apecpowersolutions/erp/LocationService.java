@@ -42,6 +42,7 @@ public class LocationService extends Service {
     private FusedLocationProviderClient fusedLocationClient;
     private LocationCallback locationCallback;
     private HandlerThread serviceHandlerThread;
+    private android.os.PowerManager.WakeLock wakeLock;
 
     @Override
     public void onCreate() {
@@ -64,6 +65,12 @@ public class LocationService extends Service {
                 }
             }
         };
+
+        // Initialize WakeLock to keep CPU running when screen is turned off
+        android.os.PowerManager powerManager = (android.os.PowerManager) getSystemService(Context.POWER_SERVICE);
+        if (powerManager != null) {
+            wakeLock = powerManager.newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "APEC::LocationTrackingWakeLock");
+        }
     }
 
     @Override
@@ -81,6 +88,12 @@ public class LocationService extends Service {
             startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION);
         } else {
             startForeground(NOTIFICATION_ID, notification);
+        }
+        
+        // Acquire wake lock with a timeout (e.g. 12 hours) as absolute safety fallback
+        if (wakeLock != null && !wakeLock.isHeld()) {
+            wakeLock.acquire(12 * 60 * 60 * 1000L); // 12 hours in milliseconds
+            Log.d(TAG, "WakeLock acquired");
         }
         
         // Request immediate last-known location update to populate portal instantly
@@ -135,6 +148,11 @@ public class LocationService extends Service {
         }
         if (serviceHandlerThread != null) {
             serviceHandlerThread.quitSafely();
+        }
+        // Release wake lock
+        if (wakeLock != null && wakeLock.isHeld()) {
+            wakeLock.release();
+            Log.d(TAG, "WakeLock released");
         }
         Log.d(TAG, "Location updates stopped and service destroyed");
     }
