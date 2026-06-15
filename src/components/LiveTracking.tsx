@@ -46,6 +46,7 @@ interface ActiveEmployee {
   accuracy?: number;
   assignedProjectName?: string | null;
   isVerifiedOnSite?: boolean;
+  routePoints?: { latitude: number; longitude: number; timestamp: Date }[];
 }
 
 export default function LiveTracking() {
@@ -59,13 +60,14 @@ export default function LiveTracking() {
   const [teamList, setTeamList] = useState<any[]>([]);
   const [projectsList, setProjectsList] = useState<any[]>([]);
   const [schedulesList, setSchedulesList] = useState<any[]>([]);
-  const [todayPunches, setTodayPunches] = useState<any[]>([]);
+  const [todayTelemetry, setTodayTelemetry] = useState<any[]>([]);
   
   const [loading, setLoading] = useState(true);
 
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersRef = useRef<{ [key: string]: L.Marker }>({});
+  const polylinesRef = useRef<{ [key: string]: L.Polyline }>({});
 
   // 1. Fetch metadata (team, projects, schedules)
   useEffect(() => {
@@ -93,7 +95,7 @@ export default function LiveTracking() {
     };
   }, []);
 
-  // 2. Fetch today's punches in real-time
+  // 2. Fetch today's telemetry in real-time
   useEffect(() => {
     if (!db) return;
 
@@ -101,11 +103,11 @@ export default function LiveTracking() {
     todayStart.setHours(0, 0, 0, 0);
 
     const q = query(
-      collection(db, 'attendance'), 
+      collection(db, 'telemetry'), 
       where('timestamp', '>=', Timestamp.fromDate(todayStart))
     );
 
-    const unsubPunches = onSnapshot(q, (snap) => {
+    const unsubTelemetry = onSnapshot(q, (snap) => {
       const list = snap.docs.map(doc => {
         const data = doc.data();
         let ts = new Date();
@@ -121,35 +123,39 @@ export default function LiveTracking() {
       });
       // Sort ascending to process chronology
       list.sort((a: any, b: any) => a.timestamp.getTime() - b.timestamp.getTime());
-      setTodayPunches(list);
+      setTodayTelemetry(list);
       setLoading(false);
     }, (err) => {
-      console.error("Failed to read punches:", err);
+      console.error("Failed to read telemetry:", err);
       setLoading(false);
     });
 
-    return () => unsubPunches();
+    return () => unsubTelemetry();
   }, []);
 
   // 3. Process active states
   useEffect(() => {
-    // Map employee email to their chronological punches today
-    const employeePunches: { [key: string]: any[] } = {};
-    todayPunches.forEach(punch => {
-      const email = punch.userEmail?.toLowerCase();
+    // Map employee email to their chronological telemetry today
+    const employeeTelemetry: { [key: string]: any[] } = {};
+    todayTelemetry.forEach(item => {
+      const email = item.userEmail?.toLowerCase();
       if (!email) return;
-      if (!employeePunches[email]) employeePunches[email] = [];
-      employeePunches[email].push(punch);
+      if (!employeeTelemetry[email]) employeeTelemetry[email] = [];
+      employeeTelemetry[email].push(item);
     });
 
     const activeList: ActiveEmployee[] = [];
     const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
 
-    Object.keys(employeePunches).forEach(email => {
-      const punches = employeePunches[email];
-      if (punches.length === 0) return;
+    Object.keys(employeeTelemetry).forEach(email => {
+      const items = employeeTelemetry[email];
+      if (items.length === 0) return;
 
-      const latestPunch = punches[punches.length - 1];
+      // Filter manual punches from telemetry to determine current clock status
+      const manualPunches = items.filter(i => i.type === 'punch_in' || i.type === 'punch_out');
+      if (manualPunches.length === 0) return;
+
+      const latestPunch = manualPunches[manualPunches.length - 1];
       
       // If they are currently punched in (latest action today is punch_in)
       if (latestPunch.type === 'punch_in') {
@@ -162,6 +168,18 @@ export default function LiveTracking() {
         );
         const project = shift ? projectsList.find(p => p.id === shift.projectId) : null;
 
+        // Get the latest coordinates (newest item in telemetry today)
+        const latestItem = items[items.length - 1];
+
+        // Store all coordinates of today chronologically for route line plotting
+        const routePoints = items
+          .filter(i => i.location?.latitude && i.location?.longitude)
+          .map(i => ({
+            latitude: i.location.latitude,
+            longitude: i.location.longitude,
+            timestamp: i.timestamp
+          }));
+
         activeList.push({
           id: teamMember?.id || latestPunch.employeeId || email,
           name: teamMember?.name || latestPunch.userName || 'Unknown Staff',
@@ -171,18 +189,19 @@ export default function LiveTracking() {
           branch: teamMember?.branch || teamMember?.department || 'Vijayawada',
           role: teamMember?.role || 'Technician',
           lastPunchTime: latestPunch.timestamp,
-          latitude: latestPunch.location?.latitude || 15.3647,
-          longitude: latestPunch.location?.longitude || 75.1240,
-          address: latestPunch.location?.address || 'Verified Coordinates',
-          accuracy: latestPunch.location?.accuracy,
+          latitude: latestItem.location?.latitude || 15.3647,
+          longitude: latestItem.location?.longitude || 75.1240,
+          address: latestItem.location?.address || 'Background Telemetry',
+          accuracy: latestItem.location?.accuracy,
           assignedProjectName: project?.name || latestPunch.geofenceStatus?.assignedProjectName || null,
-          isVerifiedOnSite: latestPunch.geofenceStatus?.isVerifiedOnSite || false
+          isVerifiedOnSite: latestPunch.geofenceStatus?.isVerifiedOnSite || false,
+          routePoints: routePoints
         });
       }
     });
 
     setActiveEmployees(activeList);
-  }, [todayPunches, teamList, projectsList, schedulesList]);
+  }, [todayTelemetry, teamList, projectsList, schedulesList]);
 
   // Memoized filtered employees list
   const filteredEmployees = useMemo(() => {
@@ -249,6 +268,12 @@ export default function LiveTracking() {
     });
     markersRef.current = {};
 
+    // Clear existing polylines
+    Object.keys(polylinesRef.current).forEach(id => {
+      polylinesRef.current[id].remove();
+    });
+    polylinesRef.current = {};
+
     if (filteredEmployees.length === 0) return;
 
     const bounds: L.LatLngBoundsExpression = [];
@@ -256,6 +281,21 @@ export default function LiveTracking() {
     filteredEmployees.forEach(emp => {
       const pos: L.LatLngExpression = [emp.latitude, emp.longitude];
       bounds.push(pos);
+
+      // Draw Route Lines connecting today's coordinates chronologically
+      if (emp.routePoints && emp.routePoints.length >= 2) {
+        const latlngs = emp.routePoints.map(pt => [pt.latitude, pt.longitude] as L.LatLngExpression);
+        const polyline = L.polyline(latlngs, {
+          color: '#06b6d4',
+          weight: 3.5,
+          opacity: 0.75,
+          lineJoin: 'round',
+          lineCap: 'round',
+          dashArray: '1, 5' // gives it a premium tracking path feel
+        }).addTo(map);
+
+        polylinesRef.current[emp.id] = polyline;
+      }
 
       // Create Custom Popup HTML Content (Sleek Dark Theme)
       const popupContent = `
