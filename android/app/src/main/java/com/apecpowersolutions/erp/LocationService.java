@@ -230,6 +230,21 @@ public class LocationService extends Service {
         return null;
     }
 
+    private void updateNotification(String text) {
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if (manager == null) return;
+
+        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
+                .setContentTitle("APEC Location Tracking Active")
+                .setContentText(text)
+                .setSmallIcon(android.R.drawable.ic_menu_mylocation)
+                .setOngoing(true)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .build();
+
+        manager.notify(NOTIFICATION_ID, notification);
+    }
+
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel serviceChannel = new NotificationChannel(
@@ -326,6 +341,9 @@ public class LocationService extends Service {
                     int respCode = conn.getResponseCode();
                     if (respCode == 200 || respCode == 201) {
                         Log.d(TAG, "Telemetry write OK: lat=" + latitude + ", lng=" + longitude);
+                        SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm:ss a", Locale.getDefault());
+                        String formattedTime = timeFormat.format(new Date());
+                        updateNotification("Last update sent: " + formattedTime);
                     } else {
                         String error = "";
                         try {
@@ -333,9 +351,15 @@ public class LocationService extends Service {
                             if (es != null) error = readStream(es);
                         } catch (Exception ignored) {}
                         Log.e(TAG, "Telemetry write failed: HTTP " + respCode + " - " + error);
+                        SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm:ss a", Locale.getDefault());
+                        String formattedTime = timeFormat.format(new Date());
+                        updateNotification("Last update failed: " + formattedTime + " (HTTP " + respCode + ")");
                     }
                 } catch (Exception e) {
                     Log.e(TAG, "Telemetry network error", e);
+                    SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm:ss a", Locale.getDefault());
+                    String formattedTime = timeFormat.format(new Date());
+                    updateNotification("Offline. Last update attempt: " + formattedTime);
                 }
             }
         }).start();
