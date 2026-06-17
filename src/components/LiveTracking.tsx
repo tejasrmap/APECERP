@@ -501,7 +501,7 @@ export default function LiveTracking() {
               onClick={() => setStatusFilter('off_site')}
               className={`flex-1 py-1.5 px-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border cursor-pointer ${
                 statusFilter === 'off_site'
-                  ? 'bg-rose-500/10 text-rose-455 border-rose-500/30 shadow-[0_0_8px_rgba(239,68,68,0.1)]'
+                  ? 'bg-rose-500/10 text-rose-400 border-rose-500/30 shadow-[0_0_8px_rgba(239,68,68,0.1)]'
                   : 'bg-slate-950/20 text-slate-400 border-slate-900 hover:text-slate-300 hover:border-slate-800'
               }`}
             >
@@ -533,7 +533,7 @@ export default function LiveTracking() {
                   className={`p-3.5 rounded-xl border transition-all cursor-pointer flex gap-3 ${
                     isSelected
                       ? 'bg-cyan-950/20 border-cyan-500/40 shadow-[0_0_12px_rgba(6,182,212,0.08)]'
-                      : 'bg-slate-955/30 border-slate-900 hover:border-slate-800'
+                      : 'bg-slate-950/30 border-slate-900 hover:border-slate-800'
                   }`}
                 >
                   {/* Photo / Avatar */}
@@ -562,7 +562,7 @@ export default function LiveTracking() {
                     <p className="text-[9.5px] font-bold text-cyan-400 font-mono tracking-wide leading-none">{emp.employeeId}</p>
                     
                     {emp.assignedProjectName && (
-                      <p className="text-[9.5px] text-slate-450 font-medium truncate pt-1">
+                      <p className="text-[9.5px] text-slate-400 font-medium truncate pt-1">
                         Site: <span className="text-slate-300 font-semibold">{emp.assignedProjectName}</span>
                       </p>
                     )}
@@ -607,7 +607,7 @@ export default function LiveTracking() {
 
         {/* Panel Footer */}
         <div className="p-3 bg-slate-950/40 border-t border-slate-900 flex items-center justify-center gap-2 text-slate-500 font-mono text-[9px] uppercase tracking-widest text-center select-none shrink-0">
-          <Shield className="w-3.5 h-3.5 text-slate-550 shrink-0" />
+          <Shield className="w-3.5 h-3.5 text-slate-500 shrink-0" />
           <span>Real-time Secure GPS Node Telemetry</span>
         </div>
 
