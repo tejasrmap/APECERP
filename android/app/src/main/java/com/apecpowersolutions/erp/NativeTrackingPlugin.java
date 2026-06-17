@@ -16,25 +16,30 @@ public class NativeTrackingPlugin extends Plugin {
 
     @PluginMethod
     public void startTracking(PluginCall call) {
-        String employeeId = call.getString("employeeId");
-        String userName = call.getString("userName");
-        String userEmail = call.getString("userEmail");
-        String apiKey = call.getString("apiKey");
-        String refreshToken = call.getString("refreshToken");
-        String projectId = call.getString("projectId");
-
-        SharedPreferences prefs = getContext().getSharedPreferences("APEC_NATIVE_TRACKING", Context.MODE_PRIVATE);
-        prefs.edit()
-            .putString("employeeId", employeeId)
-            .putString("userName", userName)
-            .putString("userEmail", userEmail)
-            .putString("apiKey", apiKey)
-            .putString("refreshToken", refreshToken)
-            .putString("projectId", projectId)
-            .putLong("last_bg_update_time", 0)
-            .apply();
-
         try {
+            String employeeId = call.getString("employeeId");
+            String userName = call.getString("userName");
+            String userEmail = call.getString("userEmail");
+            String apiKey = call.getString("apiKey");
+            String refreshToken = call.getString("refreshToken");
+            String projectId = call.getString("projectId");
+
+            if (employeeId == null || projectId == null) {
+                call.reject("Failed: employeeId and projectId are required parameters.");
+                return;
+            }
+
+            SharedPreferences prefs = getContext().getSharedPreferences("APEC_NATIVE_TRACKING", Context.MODE_PRIVATE);
+            prefs.edit()
+                .putString("employeeId", employeeId)
+                .putString("userName", userName != null ? userName : "")
+                .putString("userEmail", userEmail != null ? userEmail : "")
+                .putString("apiKey", apiKey != null ? apiKey : "")
+                .putString("refreshToken", refreshToken != null ? refreshToken : "")
+                .putString("projectId", projectId)
+                .putLong("last_bg_update_time", 0)
+                .apply();
+
             getActivity().runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
