@@ -49,6 +49,23 @@ public class LocationService extends Service {
     private HandlerThread serviceHandlerThread;
     private android.os.PowerManager.WakeLock wakeLock;
 
+    // Schedule a periodic UI updater (notification + toast) every minute
+    private final Runnable uiUpdater = new Runnable() {
+        @Override
+        public void run() {
+            // Update notification with current time (even if no data sent)
+            java.text.SimpleDateFormat timeFmt = new java.text.SimpleDateFormat("hh:mm:ss a", java.util.Locale.getDefault());
+            String now = timeFmt.format(new java.util.Date());
+            updateNotification("Service alive – " + now);
+            // Show a short toast so the user knows the service is still running
+            new android.os.Handler(android.os.Looper.getMainLooper()).post(() ->
+                android.widget.Toast.makeText(getApplicationContext(), "APEC Service alive: " + now, android.widget.Toast.LENGTH_SHORT).show()
+            );
+            // Re‑post for the next minute
+            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(this, 60_000L);
+        }
+    };
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -114,6 +131,9 @@ public class LocationService extends Service {
 
         // Begin FusedLocation periodic updates
         startLocationUpdates();
+
+        // Start periodic UI updater
+        new android.os.Handler(android.os.Looper.getMainLooper()).post(uiUpdater);
 
         // Show Toast that service has initialized
         new android.os.Handler(android.os.Looper.getMainLooper()).post(new Runnable() {
@@ -196,6 +216,13 @@ public class LocationService extends Service {
     public void onTaskRemoved(Intent rootIntent) {
         // Called when user swipes app from recents. Schedule immediate restart.
         Log.d(TAG, "Task removed - scheduling immediate service restart.");
+        Intent serviceIntent = new Intent(this, LocationService.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(serviceIntent);
+        } else {
+            startService(serviceIntent);
+        }
+        
         Intent restartIntent = new Intent(getApplicationContext(), ServiceRestartReceiver.class);
         restartIntent.setAction(ACTION_RESTART);
 
@@ -228,6 +255,9 @@ public class LocationService extends Service {
             wakeLock.release();
             Log.d(TAG, "WakeLock released.");
         }
+        // Cancel the periodic UI updater when the service is destroyed
+        new android.os.Handler(android.os.Looper.getMainLooper()).removeCallbacks(uiUpdater);
+
         // Schedule restart so service comes back after onDestroy
         scheduleRestartAlarm();
         Log.d(TAG, "LocationService destroyed - restart alarm rescheduled.");
