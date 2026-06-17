@@ -1,8 +1,10 @@
 package com.apecpowersolutions.erp;
 
+import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -12,7 +14,6 @@ import android.location.Location;
 import android.os.Build;
 import android.os.HandlerThread;
 import android.os.IBinder;
-import android.os.Looper;
 import android.util.Log;
 import androidx.core.app.NotificationCompat;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -39,6 +40,10 @@ public class LocationService extends Service {
     private static final String CHANNEL_ID = "APEC_LOCATION_SERVICE_CHANNEL";
     private static final int NOTIFICATION_ID = 8472;
 
+    // AlarmManager restart heartbeat - every 90 seconds
+    private static final long ALARM_INTERVAL_MS = 90_000L;
+    public static final String ACTION_RESTART = "com.apecpowersolutions.erp.APEC_RESTART_SERVICE";
+
     private FusedLocationProviderClient fusedLocationClient;
     private LocationCallback locationCallback;
     private HandlerThread serviceHandlerThread;
@@ -48,7 +53,7 @@ public class LocationService extends Service {
     public void onCreate() {
         super.onCreate();
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-        
+
         // Start a dedicated background thread for location callbacks
         serviceHandlerThread = new HandlerThread("LocationServiceThread");
         serviceHandlerThread.start();
@@ -59,50 +64,89 @@ public class LocationService extends Service {
                 if (locationResult != null) {
                     Location location = locationResult.getLastLocation();
                     if (location != null) {
-                        Log.d(TAG, "Location callback triggered: " + location.getLatitude() + ", " + location.getLongitude());
+                        Log.d(TAG, "Location callback: " + location.getLatitude() + ", " + location.getLongitude());
                         sendLocationToFirestore(location, false);
                     }
                 }
             }
         };
 
-        // Initialize WakeLock to keep CPU running when screen is turned off
+        // Acquire PARTIAL_WAKE_LOCK so CPU stays awake when screen is off
         android.os.PowerManager powerManager = (android.os.PowerManager) getSystemService(Context.POWER_SERVICE);
         if (powerManager != null) {
-            wakeLock = powerManager.newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "APEC::LocationTrackingWakeLock");
+            wakeLock = powerManager.newWakeLock(
+                android.os.PowerManager.PARTIAL_WAKE_LOCK,
+                "APEC::LocationTrackingWakeLock"
+            );
         }
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         createNotificationChannel();
+
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("Location Tracking Active")
-                .setContentText("APEC ERP is recording shift location data.")
+                .setContentTitle("APEC Location Tracking Active")
+                .setContentText("Recording your shift location. Do not disable.")
                 .setSmallIcon(android.R.drawable.ic_menu_mylocation)
-                .setOngoing(true)
+                .setOngoing(true)       // Cannot be dismissed by user
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .build();
 
-        // Android 10 (Q) and above requires specifying the foreground service type
+        // Android 10 (Q)+ requires specifying foreground service type
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             startForeground(NOTIFICATION_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION);
         } else {
             startForeground(NOTIFICATION_ID, notification);
         }
-        
-        // Acquire wake lock with a timeout (e.g. 12 hours) as absolute safety fallback
+
+        // Acquire wake lock (12 hour timeout as absolute safety net)
         if (wakeLock != null && !wakeLock.isHeld()) {
-            wakeLock.acquire(12 * 60 * 60 * 1000L); // 12 hours in milliseconds
-            Log.d(TAG, "WakeLock acquired");
+            wakeLock.acquire(12 * 60 * 60 * 1000L);
+            Log.d(TAG, "WakeLock acquired.");
         }
-        
-        // Request immediate last-known location update to populate portal instantly
+
+        // Schedule AlarmManager heartbeat to restart service if killed
+        scheduleRestartAlarm();
+
+        // Immediately fetch last known location to populate admin portal
         requestImmediateLocation();
 
-        // Start periodic tracking
+        // Begin FusedLocation periodic updates
         startLocationUpdates();
-        
+
+        // START_STICKY: system will restart service with null intent if killed
         return START_STICKY;
+    }
+
+    /**
+     * Schedule a recurring AlarmManager alarm that fires every 90 seconds.
+     * If the service is alive, ServiceRestartReceiver will see it's running and skip.
+     * If the service was killed, ServiceRestartReceiver will restart it.
+     */
+    private void scheduleRestartAlarm() {
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        if (alarmManager == null) return;
+
+        Intent restartIntent = new Intent(this, ServiceRestartReceiver.class);
+        restartIntent.setAction(ACTION_RESTART);
+
+        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            flags |= PendingIntent.FLAG_IMMUTABLE;
+        }
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 9001, restartIntent, flags);
+
+        long triggerAt = System.currentTimeMillis() + ALARM_INTERVAL_MS;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            // setExactAndAllowWhileIdle fires even in Doze mode
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent);
+        } else {
+            alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent);
+        }
+
+        Log.d(TAG, "Restart alarm scheduled in " + (ALARM_INTERVAL_MS / 1000) + "s.");
     }
 
     private void requestImmediateLocation() {
@@ -112,32 +156,55 @@ public class LocationService extends Service {
                     @Override
                     public void onSuccess(Location location) {
                         if (location != null) {
-                            Log.d(TAG, "Immediate last-known location fetched: " + location.getLatitude() + ", " + location.getLongitude());
-                            sendLocationToFirestore(location, true); // Force send immediate location (bypass throttle)
+                            Log.d(TAG, "Immediate location: " + location.getLatitude() + ", " + location.getLongitude());
+                            sendLocationToFirestore(location, true);
                         } else {
-                            Log.d(TAG, "No cached last-known location available");
+                            Log.d(TAG, "No cached last-known location available.");
                         }
                     }
                 });
         } catch (SecurityException e) {
-            Log.e(TAG, "Permission missing for last-known location access", e);
+            Log.e(TAG, "Permission missing for immediate location", e);
         }
     }
 
     private void startLocationUpdates() {
         try {
-            // Using modern LocationRequest.Builder (supported in play-services-location 21.3.0)
-            LocationRequest locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 60000)
-                    .setMinUpdateIntervalMillis(30000)
-                    .setMinUpdateDistanceMeters(0) // irrespective of distance change, tracks updates even when stationary
+            // Request location every 60 seconds, accept updates as fast as every 30s
+            LocationRequest locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 60_000L)
+                    .setMinUpdateIntervalMillis(30_000L)
+                    .setMinUpdateDistanceMeters(0) // Track even when stationary
+                    .setMaxUpdateDelayMillis(90_000L) // Max batching delay
                     .build();
 
-            // Run location updates on the background thread looper
             fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, serviceHandlerThread.getLooper());
-            Log.d(TAG, "Periodic location updates requested successfully on background thread");
+            Log.d(TAG, "FusedLocation periodic updates started (every 60s).");
         } catch (SecurityException e) {
             Log.e(TAG, "Location permission missing", e);
         }
+    }
+
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        // Called when user swipes app from recents. Schedule immediate restart.
+        Log.d(TAG, "Task removed - scheduling immediate service restart.");
+        Intent restartIntent = new Intent(getApplicationContext(), ServiceRestartReceiver.class);
+        restartIntent.setAction(ACTION_RESTART);
+
+        int flags = PendingIntent.FLAG_ONE_SHOT;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            flags |= PendingIntent.FLAG_IMMUTABLE;
+        }
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+            getApplicationContext(), 9002, restartIntent, flags
+        );
+
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        if (alarmManager != null) {
+            // Restart after 3 seconds
+            alarmManager.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 3000, pendingIntent);
+        }
+        super.onTaskRemoved(rootIntent);
     }
 
     @Override
@@ -149,12 +216,13 @@ public class LocationService extends Service {
         if (serviceHandlerThread != null) {
             serviceHandlerThread.quitSafely();
         }
-        // Release wake lock
         if (wakeLock != null && wakeLock.isHeld()) {
             wakeLock.release();
-            Log.d(TAG, "WakeLock released");
+            Log.d(TAG, "WakeLock released.");
         }
-        Log.d(TAG, "Location updates stopped and service destroyed");
+        // Schedule restart so service comes back after onDestroy
+        scheduleRestartAlarm();
+        Log.d(TAG, "LocationService destroyed - restart alarm rescheduled.");
     }
 
     @Override
@@ -166,9 +234,11 @@ public class LocationService extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel serviceChannel = new NotificationChannel(
                     CHANNEL_ID,
-                    "Location Service Channel",
+                    "APEC Location Service",
                     NotificationManager.IMPORTANCE_LOW
             );
+            serviceChannel.setDescription("Keeps location tracking active during shift");
+            serviceChannel.setShowBadge(false);
             NotificationManager manager = getSystemService(NotificationManager.class);
             if (manager != null) {
                 manager.createNotificationChannel(serviceChannel);
@@ -186,7 +256,7 @@ public class LocationService extends Service {
         final String projectId = prefs.getString("projectId", null);
 
         if (empId == null || projectId == null) {
-            Log.d(TAG, "Tracking configuration missing. Aborting Firestore write.");
+            Log.d(TAG, "Tracking config missing - skipping Firestore write.");
             return;
         }
 
@@ -195,16 +265,15 @@ public class LocationService extends Service {
         final float accuracy = location.getAccuracy();
 
         if (!bypassThrottle) {
-            // Throttle check: permit updates if at least 50 seconds (50000ms) have passed
+            // Throttle: only send if at least 50 seconds have passed since last update
             long now = System.currentTimeMillis();
             long lastUpdate = prefs.getLong("last_bg_update_time", 0);
-            if (now - lastUpdate < 50000) {
-                Log.d(TAG, "Throttled: Less than 50 seconds since last background update.");
+            if (now - lastUpdate < 50_000L) {
+                Log.d(TAG, "Throttled: < 50s since last update.");
                 return;
             }
             prefs.edit().putLong("last_bg_update_time", now).apply();
         } else {
-            // For immediate/forced updates, still cache the update time to throttle next periodic update
             prefs.edit().putLong("last_bg_update_time", System.currentTimeMillis()).apply();
         }
 
@@ -225,12 +294,13 @@ public class LocationService extends Service {
                         conn.setRequestProperty("Authorization", "Bearer " + idToken);
                     }
                     conn.setDoOutput(true);
+                    conn.setConnectTimeout(10000);
+                    conn.setReadTimeout(10000);
 
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
                     sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
                     String timestamp = sdf.format(new Date());
 
-                    // Static address parameter to save data bandwidth (no reverse geocoding)
                     String jsonBody = "{"
                         + "\"fields\":{"
                         + "\"employeeId\":{\"stringValue\":\"" + empId + "\"},"
@@ -255,21 +325,17 @@ public class LocationService extends Service {
 
                     int respCode = conn.getResponseCode();
                     if (respCode == 200 || respCode == 201) {
-                        Log.d(TAG, "Native telemetry write succeeded for lat=" + latitude + ", lng=" + longitude);
+                        Log.d(TAG, "Telemetry write OK: lat=" + latitude + ", lng=" + longitude);
                     } else {
                         String error = "";
                         try {
                             InputStream es = conn.getErrorStream();
-                            if (es != null) {
-                                error = readStream(es);
-                            }
-                        } catch (Exception e) {
-                            // ignore
-                        }
-                        Log.e(TAG, "Native telemetry write failed with response code: " + respCode + " - " + error);
+                            if (es != null) error = readStream(es);
+                        } catch (Exception ignored) {}
+                        Log.e(TAG, "Telemetry write failed: HTTP " + respCode + " - " + error);
                     }
                 } catch (Exception e) {
-                    Log.e(TAG, "Native telemetry network error", e);
+                    Log.e(TAG, "Telemetry network error", e);
                 }
             }
         }).start();
@@ -282,32 +348,23 @@ public class LocationService extends Service {
             conn.setRequestMethod("POST");
             conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
             conn.setDoOutput(true);
+            conn.setConnectTimeout(10000);
+            conn.setReadTimeout(10000);
 
             String payload = "grant_type=refresh_token&refresh_token=" + refreshToken;
-            byte[] postData = payload.getBytes(StandardCharsets.UTF_8);
             try (OutputStream os = conn.getOutputStream()) {
-                os.write(postData);
+                os.write(payload.getBytes(StandardCharsets.UTF_8));
             }
 
-            int responseCode = conn.getResponseCode();
-            if (responseCode == 200) {
+            if (conn.getResponseCode() == 200) {
                 String response = readStream(conn.getInputStream());
                 org.json.JSONObject jsonObj = new org.json.JSONObject(response);
                 return jsonObj.optString("id_token", null);
             } else {
-                String error = "";
-                try {
-                    InputStream es = conn.getErrorStream();
-                    if (es != null) {
-                        error = readStream(es);
-                    }
-                } catch (Exception e) {
-                    // ignore
-                }
-                Log.e(TAG, "Refresh ID token failed: HTTP " + responseCode + " - " + error);
+                Log.e(TAG, "Token refresh failed: HTTP " + conn.getResponseCode());
             }
         } catch (Exception e) {
-            Log.e(TAG, "Refresh ID token network exception", e);
+            Log.e(TAG, "Token refresh exception", e);
         }
         return null;
     }
@@ -316,9 +373,7 @@ public class LocationService extends Service {
         BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
         StringBuilder sb = new StringBuilder();
         String line;
-        while ((line = reader.readLine()) != null) {
-            sb.append(line);
-        }
+        while ((line = reader.readLine()) != null) sb.append(line);
         reader.close();
         return sb.toString();
     }

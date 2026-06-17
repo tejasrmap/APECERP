@@ -736,6 +736,17 @@ export default function Attendance() {
 
       // Handle mobile background location tracking hooks
       if (punchType === 'punch_in') {
+        // Request battery optimization bypass BEFORE starting tracking.
+        // This is critical on Android - without it the OS kills the service after ~2 mins.
+        if (Capacitor.isNativePlatform()) {
+          try {
+            const BatteryOpt = registerPlugin<any>('BatteryOpt');
+            await BatteryOpt.requestIgnore();
+            console.log('Battery optimization bypass requested.');
+          } catch (batteryErr) {
+            console.warn('Battery opt bypass request failed (non-fatal):', batteryErr);
+          }
+        }
         startBackgroundTracking(
           selectedUser.employeeId || 'APEC-MEMBER',
           selectedUser.name,
