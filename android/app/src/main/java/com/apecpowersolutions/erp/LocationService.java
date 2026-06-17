@@ -115,6 +115,14 @@ public class LocationService extends Service {
         // Begin FusedLocation periodic updates
         startLocationUpdates();
 
+        // Show Toast that service has initialized
+        new android.os.Handler(android.os.Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                android.widget.Toast.makeText(getApplicationContext(), "APEC Service Active!", android.widget.Toast.LENGTH_SHORT).show();
+            }
+        });
+
         // START_STICKY: system will restart service with null intent if killed
         return START_STICKY;
     }
@@ -342,8 +350,14 @@ public class LocationService extends Service {
                     if (respCode == 200 || respCode == 201) {
                         Log.d(TAG, "Telemetry write OK: lat=" + latitude + ", lng=" + longitude);
                         SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm:ss a", Locale.getDefault());
-                        String formattedTime = timeFormat.format(new Date());
+                        final String formattedTime = timeFormat.format(new Date());
                         updateNotification("Last update sent: " + formattedTime);
+                        new android.os.Handler(android.os.Looper.getMainLooper()).post(new Runnable() {
+                            @Override
+                            public void run() {
+                                android.widget.Toast.makeText(getApplicationContext(), "APEC GPS Sent: " + formattedTime, android.widget.Toast.LENGTH_SHORT).show();
+                            }
+                        });
                     } else {
                         String error = "";
                         try {
@@ -352,14 +366,27 @@ public class LocationService extends Service {
                         } catch (Exception ignored) {}
                         Log.e(TAG, "Telemetry write failed: HTTP " + respCode + " - " + error);
                         SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm:ss a", Locale.getDefault());
-                        String formattedTime = timeFormat.format(new Date());
+                        final String formattedTime = timeFormat.format(new Date());
                         updateNotification("Last update failed: " + formattedTime + " (HTTP " + respCode + ")");
+                        final String finalError = error;
+                        new android.os.Handler(android.os.Looper.getMainLooper()).post(new Runnable() {
+                            @Override
+                            public void run() {
+                                android.widget.Toast.makeText(getApplicationContext(), "APEC Write Error: HTTP " + respCode + " - " + finalError, android.widget.Toast.LENGTH_LONG).show();
+                            }
+                        });
                     }
-                } catch (Exception e) {
+                } catch (final Exception e) {
                     Log.e(TAG, "Telemetry network error", e);
                     SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm:ss a", Locale.getDefault());
-                    String formattedTime = timeFormat.format(new Date());
+                    final String formattedTime = timeFormat.format(new Date());
                     updateNotification("Offline. Last update attempt: " + formattedTime);
+                    new android.os.Handler(android.os.Looper.getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            android.widget.Toast.makeText(getApplicationContext(), "APEC Offline: " + e.getMessage(), android.widget.Toast.LENGTH_SHORT).show();
+                        }
+                    });
                 }
             }
         }).start();

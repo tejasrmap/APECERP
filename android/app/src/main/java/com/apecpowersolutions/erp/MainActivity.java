@@ -119,6 +119,7 @@ class NativeTrackingPlugin extends Plugin {
             .apply();
 
         try {
+            android.widget.Toast.makeText(getContext(), "APEC: Starting tracking service...", android.widget.Toast.LENGTH_SHORT).show();
             Intent serviceIntent = new Intent(getContext(), LocationService.class);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 getContext().startForegroundService(serviceIntent);
