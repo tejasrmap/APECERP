@@ -127,8 +127,8 @@ public class LocationService extends Service {
     private void startLocationUpdates() {
         try {
             // Using modern LocationRequest.Builder (supported in play-services-location 21.3.0)
-            LocationRequest locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 300000)
-                    .setMinUpdateIntervalMillis(60000)
+            LocationRequest locationRequest = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 60000)
+                    .setMinUpdateIntervalMillis(30000)
                     .setMinUpdateDistanceMeters(0) // irrespective of distance change, tracks updates even when stationary
                     .build();
 
@@ -195,11 +195,11 @@ public class LocationService extends Service {
         final float accuracy = location.getAccuracy();
 
         if (!bypassThrottle) {
-            // Throttle check: permit updates if at least 4 minutes (240000ms) have passed
+            // Throttle check: permit updates if at least 50 seconds (50000ms) have passed
             long now = System.currentTimeMillis();
             long lastUpdate = prefs.getLong("last_bg_update_time", 0);
-            if (now - lastUpdate < 240000) {
-                Log.d(TAG, "Throttled: Less than 4 minutes since last background update.");
+            if (now - lastUpdate < 50000) {
+                Log.d(TAG, "Throttled: Less than 50 seconds since last background update.");
                 return;
             }
             prefs.edit().putLong("last_bg_update_time", now).apply();

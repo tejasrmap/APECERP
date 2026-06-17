@@ -453,7 +453,7 @@ export default function Attendance() {
     };
   }, [selectedUser]);
 
-  // Start periodic 5-minute location tracking timer
+  // Start periodic 1-minute location tracking timer
   const startPeriodicLocationTimer = (empId: string, empName: string, empEmail: string) => {
     if (bgTimerRef.current) {
       clearInterval(bgTimerRef.current);
@@ -498,8 +498,8 @@ export default function Attendance() {
       );
     };
 
-    // Run every 5 minutes (300,000ms)
-    bgTimerRef.current = setInterval(logLocation, 300000);
+    // Run every 1 minute (60,000ms)
+    bgTimerRef.current = setInterval(logLocation, 60000);
   };
 
   // Start background location tracking watcher
