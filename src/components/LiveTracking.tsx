@@ -331,16 +331,43 @@ export default function LiveTracking() {
       // Draw Route Lines connecting today's coordinates chronologically
       if (emp.routePoints && emp.routePoints.length >= 2) {
         const latlngs = emp.routePoints.map(pt => [pt.latitude, pt.longitude] as L.LatLngExpression);
-        const polyline = L.polyline(latlngs, {
-          color: '#06b6d4',
-          weight: 3.5,
-          opacity: 0.75,
-          lineJoin: 'round',
-          lineCap: 'round',
-          dashArray: '1, 5' // gives it a premium tracking path feel
-        }).addTo(map);
+        
+        const pathGroup = L.featureGroup();
 
-        polylinesRef.current[emp.id] = polyline;
+        // 1. Outer glow path
+        L.polyline(latlngs, {
+          color: '#2563eb',
+          weight: 6,
+          opacity: 0.15,
+          lineJoin: 'round',
+          lineCap: 'round'
+        }).addTo(pathGroup);
+
+        // 2. Main solid path
+        L.polyline(latlngs, {
+          color: '#2563eb',
+          weight: 3,
+          opacity: 0.85,
+          lineJoin: 'round',
+          lineCap: 'round'
+        }).addTo(pathGroup);
+
+        // 3. Circle pings for intermediate coordinates
+        emp.routePoints.forEach((pt, idx) => {
+          if (idx > 0 && idx < emp.routePoints.length - 1) {
+            L.circleMarker([pt.latitude, pt.longitude], {
+              radius: 2.5,
+              fillColor: '#ffffff',
+              fillOpacity: 1,
+              color: '#2563eb',
+              weight: 1.5,
+              opacity: 0.9
+            }).addTo(pathGroup);
+          }
+        });
+
+        pathGroup.addTo(map);
+        polylinesRef.current[emp.id] = pathGroup as any;
       }
 
       // Compute displayAddress
