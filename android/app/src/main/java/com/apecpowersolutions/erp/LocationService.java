@@ -105,7 +105,7 @@ public class LocationService extends Service {
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("APEC Location Tracking Active")
                 .setContentText("Recording your shift location. Do not disable.")
-                .setSmallIcon(android.R.drawable.ic_menu_mylocation)
+                .setSmallIcon(R.mipmap.ic_launcher)
                 .setOngoing(true)       // Cannot be dismissed by user
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .build();
@@ -168,10 +168,10 @@ public class LocationService extends Service {
         long triggerAt = System.currentTimeMillis() + ALARM_INTERVAL_MS;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            // setExactAndAllowWhileIdle fires even in Doze mode
-            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent);
+            // setAndAllowWhileIdle is inexact and does NOT require SCHEDULE_EXACT_ALARM permission, but still fires in Doze
+            alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent);
         } else {
-            alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent);
+            alarmManager.set(AlarmManager.RTC_WAKEUP, triggerAt, pendingIntent);
         }
 
         Log.d(TAG, "Restart alarm scheduled in " + (ALARM_INTERVAL_MS / 1000) + "s.");
@@ -214,14 +214,8 @@ public class LocationService extends Service {
 
     @Override
     public void onTaskRemoved(Intent rootIntent) {
-        // Called when user swipes app from recents. Schedule immediate restart.
-        Log.d(TAG, "Task removed - scheduling immediate service restart.");
-        Intent serviceIntent = new Intent(this, LocationService.class);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(serviceIntent);
-        } else {
-            startService(serviceIntent);
-        }
+        // Called when user swipes app from recents. Schedule alarm-based service restart watchdog.
+        Log.d(TAG, "Task removed - scheduling alarm-based service restart watchdog.");
         
         Intent restartIntent = new Intent(getApplicationContext(), ServiceRestartReceiver.class);
         restartIntent.setAction(ACTION_RESTART);
@@ -236,8 +230,8 @@ public class LocationService extends Service {
 
         AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
         if (alarmManager != null) {
-            // Restart after 3 seconds
-            alarmManager.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 3000, pendingIntent);
+            // Restart after 2 seconds
+            alarmManager.set(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + 2000, pendingIntent);
         }
         super.onTaskRemoved(rootIntent);
     }
@@ -275,7 +269,7 @@ public class LocationService extends Service {
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("APEC Location Tracking Active")
                 .setContentText(text)
-                .setSmallIcon(android.R.drawable.ic_menu_mylocation)
+                .setSmallIcon(R.mipmap.ic_launcher)
                 .setOngoing(true)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .build();
