@@ -348,22 +348,28 @@ public class LocationService extends Service {
                     sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
                     String timestamp = sdf.format(new Date());
 
-                    String jsonBody = "{"
-                        + "\"fields\":{"
-                        + "\"employeeId\":{\"stringValue\":\"" + empId + "\"},"
-                        + "\"userName\":{\"stringValue\":\"" + empName + "\"},"
-                        + "\"userEmail\":{\"stringValue\":\"" + empEmail + "\"},"
-                        + "\"type\":{\"stringValue\":\"telemetry\"},"
-                        + "\"photoUrl\":{\"nullValue\":null},"
-                        + "\"location\":{\"mapValue\":{\"fields\":{"
-                        + "\"latitude\":{\"doubleValue\":" + latitude + "},"
-                        + "\"longitude\":{\"doubleValue\":" + longitude + "},"
-                        + "\"accuracy\":{\"doubleValue\":" + accuracy + "},"
-                        + "\"address\":{\"stringValue\":\"Background Telemetry (Foreground Service)\"}"
-                        + "}}},"
-                        + "\"timestamp\":{\"timestampValue\":\"" + timestamp + "\"}"
-                        + "}"
-                        + "}";
+                    org.json.JSONObject fields = new org.json.JSONObject();
+                    fields.put("employeeId", new org.json.JSONObject().put("stringValue", empId));
+                    fields.put("userName", new org.json.JSONObject().put("stringValue", empName != null ? empName : ""));
+                    fields.put("userEmail", new org.json.JSONObject().put("stringValue", empEmail != null ? empEmail : ""));
+                    fields.put("type", new org.json.JSONObject().put("stringValue", "telemetry"));
+                    fields.put("photoUrl", new org.json.JSONObject().put("nullValue", org.json.JSONObject.NULL));
+
+                    org.json.JSONObject locFields = new org.json.JSONObject();
+                    locFields.put("latitude", new org.json.JSONObject().put("doubleValue", latitude));
+                    locFields.put("longitude", new org.json.JSONObject().put("doubleValue", longitude));
+                    locFields.put("accuracy", new org.json.JSONObject().put("doubleValue", accuracy));
+                    locFields.put("address", new org.json.JSONObject().put("stringValue", "Background Telemetry (Foreground Service)"));
+
+                    org.json.JSONObject locationMap = new org.json.JSONObject();
+                    locationMap.put("mapValue", new org.json.JSONObject().put("fields", locFields));
+                    fields.put("location", locationMap);
+
+                    fields.put("timestamp", new org.json.JSONObject().put("timestampValue", timestamp));
+
+                    org.json.JSONObject requestBody = new org.json.JSONObject();
+                    requestBody.put("fields", fields);
+                    String jsonBody = requestBody.toString();
 
                     byte[] postData = jsonBody.getBytes(StandardCharsets.UTF_8);
                     try (OutputStream os = conn.getOutputStream()) {
