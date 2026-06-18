@@ -45,8 +45,17 @@ export default function MyProfile() {
       }
 
       const user = auth.currentUser;
+      const userEmail = user.email ? user.email.toLowerCase() : '';
       const userPhone = user.phoneNumber || '';
-      const cleanPhone = userPhone.replace(/[\s+-]/g, '');
+      
+      let cleanPhone = '';
+      const isVirtual = userEmail.endsWith('@apec-erp.local');
+      if (isVirtual) {
+        cleanPhone = userEmail.split('@')[0];
+      } else {
+        cleanPhone = userPhone.replace(/[\s+-]/g, '');
+      }
+
       const phoneCandidates = [
         userPhone,
         '+' + cleanPhone,
