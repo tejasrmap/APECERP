@@ -32,6 +32,13 @@ export default function TeamControl() {
 
   const [teamList, setTeamList] = useState<any[]>([]);
   const [isTeamLoading, setIsTeamLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+
+  const filteredTeamList = teamList.filter(m => {
+    if (statusFilter === 'active') return m.status !== 'Inactive';
+    if (statusFilter === 'inactive') return m.status === 'Inactive';
+    return true;
+  });
 
   // Form states
   const [newName, setNewName] = useState('');
@@ -395,6 +402,29 @@ export default function TeamControl() {
       });
     } catch (err) {
       console.error('Error updating user role:', err);
+    } finally {
+      setIsDbActionLoading(false);
+    }
+  };
+
+  const handleToggleStatus = async (id: string, currentStatus: string, userName: string) => {
+    if (!db) return;
+    setIsDbActionLoading(true);
+    const nextStatus = currentStatus === 'Inactive' ? 'Active' : 'Inactive';
+    try {
+      await updateDoc(doc(db, 'team', id), {
+        status: nextStatus
+      });
+
+      // Log activity
+      await addDoc(collection(db, 'activities'), {
+        title: 'User status updated',
+        desc: `"${userName}" status was changed to ${nextStatus}`,
+        type: 'settings',
+        timestamp: Timestamp.now()
+      });
+    } catch (err) {
+      console.error('Error updating user status:', err);
     } finally {
       setIsDbActionLoading(false);
     }
@@ -1570,17 +1600,58 @@ export default function TeamControl() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="w-full glass-card rounded-2xl overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.3)]"
-          >
-            {teamList.length === 0 ? (
+          >            {/* Filter Tabs */}
+            <div className="flex gap-2 p-4 border-b border-slate-800 bg-slate-950/20">
+              <button
+                type="button"
+                onClick={() => setStatusFilter('all')}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all duration-150 cursor-pointer ${
+                  statusFilter === 'all'
+                    ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 shadow-[0_0_10px_rgba(6,182,212,0.1)]'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent'
+                }`}
+              >
+                All Members ({teamList.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setStatusFilter('active')}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all duration-150 cursor-pointer ${
+                  statusFilter === 'active'
+                    ? 'bg-green-500/10 text-green-400 border border-green-500/30 shadow-[0_0_10px_rgba(34,197,94,0.1)]'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent'
+                }`}
+              >
+                Active ({teamList.filter(m => m.status !== 'Inactive').length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setStatusFilter('inactive')}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all duration-150 cursor-pointer ${
+                  statusFilter === 'inactive'
+                    ? 'bg-rose-500/10 text-rose-405 border border-rose-500/30 shadow-[0_0_10px_rgba(244,63,94,0.1)]'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent'
+                }`}
+              >
+                Inactive ({teamList.filter(m => m.status === 'Inactive').length})
+              </button>
+            </div>
+
+            {filteredTeamList.length === 0 ? (
               <div className="py-20 text-center flex flex-col items-center">
                 <Users className="w-14 h-14 text-slate-700 mb-3" />
-                <p className="text-sm font-medium text-slate-400">Database registry is empty</p>
-                <p className="text-xs text-slate-505 mt-1">Populate users by clicking "Add Team Member".</p>
+                <p className="text-sm font-medium text-slate-400">
+                  {teamList.length === 0 ? "Database registry is empty" : "No matching members found"}
+                </p>
+                <p className="text-xs text-slate-505 mt-1">
+                  {teamList.length === 0 ? "Populate users by clicking 'Add Team Member'." : "Try changing the status filter."}
+                </p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse text-xs">
-                  <thead>                    <tr className="border-b border-slate-800 bg-slate-955/45 uppercase tracking-wider text-slate-400 font-semibold">
+                  <thead>
+                    <tr className="border-b border-slate-800 bg-slate-955/45 uppercase tracking-wider text-slate-400 font-semibold">
                       <th className="p-4 text-center">S.No</th>
                       <th className="p-4">Employee ID</th>
                       <th className="p-4">Name</th>
@@ -1592,7 +1663,7 @@ export default function TeamControl() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800/50 text-sm text-slate-355">
-                    {teamList.map((m, index) => {
+                    {filteredTeamList.map((m, index) => {
                       const isMemberAdmin = m.accessRole === 'Admin' || m.roleType === 'Admin' || [
                         'admin@apecpowersolutions.com',
                         'managingdirector@apecpowersolutions.com'
@@ -1609,7 +1680,7 @@ export default function TeamControl() {
                       return (
                         <tr key={m.id} className="hover:bg-slate-900/30 transition-colors">
                           <td className="p-4 text-center font-mono text-xs text-slate-400">{index + 1}</td>
-                          <td className="p-4 font-mono text-xs text-slate-450">{m.employeeId || 'APEC-MEMBER'}</td>
+                          <td className="p-4 font-mono text-xs text-slate-455">{m.employeeId || 'APEC-MEMBER'}</td>
                           <td className="p-4 font-bold text-slate-100 flex items-center gap-2.5">
                             {m.photoUrl ? (
                               <img src={m.photoUrl} alt={m.name} className="w-8 h-8 rounded-full object-cover border border-slate-700 shrink-0" />
@@ -1622,7 +1693,7 @@ export default function TeamControl() {
                           </td>
                           <td className="p-4">
                             <div className="font-medium text-slate-205 truncate max-w-[150px]">{m.role}</div>
-                            <div className="text-[10px] text-slate-500 font-mono mt-0.5">{m.branch || m.department || 'Vijayawada'}</div>
+                            <div className="text-[10px] text-slate-505 font-mono mt-0.5">{m.branch || m.department || 'Vijayawada'}</div>
                           </td>
                           <td className="p-4 font-mono text-xs text-slate-400">
                             {m.phone || 'N/A'}
@@ -1630,7 +1701,7 @@ export default function TeamControl() {
                           <td className="p-4">
                             <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                               isMemberAdmin 
-                                ? 'bg-cyan-950/40 text-cyan-400 border border-cyan-500/25 shadow-[0_0_10px_rgba(6,182,212,0.15)]' 
+                                ? 'bg-cyan-955/40 text-cyan-400 border border-cyan-500/25 shadow-[0_0_10px_rgba(6,182,212,0.15)]' 
                                 : 'bg-slate-800 text-slate-400 border border-slate-700'
                             } border`}>
                               {isMemberAdmin ? (
@@ -1644,21 +1715,38 @@ export default function TeamControl() {
                             </span>
                           </td>
                           <td className="p-4">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                              m.status === 'Active' ? 'bg-green-955/40 text-green-400 border border-green-500/25' :
-                              m.status === 'Site Visit' ? 'bg-cyan-955/40 text-cyan-400 border border-cyan-500/25' :
-                              m.status === 'Inactive' ? 'bg-rose-955/40 text-rose-400 border border-rose-500/25' :
-                              'bg-amber-955/40 text-amber-400 border border-amber-500/25'
-                            }`}>
-                              {m.status || 'Active'}
-                            </span>
+                            <div className="flex items-center gap-3">
+                              <button
+                                type="button"
+                                onClick={() => handleToggleStatus(m.id, m.status || 'Active', m.name)}
+                                disabled={isDbActionLoading || ['admin@apecpowersolutions.com', 'managingdirector@apecpowersolutions.com'].includes(m.email?.toLowerCase())}
+                                className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-cyan-500/20 disabled:opacity-30 disabled:cursor-not-allowed ${
+                                  m.status !== 'Inactive' ? 'bg-cyan-500/80 hover:bg-cyan-500' : 'bg-slate-700 hover:bg-slate-650'
+                                }`}
+                                title={m.status === 'Inactive' ? 'Activate Account' : 'Deactivate Account'}
+                              >
+                                <span
+                                  className={`pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-slate-955 shadow-md ring-0 transition duration-200 ease-in-out ${
+                                    m.status !== 'Inactive' ? 'translate-x-4' : 'translate-x-0'
+                                  }`}
+                                />
+                              </button>
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                                m.status === 'Active' ? 'bg-green-955/40 text-green-400 border border-green-500/25' :
+                                m.status === 'Site Visit' ? 'bg-cyan-955/40 text-cyan-400 border border-cyan-500/25' :
+                                m.status === 'Inactive' ? 'bg-rose-955/40 text-rose-400 border border-rose-500/25' :
+                                'bg-amber-955/40 text-amber-400 border border-amber-500/25'
+                              }`}>
+                                {m.status || 'Active'}
+                              </span>
+                            </div>
                           </td>
                           <td className="p-4 text-center">
                             <div className="flex items-center justify-center gap-2">
                               {/* View details */}
                               <button
                                 onClick={() => setSelectedProfile(m)}
-                                className="p-1.5 text-slate-400 hover:text-cyan-400 transition-colors rounded hover:bg-cyan-950/20"
+                                className="p-1.5 text-slate-400 hover:text-cyan-400 transition-colors rounded hover:bg-cyan-955/20"
                                 title="View Complete Profile Details"
                               >
                                 <Eye className="w-4 h-4" />
@@ -1668,7 +1756,7 @@ export default function TeamControl() {
                               <button
                                 onClick={() => handleTogglePriority(m.id, isMemberAdmin ? 'Admin' : 'User', m.name)}
                                 disabled={isDbActionLoading || ['admin@apecpowersolutions.com', 'managingdirector@apecpowersolutions.com'].includes(m.email?.toLowerCase())}
-                                className="p-1.5 text-slate-400 hover:text-cyan-400 transition-colors rounded hover:bg-cyan-950/20 disabled:opacity-30"
+                                className="p-1.5 text-slate-400 hover:text-cyan-400 transition-colors rounded hover:bg-cyan-955/20 disabled:opacity-30"
                                 title={isMemberAdmin ? 'Demote to Standard User' : 'Promote to Administrative Access'}
                               >
                                 <Shield className="w-4 h-4" />
