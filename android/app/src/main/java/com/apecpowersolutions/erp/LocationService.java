@@ -48,6 +48,7 @@ public class LocationService extends Service {
     private LocationCallback locationCallback;
     private HandlerThread serviceHandlerThread;
     private android.os.PowerManager.WakeLock wakeLock;
+    private final android.os.Handler mainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
 
     // Schedule a periodic UI updater (notification + toast) every minute
     private final Runnable uiUpdater = new Runnable() {
@@ -58,11 +59,9 @@ public class LocationService extends Service {
             String now = timeFmt.format(new java.util.Date());
             updateNotification("Service alive – " + now);
             // Show a short toast so the user knows the service is still running
-            new android.os.Handler(android.os.Looper.getMainLooper()).post(() ->
-                android.widget.Toast.makeText(getApplicationContext(), "APEC Service alive: " + now, android.widget.Toast.LENGTH_SHORT).show()
-            );
+            android.widget.Toast.makeText(getApplicationContext(), "APEC Service alive: " + now, android.widget.Toast.LENGTH_SHORT).show();
             // Re‑post for the next minute
-            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(this, 60_000L);
+            mainHandler.postDelayed(this, 60_000L);
         }
     };
 
@@ -100,6 +99,15 @@ public class LocationService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        // Enforce active session check: retrieve employeeId from SharedPreferences
+        SharedPreferences prefs = getSharedPreferences("APEC_NATIVE_TRACKING", Context.MODE_PRIVATE);
+        String empId = prefs.getString("employeeId", null);
+        if (empId == null) {
+            Log.d(TAG, "onStartCommand: No active tracking session (employeeId is null). Stopping service.");
+            stopSelf();
+            return START_NOT_STICKY;
+        }
+
         createNotificationChannel();
 
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
@@ -133,10 +141,10 @@ public class LocationService extends Service {
         startLocationUpdates();
 
         // Start periodic UI updater
-        new android.os.Handler(android.os.Looper.getMainLooper()).post(uiUpdater);
+        mainHandler.post(uiUpdater);
 
         // Show Toast that service has initialized
-        new android.os.Handler(android.os.Looper.getMainLooper()).post(new Runnable() {
+        mainHandler.post(new Runnable() {
             @Override
             public void run() {
                 android.widget.Toast.makeText(getApplicationContext(), "APEC Service Active!", android.widget.Toast.LENGTH_SHORT).show();
@@ -175,6 +183,40 @@ public class LocationService extends Service {
         }
 
         Log.d(TAG, "Restart alarm scheduled in " + (ALARM_INTERVAL_MS / 1000) + "s.");
+    }
+
+    /**
+     * Cancel any scheduled restart alarms from AlarmManager to prevent the service from starting up again.
+     */
+    private void cancelRestartAlarm() {
+        AlarmManager alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+        if (alarmManager == null) return;
+
+        // Cancel the 90-second watchdog alarm
+        Intent restartIntent = new Intent(this, ServiceRestartReceiver.class);
+        restartIntent.setAction(ACTION_RESTART);
+        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            flags |= PendingIntent.FLAG_IMMUTABLE;
+        }
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, 9001, restartIntent, flags);
+        alarmManager.cancel(pendingIntent);
+        pendingIntent.cancel();
+
+        // Cancel the 2-second task removal watchdog alarm
+        Intent taskRemovedIntent = new Intent(getApplicationContext(), ServiceRestartReceiver.class);
+        taskRemovedIntent.setAction(ACTION_RESTART);
+        int trFlags = PendingIntent.FLAG_ONE_SHOT;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            trFlags |= PendingIntent.FLAG_IMMUTABLE;
+        }
+        PendingIntent trPendingIntent = PendingIntent.getBroadcast(
+            getApplicationContext(), 9002, taskRemovedIntent, trFlags
+        );
+        alarmManager.cancel(trPendingIntent);
+        trPendingIntent.cancel();
+
+        Log.d(TAG, "All watchdog alarms cancelled.");
     }
 
     private void requestImmediateLocation() {
@@ -250,11 +292,25 @@ public class LocationService extends Service {
             Log.d(TAG, "WakeLock released.");
         }
         // Cancel the periodic UI updater when the service is destroyed
-        new android.os.Handler(android.os.Looper.getMainLooper()).removeCallbacks(uiUpdater);
+        mainHandler.removeCallbacks(uiUpdater);
 
-        // Schedule restart so service comes back after onDestroy
-        scheduleRestartAlarm();
-        Log.d(TAG, "LocationService destroyed - restart alarm rescheduled.");
+        // Cancel notification
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if (manager != null) {
+            manager.cancel(NOTIFICATION_ID);
+        }
+
+        SharedPreferences prefs = getSharedPreferences("APEC_NATIVE_TRACKING", Context.MODE_PRIVATE);
+        String empId = prefs.getString("employeeId", null);
+        if (empId != null) {
+            // Schedule restart so service comes back after unexpected onDestroy
+            scheduleRestartAlarm();
+            Log.d(TAG, "LocationService destroyed unexpectedly - restart alarm rescheduled.");
+        } else {
+            // Cancel any pending alarms
+            cancelRestartAlarm();
+            Log.d(TAG, "LocationService destroyed intentionally - all alarms cancelled.");
+        }
     }
 
     @Override
