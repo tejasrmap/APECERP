@@ -207,11 +207,11 @@ export default function Dashboard() {
     { name: 'Scheduling', icon: Calendar },
     { name: 'Leaves', icon: CalendarRange },
     { name: 'Workforce', icon: Users },
-    { name: 'Settings', icon: Settings },
     ...(isAdmin ? [
       { name: 'Live Tracking', icon: Map },
       { name: 'Team Control', icon: Shield },
-      { name: 'Reports', icon: FileText }
+      { name: 'Reports', icon: FileText },
+      { name: 'Settings', icon: Settings }
     ] : [])
   ];
 
