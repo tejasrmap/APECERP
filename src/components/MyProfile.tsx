@@ -13,7 +13,8 @@ import {
   Loader2,
   AlertTriangle,
   Lock,
-  RefreshCw
+  RefreshCw,
+  Activity
 } from 'lucide-react';
 import { auth, db } from '../firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
@@ -217,7 +218,7 @@ service cloud.firestore {
                   {profile.name?.slice(0, 2).toUpperCase() || 'ME'}
                 </div>
               )}
-              <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-slate-950 ${profile.status === 'Active' ? 'bg-emerald-500' : profile.status === 'Site Visit' ? 'bg-cyan-500' : 'bg-amber-500'}`} />
+              <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-slate-950 ${profile.status === 'Active' ? 'bg-emerald-500' : profile.status === 'Site Visit' ? 'bg-cyan-500' : profile.status === 'Inactive' ? 'bg-rose-500' : 'bg-amber-500'}`} />
             </div>
 
             <h4 className="text-lg font-bold text-slate-100 mt-5 leading-tight">{profile.name}</h4>
@@ -244,6 +245,15 @@ service cloud.firestore {
                   {profile.accessRole === 'Admin' ? 'Admin' : 'User'}
                 </span>
               </div>
+            </div>
+
+            <div className="mt-3.5 space-y-1 w-full text-left font-mono">
+              <span className="text-[9px] text-slate-500 uppercase tracking-wider font-bold block">Last Active</span>
+              <span className="text-xs font-bold text-slate-300 bg-slate-955/60 border border-slate-900 px-2 py-1 rounded block text-center truncate">
+                {profile.lastActive ? (
+                  profile.lastActive.toDate ? profile.lastActive.toDate().toLocaleString() : new Date(profile.lastActive).toLocaleString()
+                ) : 'Just Now'}
+              </span>
             </div>
 
             <hr className="border-slate-800/80 w-full my-5" />

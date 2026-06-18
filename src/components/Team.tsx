@@ -10,7 +10,8 @@ import {
   Calendar,
   Award,
   Shield,
-  X
+  X,
+  Activity
 } from 'lucide-react';
 import { collection, onSnapshot, doc, deleteDoc, addDoc, Timestamp } from 'firebase/firestore';
 import { useOutletContext, useNavigate } from 'react-router-dom';
@@ -218,6 +219,7 @@ export default function Team() {
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                     m.status === 'Active' ? 'bg-green-955/40 text-green-400 border border-green-500/25' :
                     m.status === 'Site Visit' ? 'bg-cyan-955/40 text-cyan-400 border border-cyan-500/25' :
+                    m.status === 'Inactive' ? 'bg-rose-955/40 text-rose-400 border border-rose-500/25' :
                     'bg-amber-955/40 text-amber-400 border border-amber-500/25'
                   }`}>
                     {m.status}
@@ -371,8 +373,9 @@ export default function Team() {
                 <div className="space-y-1">
                   <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Status</span>
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                    selectedProfile.status === 'Active' ? 'bg-green-500/10 text-green-450 border border-green-500/20' :
+                    selectedProfile.status === 'Active' ? 'bg-green-500/10 text-green-455 border border-green-500/20' :
                     selectedProfile.status === 'Site Visit' ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' :
+                    selectedProfile.status === 'Inactive' ? 'bg-rose-500/10 text-rose-455 border border-rose-500/20' :
                     'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                   } border`}>
                     {selectedProfile.status || 'Active'}
@@ -408,6 +411,15 @@ export default function Team() {
                     {selectedProfile.joinedDate ? new Date(selectedProfile.joinedDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}
                   </span>
                 </div>
+                <div className="space-y-1 col-span-2 border-t border-slate-900/80 pt-2 mt-1 font-mono text-xs">
+                   <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Last Active</span>
+                   <span className="text-slate-355 font-bold flex items-center gap-1.5">
+                     <Activity className="w-3.5 h-3.5 text-cyan-500" />
+                     {selectedProfile.lastActive ? (
+                       selectedProfile.lastActive.toDate ? selectedProfile.lastActive.toDate().toLocaleString() : new Date(selectedProfile.lastActive).toLocaleString()
+                     ) : 'Never'}
+                   </span>
+                 </div>
                 <div className="space-y-1 col-span-2 border-t border-slate-900/80 pt-2 flex justify-between items-center gap-4">
                   <div className="min-w-0 flex-1">
                     <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Verification Link</span>

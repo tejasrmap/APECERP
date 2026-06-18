@@ -12,7 +12,7 @@ import {
   getRedirectResult
 } from 'firebase/auth';
 import { auth, db } from '../firebase';
-import { collection, query, where, getDocs, addDoc, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, Timestamp, updateDoc, doc } from 'firebase/firestore';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -92,10 +92,14 @@ export default function Login() {
             }
 
             if (matchedDoc) {
-              isAllowed = true;
               const docData = matchedDoc.data();
-              if (docData.accessRole === 'Admin' || docData.roleType === 'Admin') {
-                isAdminUser = true;
+              if (docData.status === 'Inactive') {
+                isAllowed = false;
+              } else {
+                isAllowed = true;
+                if (docData.accessRole === 'Admin' || docData.roleType === 'Admin') {
+                  isAdminUser = true;
+                }
               }
             }
           } catch (err) {
@@ -107,10 +111,14 @@ export default function Login() {
             const q = query(collection(db, 'team'), where('email', '==', emailLower));
             const snap = await getDocs(q);
             if (!snap.empty) {
-              isAllowed = true;
               const docData = snap.docs[0].data();
-              if (docData.accessRole === 'Admin' || docData.roleType === 'Admin') {
-                isAdminUser = true;
+              if (docData.status === 'Inactive') {
+                isAllowed = false;
+              } else {
+                isAllowed = true;
+                if (docData.accessRole === 'Admin' || docData.roleType === 'Admin') {
+                  isAdminUser = true;
+                }
               }
             }
           } catch (err) {
@@ -120,6 +128,24 @@ export default function Login() {
 
         if (isAllowed) {
           localStorage.setItem('isAuthenticated', 'true');
+          // Update lastActive timestamp on auto-login
+          if (matchedDoc) {
+            await updateDoc(doc(db, 'team', matchedDoc.id), {
+              lastActive: Timestamp.now()
+            }).catch(e => console.error("Error updating lastActive:", e));
+          } else if (emailLower && !emailLower.endsWith('@apec-erp.local')) {
+            try {
+              const q = query(collection(db, 'team'), where('email', '==', emailLower));
+              const snap = await getDocs(q);
+              if (!snap.empty) {
+                await updateDoc(doc(db, 'team', snap.docs[0].id), {
+                  lastActive: Timestamp.now()
+                });
+              }
+            } catch (e) {
+              console.error("Error updating lastActive by email:", e);
+            }
+          }
           navigate(isAdminUser ? '/dashboard' : '/dashboard/my-profile');
         } else {
           await auth.signOut();
@@ -158,10 +184,15 @@ export default function Login() {
             const q = query(collection(db, 'team'), where('email', '==', emailLower));
             const snap = await getDocs(q);
             if (!snap.empty) {
-              isAllowed = true;
               const docData = snap.docs[0].data();
-              if (docData.accessRole === 'Admin' || docData.roleType === 'Admin') {
-                isAdminUser = true;
+              if (docData.status === 'Inactive') {
+                isAllowed = false;
+                setErrorMsg('Access denied. Your account is currently inactive. Please contact the administrator.');
+              } else {
+                isAllowed = true;
+                if (docData.accessRole === 'Admin' || docData.roleType === 'Admin') {
+                  isAdminUser = true;
+                }
               }
             }
           }
@@ -175,13 +206,25 @@ export default function Login() {
               type: 'settings',
               timestamp: Timestamp.now()
             });
+            // Update lastActive timestamp
+            if (!isAdminEmail && db) {
+              const q = query(collection(db, 'team'), where('email', '==', emailLower));
+              const snap = await getDocs(q);
+              if (!snap.empty) {
+                await updateDoc(doc(db, 'team', snap.docs[0].id), {
+                  lastActive: Timestamp.now()
+                }).catch(e => console.error("Error updating lastActive:", e));
+              }
+            }
             setTimeout(() => {
               localStorage.setItem('isAuthenticated', 'true');
               navigate(isAdminUser ? '/dashboard' : '/dashboard/my-profile');
             }, 2000);
           } else {
             await auth.signOut();
-            setErrorMsg('Access denied. Your Google account is not registered as a team member.');
+            if (!errorMsg) {
+              setErrorMsg('Access denied. Your Google account is not registered as a team member.');
+            }
           }
         }
       } catch (err: any) {
@@ -277,6 +320,9 @@ export default function Login() {
       }
 
       const employeeData = matchedDoc.data();
+      if (employeeData.status === 'Inactive') {
+        throw new Error('Access denied. Your account is currently inactive. Please contact the administrator.');
+      }
       const storedPassword = (employeeData.password || '').trim();
 
       if (!storedPassword) {
@@ -315,6 +361,11 @@ export default function Login() {
         timestamp: Timestamp.now()
       });
 
+      // Update lastActive timestamp
+      await updateDoc(doc(db, 'team', matchedDoc.id), {
+        lastActive: Timestamp.now()
+      }).catch(e => console.error("Error updating lastActive:", e));
+
       setStep('success');
       setTimeout(() => {
         localStorage.setItem('isAuthenticated', 'true');
@@ -352,6 +403,7 @@ export default function Login() {
         
         let isAllowed = false;
         let isAdminUser = false;
+        let isInactive = false;
 
         if (user && user.email) {
           const emailLower = user.email.toLowerCase();
@@ -366,10 +418,14 @@ export default function Login() {
             const q = query(collection(db, 'team'), where('email', '==', user.email));
             const snap = await getDocs(q);
             if (!snap.empty) {
-              isAllowed = true;
               const docData = snap.docs[0].data();
-              if (docData.accessRole === 'Admin' || docData.roleType === 'Admin') {
-                isAdminUser = true;
+              if (docData.status === 'Inactive') {
+                isInactive = true;
+              } else {
+                isAllowed = true;
+                if (docData.accessRole === 'Admin' || docData.roleType === 'Admin') {
+                  isAdminUser = true;
+                }
               }
             }
           }
@@ -385,6 +441,14 @@ export default function Login() {
               type: 'settings',
               timestamp: Timestamp.now()
             });
+            // Update lastActive timestamp
+            const q = query(collection(db, 'team'), where('email', '==', user.email));
+            const snap = await getDocs(q);
+            if (!snap.empty) {
+              await updateDoc(doc(db, 'team', snap.docs[0].id), {
+                lastActive: Timestamp.now()
+              }).catch(e => console.error("Error updating lastActive:", e));
+            }
           }
           setTimeout(() => {
             localStorage.setItem('isAuthenticated', 'true');
@@ -392,7 +456,11 @@ export default function Login() {
           }, 2000);
         } else {
           await auth.signOut();
-          throw new Error('Access denied. Your Google account is not registered as a team member.');
+          if (isInactive) {
+            throw new Error('Access denied. Your account is currently inactive. Please contact the administrator.');
+          } else {
+            throw new Error('Access denied. Your Google account is not registered as a team member.');
+          }
         }
       }
     } catch (err: any) {

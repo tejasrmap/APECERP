@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from '../firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, updateDoc, doc, Timestamp } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
 
 export default function ProtectedRoute() {
@@ -65,13 +65,27 @@ export default function ProtectedRoute() {
                 }
 
                 if (matchedDoc) {
-                  matched = true;
+                  const docData = matchedDoc.data();
+                  if (docData.status !== 'Inactive') {
+                    matched = true;
+                    // Asynchronously update lastActive timestamp
+                    updateDoc(doc(db, 'team', matchedDoc.id), {
+                      lastActive: Timestamp.now()
+                    }).catch(e => console.error("Error updating lastActive:", e));
+                  }
                 }
               } else {
                 const q = query(collection(db, 'team'), where('email', '==', emailLower));
                 const snap = await getDocs(q);
                 if (!snap.empty) {
-                  matched = true;
+                  const docData = snap.docs[0].data();
+                  if (docData.status !== 'Inactive') {
+                    matched = true;
+                    // Asynchronously update lastActive timestamp
+                    updateDoc(doc(db, 'team', snap.docs[0].id), {
+                      lastActive: Timestamp.now()
+                    }).catch(e => console.error("Error updating lastActive:", e));
+                  }
                 }
               }
 

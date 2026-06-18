@@ -19,7 +19,8 @@ import {
   Wifi,
   Edit,
   Camera,
-  Upload
+  Upload,
+  Activity
 } from 'lucide-react';
 import { collection, onSnapshot, doc, deleteDoc, addDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { useOutletContext } from 'react-router-dom';
@@ -748,7 +749,7 @@ export default function TeamControl() {
                           exit={{ opacity: 0, y: 5 }}
                           className="absolute z-30 w-full mt-1 bg-[#090d16]/95 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl overflow-hidden p-1 space-y-0.5"
                         >
-                          {["Active", "Site Visit", "On Leave"].map((statusVal) => (
+                          {["Active", "Site Visit", "On Leave", "Inactive"].map((statusVal) => (
                             <button
                               key={statusVal}
                               type="button"
@@ -1262,7 +1263,7 @@ export default function TeamControl() {
                           exit={{ opacity: 0, y: 5 }}
                           className="absolute z-30 w-full mt-1 bg-[#090d16]/95 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl overflow-hidden p-1 space-y-0.5"
                         >
-                          {["Active", "Site Visit", "On Leave"].map((statusVal) => (
+                          {["Active", "Site Visit", "On Leave", "Inactive"].map((statusVal) => (
                             <button
                               key={statusVal}
                               type="button"
@@ -1646,6 +1647,7 @@ export default function TeamControl() {
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                               m.status === 'Active' ? 'bg-green-955/40 text-green-400 border border-green-500/25' :
                               m.status === 'Site Visit' ? 'bg-cyan-955/40 text-cyan-400 border border-cyan-500/25' :
+                              m.status === 'Inactive' ? 'bg-rose-955/40 text-rose-400 border border-rose-500/25' :
                               'bg-amber-955/40 text-amber-400 border border-amber-500/25'
                             }`}>
                               {m.status || 'Active'}
@@ -1863,6 +1865,7 @@ export default function TeamControl() {
                     <span className={`font-bold uppercase block text-right ${
                       (isEditingProfile ? editStatus : selectedProfile.status) === 'Active' ? 'text-green-400' :
                       (isEditingProfile ? editStatus : selectedProfile.status) === 'Site Visit' ? 'text-cyan-400' :
+                      (isEditingProfile ? editStatus : selectedProfile.status) === 'Inactive' ? 'text-rose-400' :
                       'text-amber-400'
                     }`}>
                       {isEditingProfile ? editStatus : (selectedProfile.status || 'Active')}
@@ -2066,7 +2069,7 @@ export default function TeamControl() {
                               exit={{ opacity: 0, y: 5 }}
                               className="absolute z-30 w-full mt-1 bg-[#090d16]/95 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl overflow-hidden p-1 space-y-0.5"
                             >
-                              {["Active", "Site Visit", "On Leave"].map((st) => (
+                              {["Active", "Site Visit", "On Leave", "Inactive"].map((st) => (
                                 <button
                                   key={st}
                                   type="button"
@@ -2257,6 +2260,7 @@ export default function TeamControl() {
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                         selectedProfile.status === 'Active' ? 'bg-green-500/10 text-green-450 border border-green-500/20' :
                         selectedProfile.status === 'Site Visit' ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' :
+                        selectedProfile.status === 'Inactive' ? 'bg-rose-500/10 text-rose-455 border border-rose-500/20' :
                         'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                       } border`}>
                         {selectedProfile.status || 'Active'}
@@ -2290,6 +2294,15 @@ export default function TeamControl() {
                       <span className="text-slate-350 font-bold flex items-center gap-1.5">
                         <Calendar className="w-3.5 h-3.5 text-cyan-500" />
                         {selectedProfile.joinedDate ? new Date(selectedProfile.joinedDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}
+                      </span>
+                    </div>
+                    <div className="space-y-1 col-span-2 border-t border-slate-900/80 pt-2 mt-1">
+                      <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Last Active</span>
+                      <span className="text-slate-350 font-bold flex items-center gap-1.5 font-mono">
+                        <Activity className="w-3.5 h-3.5 text-cyan-500" />
+                        {selectedProfile.lastActive ? (
+                          selectedProfile.lastActive.toDate ? selectedProfile.lastActive.toDate().toLocaleString() : new Date(selectedProfile.lastActive).toLocaleString()
+                        ) : 'Never'}
                       </span>
                     </div>
                     <div className="space-y-1 col-span-2 border-t border-slate-900/80 pt-2 flex justify-between items-center gap-4">

@@ -304,7 +304,7 @@ export default function ProfileView() {
                       </div>
                     )}
                     {/* Status dot */}
-                    <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[#1E293B] ${profile.status === 'Active' ? 'bg-emerald-500' : profile.status === 'Site Visit' ? 'bg-cyan-500' : 'bg-amber-500'}`} />
+                    <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[#1E293B] ${profile.status === 'Active' ? 'bg-emerald-500' : profile.status === 'Site Visit' ? 'bg-cyan-500' : profile.status === 'Inactive' ? 'bg-rose-500' : 'bg-amber-500'}`} />
                   </div>
                   
                   <div className="h-4" />
@@ -337,11 +337,21 @@ export default function ProfileView() {
                       <span className={`inline-flex w-full justify-center items-center py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${
                         profile.status === 'Active' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
                         profile.status === 'Site Visit' ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' :
+                        profile.status === 'Inactive' ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' :
                         'bg-amber-500/10 text-amber-400 border-amber-500/20'
                       }`}>
                         {profile.status || 'Active'}
                       </span>
                     </div>
+                  </div>
+
+                  <div className="mt-4 space-y-1 w-full text-left font-mono">
+                    <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold block">Last Active</span>
+                    <span className="text-xs font-bold text-slate-300 bg-slate-950/80 border border-slate-800 px-2.5 py-1.5 rounded-lg block text-center truncate">
+                      {profile.lastActive ? (
+                        profile.lastActive.toDate ? profile.lastActive.toDate().toLocaleString() : new Date(profile.lastActive).toLocaleString()
+                      ) : 'Never'}
+                    </span>
                   </div>
 
                   <hr className="border-slate-800 w-full my-6" />
