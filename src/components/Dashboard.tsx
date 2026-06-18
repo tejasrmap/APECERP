@@ -21,7 +21,8 @@ import {
   CalendarRange,
   Map,
   User,
-  ClipboardList
+  ClipboardList,
+  Briefcase
 } from 'lucide-react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { auth, db } from '../firebase';
@@ -205,6 +206,7 @@ export default function Dashboard() {
     { name: 'Workforce', icon: Users },
     { name: 'Attendance', icon: Clock },
     { name: 'Leaves', icon: CalendarRange },
+    { name: 'Leads', icon: Briefcase },
     { name: 'Settings', icon: Settings },
     ...(isAdmin ? [
       { name: 'Team Control', icon: Shield },
@@ -227,6 +229,7 @@ export default function Dashboard() {
     if (path === '/dashboard/reports') return 'Reports';
     if (path === '/dashboard/leaves') return 'Leaves';
     if (path === '/dashboard/my-profile') return 'My Profile';
+    if (path === '/dashboard/leads') return 'Leads';
 
     return 'Dashboard';
   };
@@ -238,6 +241,7 @@ export default function Dashboard() {
     if (tabName === 'Live Tracking') return '/dashboard/live-tracking';
     if (tabName === 'My Profile') return '/dashboard/my-profile';
     if (tabName === 'Daily Reports') return '/dashboard/daily-reports';
+    if (tabName === 'Leads') return '/dashboard/leads';
 
     return `/dashboard/${tabName.toLowerCase()}`;
   };

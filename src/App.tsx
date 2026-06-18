@@ -22,6 +22,7 @@ const Leaves       = lazy(() => import('./components/Leaves'));
 const LiveTracking = lazy(() => import('./components/LiveTracking'));
 const MyProfile    = lazy(() => import('./components/MyProfile'));
 const DailyReports = lazy(() => import('./components/DailyReports'));
+const Leads        = lazy(() => import('./components/Leads'));
 
 const PageLoader = () => (
   <div className="absolute inset-0 flex items-center justify-center bg-[#070a13]/50 z-30">
@@ -76,6 +77,9 @@ export default function App() {
           } />
           <Route path="live-tracking" element={
             <Suspense fallback={<PageLoader />}><LiveTracking /></Suspense>
+          } />
+          <Route path="leads" element={
+            <Suspense fallback={<PageLoader />}><Leads /></Suspense>
           } />
 
         </Route>
