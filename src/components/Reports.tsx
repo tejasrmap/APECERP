@@ -430,30 +430,24 @@ export default function Reports() {
       </div>
 
       {/* Summary KPI Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         
-        {/* Compliance */}
+        {/* Total Persons Allotted */}
         <div className="p-4 rounded-2xl glass-card border border-white/10 flex flex-col justify-between space-y-2">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Compliance Rate</span>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold text-slate-100 font-mono">{stats.complianceRate}%</span>
-            <TrendingUp className="w-4 h-4 text-cyan-400" />
-          </div>
-          <span className="text-[9px] text-slate-500">Percentage of shifts marked "On Time"</span>
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Allotted Personnel</span>
+          <span className="text-2xl font-bold text-slate-100 font-mono">
+            {filteredSchedules.map(s => s.technicianId).filter((v, i, a) => a.indexOf(v) === i).length}
+          </span>
+          <span className="text-[9px] text-slate-500">Across {stats.totalShifts} scheduled dispatches</span>
         </div>
 
-        {/* Total Shifts */}
+        {/* Total Present */}
         <div className="p-4 rounded-2xl glass-card border border-white/10 flex flex-col justify-between space-y-2">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Dispatches</span>
-          <span className="text-2xl font-bold text-slate-100 font-mono">{stats.totalShifts} shifts</span>
-          <span className="text-[9px] text-slate-500">Across {filteredSchedules.map(s => s.technicianId).filter((v, i, a) => a.indexOf(v) === i).length} unique engineers</span>
-        </div>
-
-        {/* Total Hours */}
-        <div className="p-4 rounded-2xl glass-card border border-white/10 flex flex-col justify-between space-y-2">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Assigned Hours</span>
-          <span className="text-2xl font-bold text-slate-100 font-mono">{stats.totalHours} hrs</span>
-          <span className="text-[9px] text-slate-500">Total workload scheduled</span>
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Present</span>
+          <span className="text-2xl font-bold text-slate-100 font-mono">
+            {stats.onTime + stats.delayed}
+          </span>
+          <span className="text-[9px] text-slate-500">On-time: {stats.onTime} | Late: {stats.delayed}</span>
         </div>
 
         {/* Absence / Late rate */}
