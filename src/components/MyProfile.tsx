@@ -244,7 +244,7 @@ service cloud.firestore {
             <div className="grid grid-cols-2 gap-4 w-full text-left font-mono">
               <div className="space-y-1">
                 <span className="text-[9px] text-slate-500 uppercase tracking-wider font-bold block">Employee ID</span>
-                <span className="text-xs font-bold text-slate-300 bg-slate-955/60 border border-slate-900 px-2 py-1 rounded block text-center select-all">{profile.employeeId || 'APEC-MEMBER'}</span>
+                <span className="text-xs font-bold text-slate-300 bg-slate-950/60 border border-slate-900 px-2 py-1 rounded block text-center select-all">{profile.employeeId || 'APEC-MEMBER'}</span>
               </div>
               <div className="space-y-1">
                 <span className="text-[9px] text-slate-500 uppercase tracking-wider font-bold block">Access Priority</span>
@@ -258,7 +258,7 @@ service cloud.firestore {
 
             <div className="mt-3.5 space-y-1 w-full text-left font-mono">
               <span className="text-[9px] text-slate-500 uppercase tracking-wider font-bold block">Last Active</span>
-              <span className="text-xs font-bold text-slate-300 bg-slate-955/60 border border-slate-900 px-2 py-1 rounded block text-center truncate">
+              <span className="text-xs font-bold text-slate-300 bg-slate-950/60 border border-slate-900 px-2 py-1 rounded block text-center truncate">
                 {profile.lastActive ? (
                   profile.lastActive.toDate ? profile.lastActive.toDate().toLocaleString() : new Date(profile.lastActive).toLocaleString()
                 ) : 'Just Now'}

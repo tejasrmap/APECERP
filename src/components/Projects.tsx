@@ -206,7 +206,7 @@ export default function Projects() {
           <button 
             onClick={() => setIsAddingProject(!isAddingProject)}
             disabled={isDbActionLoading}
-            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-955 text-xs font-bold flex items-center gap-1.5 transition-all shadow-[0_4px_12px_rgba(6,182,212,0.15)] hover:shadow-lg disabled:opacity-50"
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-950 text-xs font-bold flex items-center gap-1.5 transition-all shadow-[0_4px_12px_rgba(6,182,212,0.15)] hover:shadow-lg disabled:opacity-50"
           >
             {isAddingProject ? <ArrowLeft className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
             {isAddingProject ? 'Back to List' : 'Add Project'}
@@ -291,7 +291,7 @@ export default function Projects() {
                     onClick={() => setIsManagerDropdownOpen(!isManagerDropdownOpen)}
                     className="w-full bg-slate-950/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 text-sm cursor-pointer flex justify-between items-center text-left transition-all"
                   >
-                    <span className={newProjectManager ? 'text-slate-100' : 'text-slate-505'}>
+                    <span className={newProjectManager ? 'text-slate-100' : 'text-slate-500'}>
                       {newProjectManager || 'Select Project Manager...'}
                     </span>
                     <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${isManagerDropdownOpen ? 'rotate-180' : ''}`} />
@@ -334,7 +334,7 @@ export default function Projects() {
               <button
                 type="submit"
                 disabled={isDbActionLoading}
-                className="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-955 rounded-xl text-xs font-bold uppercase tracking-wider shadow-[0_4px_14px_rgba(6,182,212,0.2)] hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-950 rounded-xl text-xs font-bold uppercase tracking-wider shadow-[0_4px_14px_rgba(6,182,212,0.2)] hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {isDbActionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Submit Project'}
               </button>
@@ -360,7 +360,7 @@ export default function Projects() {
               </div>
 
               {/* Futuristic SVG Map Layout */}
-              <div className="relative h-64 bg-slate-955/50 border border-slate-900 rounded-xl overflow-hidden flex items-center justify-center shadow-[inset_0_4px_12px_rgba(0,0,0,0.5)]">
+              <div className="relative h-64 bg-slate-950/50 border border-slate-900 rounded-xl overflow-hidden flex items-center justify-center shadow-[inset_0_4px_12px_rgba(0,0,0,0.5)]">
                 {/* Cyber-grid background */}
                 <div className="absolute inset-0 cyber-grid opacity-20 pointer-events-none" />
                 

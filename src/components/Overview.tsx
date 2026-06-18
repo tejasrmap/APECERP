@@ -302,7 +302,7 @@ export default function Overview() {
             </button>
             <button 
               onClick={() => handleExport('pdf')}
-              className="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-955 text-xs font-bold transition-all shadow-[0_4px_12px_rgba(6,182,212,0.15)] hover:shadow-lg flex items-center justify-center gap-1.5"
+              className="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-950 text-xs font-bold transition-all shadow-[0_4px_12px_rgba(6,182,212,0.15)] hover:shadow-lg flex items-center justify-center gap-1.5"
             >
               <FileText className="w-4 h-4" />
               Generate PDF Report

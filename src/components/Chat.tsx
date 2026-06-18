@@ -407,7 +407,7 @@ export default function Chat() {
                     
                     {/* Render Image Attachments Inline */}
                     {m.fileUrl && isImage && (
-                      <div className="mb-2.5 rounded-xl overflow-hidden border border-slate-805 max-w-xs aspect-video bg-slate-950/60 flex items-center justify-center group relative shadow-inner">
+                      <div className="mb-2.5 rounded-xl overflow-hidden border border-slate-800 max-w-xs aspect-video bg-slate-950/60 flex items-center justify-center group relative shadow-inner">
                         <img src={m.fileUrl} alt={m.fileName} className="w-full h-full object-cover p-0.5" />
                         <button 
                           onClick={() => setViewingImage({ url: m.fileUrl, name: m.fileName })}

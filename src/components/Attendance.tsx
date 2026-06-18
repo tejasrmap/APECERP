@@ -920,7 +920,7 @@ export default function Attendance() {
                   <p className="text-[9.5px] text-slate-500 truncate">{selectedUser.email}</p>
                 </div>
                 <div className="text-right">
-                  <span className="inline-block px-2 py-0.5 bg-slate-955 border border-slate-900 rounded text-[9px] font-bold text-rose-500 uppercase tracking-widest leading-none">
+                  <span className="inline-block px-2 py-0.5 bg-slate-950 border border-slate-900 rounded text-[9px] font-bold text-rose-500 uppercase tracking-widest leading-none">
                     {selectedUser.branch || selectedUser.department || 'Vijayawada'}
                   </span>
                 </div>
@@ -1034,7 +1034,7 @@ export default function Attendance() {
                 <span>GPS Core Status</span>
               </div>
 
-              <div className="p-3 bg-slate-955/60 border border-slate-900 rounded-xl space-y-2 text-xs font-mono">
+              <div className="p-3 bg-slate-950/60 border border-slate-900 rounded-xl space-y-2 text-xs font-mono">
                 {isLocationLoading ? (
                   <div className="flex items-center gap-2 text-slate-400">
                     <Loader2 className="w-3.5 h-3.5 animate-spin text-cyan-400" />
@@ -1183,7 +1183,7 @@ export default function Attendance() {
                   type="button"
                   onClick={handleExportCSV}
                   disabled={filteredLogs.length === 0}
-                  className="w-full sm:w-auto px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-805 hover:border-slate-700 text-slate-300 hover:text-slate-100 text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="w-full sm:w-auto px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-slate-100 text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <Download className="w-4 h-4" />
                   Export CSV
@@ -1261,7 +1261,7 @@ export default function Attendance() {
                   return (
                     <div 
                       key={log.id} 
-                      className="p-3.5 rounded-xl bg-slate-955/40 border border-slate-900/60 hover:border-slate-800 transition-all flex gap-3.5"
+                      className="p-3.5 rounded-xl bg-slate-950/40 border border-slate-900/60 hover:border-slate-800 transition-all flex gap-3.5"
                     >
                       {/* Photo Thumbnail */}
                       <div 

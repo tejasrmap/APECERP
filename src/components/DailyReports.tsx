@@ -670,7 +670,7 @@ export default function DailyReports() {
             
             <button
               onClick={() => setIsSubmitMode(!isSubmitMode)}
-              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-955 text-xs font-bold flex items-center gap-1.5 transition-all shadow-[0_4px_12px_rgba(6,182,212,0.15)] hover:shadow-lg"
+              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-950 text-xs font-bold flex items-center gap-1.5 transition-all shadow-[0_4px_12px_rgba(6,182,212,0.15)] hover:shadow-lg"
             >
               {isSubmitMode ? <ArrowLeft className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
               {isSubmitMode ? 'View Report History' : 'Write Daily Report'}
@@ -721,7 +721,7 @@ export default function DailyReports() {
                       <button
                         type="button"
                         onClick={() => setIsProjectDropdownOpen(!isProjectDropdownOpen)}
-                        className="w-full bg-slate-950/40 border border-slate-800 text-slate-150 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 text-xs flex justify-between items-center text-left"
+                        className="w-full bg-slate-950/40 border border-slate-800 text-slate-200 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 text-xs flex justify-between items-center text-left"
                       >
                         <span>{selectedProject ? selectedProject.name : 'Select Project Site...'}</span>
                         <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${isProjectDropdownOpen ? 'rotate-180' : ''}`} />
@@ -770,7 +770,7 @@ export default function DailyReports() {
                         <button
                           type="button"
                           onClick={() => setIsTechDropdownOpen(!isTechDropdownOpen)}
-                          className="w-full bg-slate-950/40 border border-slate-800 text-slate-150 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 text-xs flex justify-between items-center text-left"
+                          className="w-full bg-slate-950/40 border border-slate-800 text-slate-200 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 text-xs flex justify-between items-center text-left"
                         >
                           <span>{selectedTechnician ? `${selectedTechnician.name} (${selectedTechnician.employeeId || 'Staff'})` : 'Select Team Member...'}</span>
                           <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${isTechDropdownOpen ? 'rotate-180' : ''}`} />
@@ -940,7 +940,7 @@ export default function DailyReports() {
                 <button
                   type="submit"
                   disabled={isDbActionLoading}
-                  className="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-955 rounded-xl text-xs font-bold uppercase tracking-wider shadow-[0_4px_14px_rgba(6,182,212,0.2)] hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-950 rounded-xl text-xs font-bold uppercase tracking-wider shadow-[0_4px_14px_rgba(6,182,212,0.2)] hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {isDbActionLoading ? (
                     <>
@@ -1045,7 +1045,7 @@ export default function DailyReports() {
                     <button
                       onClick={handleExportCSV}
                       disabled={filteredReports.length === 0}
-                      className="w-full py-2.5 px-4 rounded-xl bg-slate-950 hover:bg-slate-900 border border-slate-850 hover:border-slate-800 text-slate-300 hover:text-slate-100 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="w-full py-2.5 px-4 rounded-xl bg-slate-950 hover:bg-slate-900 border border-slate-800 hover:border-slate-800 text-slate-300 hover:text-slate-100 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       <Download className="w-4 h-4" />
                       Export CSV List
@@ -1056,7 +1056,7 @@ export default function DailyReports() {
 
               {/* Main Directory Table / Cards */}
               <div className="glass-card rounded-2xl overflow-hidden shadow-xl border border-white/10 p-5">
-                <h4 className="text-xs font-bold text-slate-150 uppercase tracking-wider mb-4 border-b border-slate-900 pb-3 font-mono">
+                <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider mb-4 border-b border-slate-900 pb-3 font-mono">
                   Registered Progress Logs ({filteredReports.length})
                 </h4>
 
@@ -1094,7 +1094,7 @@ export default function DailyReports() {
                             </div>
 
                             <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
-                              <span className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-850 text-[10.5px] text-slate-400 font-bold font-mono">
+                              <span className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-[10.5px] text-slate-400 font-bold font-mono">
                                 {report.hoursWorked} hours
                               </span>
                               
@@ -1190,7 +1190,7 @@ export default function DailyReports() {
                                               setViewingImage({ url: report.attachmentUrl!, name: report.attachmentName || 'Photo.jpg' });
                                             }
                                           }}
-                                          className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 text-slate-300 text-[10.5px] font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                                          className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-slate-300 text-[10.5px] font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
                                         >
                                           <Paperclip className="w-3.5 h-3.5 text-cyan-400" />
                                           View Attachment: {report.attachmentName || 'Document'}
@@ -1203,7 +1203,7 @@ export default function DailyReports() {
                                       {/* Word Export Dropdown or separate buttons */}
                                       <button
                                         onClick={() => triggerDownloadDoc('digital', report)}
-                                        className="px-3.5 py-2 rounded-xl bg-slate-950 hover:bg-slate-900 border border-slate-850 text-slate-300 text-[10.5px] font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                                        className="px-3.5 py-2 rounded-xl bg-slate-950 hover:bg-slate-900 border border-slate-800 text-slate-300 text-[10.5px] font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
                                         title="Download formatted MS Word document"
                                       >
                                         <FileText className="w-3.5 h-3.5 text-cyan-400" />
@@ -1212,14 +1212,14 @@ export default function DailyReports() {
                                       
                                       <button
                                         onClick={() => triggerDownloadDoc('stationery', report)}
-                                        className="px-3.5 py-2 rounded-xl bg-slate-950 hover:bg-slate-900 border border-slate-850 text-slate-300 text-[10.5px] font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+                                        className="px-3.5 py-2 rounded-xl bg-slate-950 hover:bg-slate-900 border border-slate-800 text-slate-300 text-[10.5px] font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
                                         title="Download Word doc without logo for physical paper"
                                       >
                                         <FileText className="w-3.5 h-3.5 text-slate-500" />
                                         Download Word (Stationery)
                                       </button>
 
-                                      <span className="h-6 w-px bg-slate-850" />
+                                      <span className="h-6 w-px bg-slate-800" />
 
                                       <button
                                         onClick={() => triggerPrint('digital', report)}

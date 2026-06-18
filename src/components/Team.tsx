@@ -484,7 +484,7 @@ export default function Team() {
               {/* Bank Account Details */}
               <div className="space-y-2">
                 <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Bank Account Details & ID</span>
-                <div className="grid grid-cols-2 gap-4 text-xs bg-slate-955/20 p-4 rounded-xl border border-white/5 font-mono">
+                <div className="grid grid-cols-2 gap-4 text-xs bg-slate-950/20 p-4 rounded-xl border border-white/5 font-mono">
                   <div className="space-y-1">
                     <span className="text-slate-500 block uppercase tracking-wider text-[9px]">PAN Card</span>
                     <span className="text-slate-200 font-bold block truncate select-all">{selectedProfile.pan || 'N/A'}</span>
@@ -560,7 +560,7 @@ export default function Team() {
                       </span>
                     ))
                   ) : (
-                    <span className="text-xs text-slate-505 italic">No specialized skills/certifications listed</span>
+                    <span className="text-xs text-slate-500 italic">No specialized skills/certifications listed</span>
                   )}
                 </div>
               </div>

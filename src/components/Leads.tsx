@@ -541,18 +541,18 @@ export default function Leads() {
                             </p>
                           )}
                         </div>
-                        <div className="border-t border-slate-850/80 pt-2.5">
+                        <div className="border-t border-slate-800/80 pt-2.5">
                           <span className="text-[9px] uppercase tracking-wider font-semibold text-slate-450">Opportunity Scope:</span>
                           <p className="text-xs text-slate-350 line-clamp-3 mt-0.5 leading-relaxed">{lead.description}</p>
                         </div>
                         {lead.notes && (
-                          <div className="bg-slate-950/20 border border-slate-850/60 p-2.5 rounded-xl text-[11px] text-slate-400 mt-2">
+                          <div className="bg-slate-950/20 border border-slate-800/60 p-2.5 rounded-xl text-[11px] text-slate-400 mt-2">
                             <span className="font-semibold text-cyan-405 block text-[9px] uppercase tracking-wider">Status Update Notes:</span>
                             <p className="mt-0.5 italic text-slate-400">"{lead.notes}"</p>
                           </div>
                         )}
                       </div>
-                      <div className="border-t border-slate-850/80 pt-3 flex justify-between items-center text-[10px] text-slate-500">
+                      <div className="border-t border-slate-800/80 pt-3 flex justify-between items-center text-[10px] text-slate-500">
                         <span>Submitted on {lead.timestamp.toLocaleDateString()}</span>
                       </div>
                     </div>
@@ -621,12 +621,12 @@ export default function Leads() {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Search by company, client or creator..."
-                    className="w-full bg-slate-900/60 border border-slate-850 rounded-xl py-2 pl-9 pr-4 text-xs focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 placeholder:text-slate-550 text-slate-100"
+                    className="w-full bg-slate-900/60 border border-slate-800 rounded-xl py-2 pl-9 pr-4 text-xs focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 placeholder:text-slate-550 text-slate-100"
                   />
                 </div>
                 <div className="flex flex-wrap w-full md:w-auto gap-3 items-center">
                   {/* Status Filter */}
-                  <div className="flex items-center gap-2 text-xs text-slate-450 border border-slate-850 bg-slate-900/40 px-2.5 py-1.5 rounded-xl shrink-0">
+                  <div className="flex items-center gap-2 text-xs text-slate-450 border border-slate-800 bg-slate-900/40 px-2.5 py-1.5 rounded-xl shrink-0">
                     <Filter className="w-3.5 h-3.5 text-slate-550" />
                     <span>Status:</span>
                     <select
@@ -645,7 +645,7 @@ export default function Leads() {
                   </div>
 
                   {/* Creator Filter */}
-                  <div className="flex items-center gap-2 text-xs text-slate-450 border border-slate-850 bg-slate-900/40 px-2.5 py-1.5 rounded-xl shrink-0">
+                  <div className="flex items-center gap-2 text-xs text-slate-450 border border-slate-800 bg-slate-900/40 px-2.5 py-1.5 rounded-xl shrink-0">
                     <User className="w-3.5 h-3.5 text-slate-550" />
                     <span>Employee:</span>
                     <select
@@ -688,7 +688,7 @@ export default function Leads() {
                           <th className="p-4 text-center">Actions</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-850/80 bg-slate-900/10">
+                      <tbody className="divide-y divide-slate-800/80 bg-slate-900/10">
                         {filteredAllLeads.map((lead) => {
                           const isEditing = editingLeadId === lead.id;
                           return (

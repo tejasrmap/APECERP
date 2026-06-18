@@ -283,7 +283,7 @@ export default function Leaves() {
         {!isUserAdmin && (
           <button 
             onClick={() => setIsApplying(!isApplying)}
-            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-955 text-xs font-bold flex items-center gap-1.5 transition-all shadow-[0_4px_12px_rgba(6,182,212,0.15)] hover:shadow-lg"
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-950 text-xs font-bold flex items-center gap-1.5 transition-all shadow-[0_4px_12px_rgba(6,182,212,0.15)] hover:shadow-lg"
           >
             {isApplying ? 'View Requests' : <Plus className="w-3.5 h-3.5" />}
             {isApplying ? 'Leave History' : 'Apply for Leave'}
@@ -403,7 +403,7 @@ export default function Leaves() {
               <button
                 type="submit"
                 disabled={isDbActionLoading}
-                className="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-955 rounded-xl text-xs font-bold uppercase tracking-wider shadow-[0_4px_14px_rgba(6,182,212,0.2)] hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-950 rounded-xl text-xs font-bold uppercase tracking-wider shadow-[0_4px_14px_rgba(6,182,212,0.2)] hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 {isDbActionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Submit Application'}
               </button>
@@ -428,7 +428,7 @@ export default function Leaves() {
                 <button
                   type="button"
                   onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
-                  className="w-full bg-slate-900/60 border border-slate-800 text-slate-305 rounded-xl py-3 px-4 text-xs focus:outline-none focus:border-cyan-500 cursor-pointer flex justify-between items-center shadow-[0_2px_8px_rgba(0,0,0,0.15)] select-none text-left"
+                  className="w-full bg-slate-900/60 border border-slate-800 text-slate-300 rounded-xl py-3 px-4 text-xs focus:outline-none focus:border-cyan-500 cursor-pointer flex justify-between items-center shadow-[0_2px_8px_rgba(0,0,0,0.15)] select-none text-left"
                 >
                   <span>
                     {statusFilter === 'all' && 'All Leaves'}
@@ -539,7 +539,7 @@ export default function Leaves() {
                               </td>
                             )}
                             <td className="p-4 px-6">
-                              <span className="font-bold text-slate-150">{leave.leaveType}</span>
+                              <span className="font-bold text-slate-200">{leave.leaveType}</span>
                             </td>
                             <td className="p-4 px-6 font-medium font-mono text-xs">
                               <div>{leave.startDate}</div>

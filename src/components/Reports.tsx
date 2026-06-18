@@ -321,7 +321,7 @@ export default function Reports() {
           
           <button 
             onClick={handleExportCSV}
-            className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-955 text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-[0_4px_12px_rgba(6,182,212,0.15)] hover:shadow-lg cursor-pointer"
+            className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-950 text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-[0_4px_12px_rgba(6,182,212,0.15)] hover:shadow-lg cursor-pointer"
           >
             <Download className="w-4 h-4" />
             Export to CSV
@@ -341,7 +341,7 @@ export default function Reports() {
                 key={preset}
                 type="button"
                 onClick={() => applyPreset(preset)}
-                className="px-3 py-1.5 rounded-lg bg-slate-950 hover:bg-slate-900 border border-slate-850 hover:border-slate-800 text-[10px] font-semibold text-slate-400 hover:text-slate-200 transition-colors uppercase tracking-wider cursor-pointer"
+                className="px-3 py-1.5 rounded-lg bg-slate-950 hover:bg-slate-900 border border-slate-800 hover:border-slate-800 text-[10px] font-semibold text-slate-400 hover:text-slate-200 transition-colors uppercase tracking-wider cursor-pointer"
               >
                 {preset === 'week' ? 'Last 7 Days' : preset === 'month' ? 'Last 30 Days' : preset}
               </button>
@@ -546,7 +546,7 @@ export default function Reports() {
                         <td className="py-3.5 px-3">
                           <div>
                             <span className="font-bold block">{log.userName || 'Unknown'}</span>
-                            <span className="text-[9.5px] text-slate-505 font-mono">{log.userEmail || ''}</span>
+                            <span className="text-[9.5px] text-slate-500 font-mono">{log.userEmail || ''}</span>
                           </div>
                         </td>
                         <td className="py-3.5 px-3">

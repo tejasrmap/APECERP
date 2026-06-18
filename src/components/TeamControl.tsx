@@ -485,6 +485,9 @@ export default function TeamControl() {
       {openDropdown && (
         <div className="fixed inset-0 z-20 cursor-default" onClick={() => setOpenDropdown(null)} />
       )}
+      {openEditDropdown && (
+        <div className="fixed inset-0 z-20 cursor-default" onClick={() => setOpenEditDropdown(null)} />
+      )}
       <div className="flex justify-between items-center">
         <div>
           <h3 className="text-xl font-bold text-slate-100">Team Control Panel</h3>
@@ -495,7 +498,7 @@ export default function TeamControl() {
           <button 
             onClick={() => setIsAddingUser(!isAddingUser)}
             disabled={isDbActionLoading}
-            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-955 text-xs font-bold flex items-center gap-1.5 transition-all shadow-[0_4px_12px_rgba(6,182,212,0.15)] hover:shadow-lg disabled:opacity-50 cursor-pointer"
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-950 text-xs font-bold flex items-center gap-1.5 transition-all shadow-[0_4px_12px_rgba(6,182,212,0.15)] hover:shadow-lg disabled:opacity-50 cursor-pointer"
           >
             {isAddingUser ? 'Back to Registry' : 'Add Team Member'}
           </button>
@@ -558,7 +561,7 @@ export default function TeamControl() {
                         onChange={(e) => setNewName(e.target.value)}
                         placeholder="e.g. Rahul Sharma"
                         required
-                        className="w-full bg-slate-955/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                        className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
                       />
                     </div>
                     <div className="space-y-1">
@@ -569,7 +572,7 @@ export default function TeamControl() {
                         onChange={(e) => setNewEmail(e.target.value)}
                         placeholder="e.g. rahul@apec.com"
                         required
-                        className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                        className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
                       />
                     </div>
                     <div className="space-y-1">
@@ -579,7 +582,7 @@ export default function TeamControl() {
                         value={newPhone}
                         onChange={(e) => setNewPhone(e.target.value)}
                         placeholder="e.g. +91 98765 43210"
-                        className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                        className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
                       />
                     </div>
                   </div>
@@ -587,7 +590,7 @@ export default function TeamControl() {
               </div>
 
               {/* Section 2: Role, Branch & IDs */}
-              <div className="space-y-3 p-4 bg-slate-955/20 rounded-xl border border-white/5">
+              <div className="space-y-3 p-4 bg-slate-950/20 rounded-xl border border-white/5">
                 <h5 className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest border-b border-slate-900/60 pb-1.5 mb-3">
                   2. Role, Branch & IDs
                 </h5>
@@ -599,7 +602,7 @@ export default function TeamControl() {
                       value={newRole}
                       onChange={(e) => setNewRole(e.target.value)}
                       placeholder="e.g. Lead Technician"
-                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
                     />
                   </div>
                   <div className="space-y-1 relative">
@@ -607,7 +610,7 @@ export default function TeamControl() {
                     <button
                       type="button"
                       onClick={() => setOpenDropdown(openDropdown === 'branch' ? null : 'branch')}
-                      className="w-full bg-slate-955/60 border border-slate-805 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:border-cyan-500/50 text-xs flex justify-between items-center transition-all shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] focus:ring-1 focus:ring-cyan-500/10 cursor-pointer text-left"
+                      className="w-full bg-slate-950/60 border border-slate-800 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:border-cyan-500/50 text-xs flex justify-between items-center transition-all shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] focus:ring-1 focus:ring-cyan-500/10 cursor-pointer text-left"
                     >
                       <span>{newBranch}</span>
                       <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${openDropdown === 'branch' ? 'rotate-180' : ''}`} />
@@ -655,7 +658,7 @@ export default function TeamControl() {
                       value={newEmployeeId}
                       onChange={(e) => setNewEmployeeId(e.target.value)}
                       placeholder="APEC-2026-042 (Optional)"
-                      className="w-full bg-slate-955/60 border border-slate-850 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
                     />
                   </div>
                   <div className="space-y-1">
@@ -665,7 +668,7 @@ export default function TeamControl() {
                       value={newEsiNumber}
                       onChange={(e) => setNewEsiNumber(e.target.value)}
                       placeholder="e.g. 31123456780001001"
-                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
                     />
                   </div>
                   <div className="space-y-1">
@@ -675,7 +678,7 @@ export default function TeamControl() {
                       value={newPfNumber}
                       onChange={(e) => setNewPfNumber(e.target.value)}
                       placeholder="e.g. AP/HYD/1234567/890"
-                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
                     />
                   </div>
                   <div className="space-y-1">
@@ -685,14 +688,14 @@ export default function TeamControl() {
                       value={newAadharNumber}
                       onChange={(e) => setNewAadharNumber(e.target.value)}
                       placeholder="e.g. 1234 5678 9012"
-                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Section 3: Access Control & Skills */}
-              <div className="space-y-3 p-4 bg-slate-955/20 rounded-xl border border-white/5">
+              <div className="space-y-3 p-4 bg-slate-950/20 rounded-xl border border-white/5">
                 <h5 className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest border-b border-slate-900/60 pb-1.5 mb-3">
                   3. Access Control & Skills
                 </h5>
@@ -703,7 +706,7 @@ export default function TeamControl() {
                       type="date" 
                       value={newJoinedDate}
                       onChange={(e) => setNewJoinedDate(e.target.value)}
-                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
                     />
                   </div>
                   <div className="space-y-1">
@@ -713,7 +716,7 @@ export default function TeamControl() {
                       value={newSkills}
                       onChange={(e) => setNewSkills(e.target.value)}
                       placeholder="e.g. HV Licensing, First Aid"
-                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
                     />
                   </div>
                 </div>
@@ -723,7 +726,7 @@ export default function TeamControl() {
                     <button
                       type="button"
                       onClick={() => setOpenDropdown(openDropdown === 'priority' ? null : 'priority')}
-                      className="w-full bg-slate-955/60 border border-slate-805 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:border-cyan-500/50 text-xs flex justify-between items-center transition-all shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] focus:ring-1 focus:ring-cyan-500/10 cursor-pointer text-left"
+                      className="w-full bg-slate-950/60 border border-slate-800 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:border-cyan-500/50 text-xs flex justify-between items-center transition-all shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] focus:ring-1 focus:ring-cyan-500/10 cursor-pointer text-left"
                     >
                       <span>{newAccessRole === 'Admin' ? 'Admin (Full)' : 'User (Standard)'}</span>
                       <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${openDropdown === 'priority' ? 'rotate-180' : ''}`} />
@@ -766,7 +769,7 @@ export default function TeamControl() {
                     <button
                       type="button"
                       onClick={() => setOpenDropdown(openDropdown === 'status' ? null : 'status')}
-                      className="w-full bg-slate-955/60 border border-slate-805 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:border-cyan-500/50 text-xs flex justify-between items-center transition-all shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] focus:ring-1 focus:ring-cyan-500/10 cursor-pointer text-left"
+                      className="w-full bg-slate-950/60 border border-slate-800 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:border-cyan-500/50 text-xs flex justify-between items-center transition-all shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] focus:ring-1 focus:ring-cyan-500/10 cursor-pointer text-left"
                     >
                       <span>{newStatus}</span>
                       <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${openDropdown === 'status' ? 'rotate-180' : ''}`} />
@@ -806,7 +809,7 @@ export default function TeamControl() {
                     <button
                       type="button"
                       onClick={() => setOpenDropdown(openDropdown === 'avatar' ? null : 'avatar')}
-                      className="w-full bg-slate-955/60 border border-slate-805 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:border-cyan-505 text-xs flex justify-between items-center transition-all shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] focus:ring-1 focus:ring-cyan-500/10 cursor-pointer text-left"
+                      className="w-full bg-slate-950/60 border border-slate-800 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:border-cyan-500 text-xs flex justify-between items-center transition-all shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] focus:ring-1 focus:ring-cyan-500/10 cursor-pointer text-left"
                     >
                       <span className="capitalize">{newAvatar} Theme</span>
                       <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${openDropdown === 'avatar' ? 'rotate-180' : ''}`} />
@@ -849,7 +852,7 @@ export default function TeamControl() {
               </div>
 
               {/* Section 4: Health & Emergency Credentials */}
-              <div className="space-y-3 p-4 bg-slate-955/20 rounded-xl border border-white/5">
+              <div className="space-y-3 p-4 bg-slate-950/20 rounded-xl border border-white/5">
                 <h5 className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest border-b border-slate-900/60 pb-1.5 mb-3">
                   4. Health & Emergency Credentials
                 </h5>
@@ -861,7 +864,7 @@ export default function TeamControl() {
                       value={newEmergencyName}
                       onChange={(e) => setNewEmergencyName(e.target.value)}
                       placeholder="e.g. Jane Doe (Spouse)"
-                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
                     />
                   </div>
                   <div className="space-y-1">
@@ -871,7 +874,7 @@ export default function TeamControl() {
                       value={newEmergencyPhone}
                       onChange={(e) => setNewEmergencyPhone(e.target.value)}
                       placeholder="e.g. +91 98765 43210"
-                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
                     />
                   </div>
                   <div className="space-y-1">
@@ -879,7 +882,7 @@ export default function TeamControl() {
                     <select
                       value={newBloodGroup}
                       onChange={(e) => setNewBloodGroup(e.target.value)}
-                      className="w-full bg-slate-955/60 border border-slate-805 text-slate-100 rounded-xl py-2.5 px-3.5 text-slate-150 focus:outline-none focus:border-cyan-500/50 text-xs cursor-pointer shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                      className="w-full bg-slate-950/60 border border-slate-800 text-slate-100 rounded-xl py-2.5 px-3.5 text-slate-200 focus:outline-none focus:border-cyan-500/50 text-xs cursor-pointer shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
                     >
                       <option value="">Select Blood Group...</option>
                       <option value="A+">A+</option>
@@ -899,14 +902,14 @@ export default function TeamControl() {
                       value={newMedicalConditions}
                       onChange={(e) => setNewMedicalConditions(e.target.value)}
                       placeholder="e.g. Peanut allergy, Asthma, None"
-                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Section 5: Personal Details */}
-              <div className="space-y-3 p-4 bg-slate-955/20 rounded-xl border border-white/5">
+              <div className="space-y-3 p-4 bg-slate-950/20 rounded-xl border border-white/5">
                 <h5 className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest border-b border-slate-900/60 pb-1.5 mb-3">
                   5. Personal Details
                 </h5>
@@ -918,7 +921,7 @@ export default function TeamControl() {
                       value={newFatherName}
                       onChange={(e) => setNewFatherName(e.target.value)}
                       placeholder="e.g. Rama Swamy"
-                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
                     />
                   </div>
                   <div className="space-y-1">
@@ -926,7 +929,7 @@ export default function TeamControl() {
                     <select
                       value={newGender}
                       onChange={(e) => setNewGender(e.target.value)}
-                      className="w-full bg-slate-955/60 border border-slate-805 text-slate-100 rounded-xl py-2.5 px-3.5 text-slate-150 focus:outline-none focus:border-cyan-500/50 text-xs cursor-pointer shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] bg-[#090d16]"
+                      className="w-full bg-slate-950/60 border border-slate-800 text-slate-100 rounded-xl py-2.5 px-3.5 text-slate-200 focus:outline-none focus:border-cyan-500/50 text-xs cursor-pointer shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] bg-[#090d16]"
                     >
                       <option value="Male">Male</option>
                       <option value="Female">Female</option>
@@ -940,7 +943,7 @@ export default function TeamControl() {
                       value={newDob}
                       onChange={(e) => setNewDob(e.target.value)}
                       placeholder="YYYY-MM-DD"
-                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
                     />
                   </div>
                   <div className="space-y-1">
@@ -948,7 +951,7 @@ export default function TeamControl() {
                     <select
                       value={newMaritalStatus}
                       onChange={(e) => setNewMaritalStatus(e.target.value)}
-                      className="w-full bg-slate-955/60 border border-slate-805 text-slate-100 rounded-xl py-2.5 px-3.5 text-slate-150 focus:outline-none focus:border-cyan-500/50 text-xs cursor-pointer shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] bg-[#090d16]"
+                      className="w-full bg-slate-950/60 border border-slate-800 text-slate-100 rounded-xl py-2.5 px-3.5 text-slate-200 focus:outline-none focus:border-cyan-500/50 text-xs cursor-pointer shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] bg-[#090d16]"
                     >
                       <option value="Married">Married</option>
                       <option value="Un-Married">Un-Married</option>
@@ -961,14 +964,14 @@ export default function TeamControl() {
                       value={newQualification}
                       onChange={(e) => setNewQualification(e.target.value)}
                       placeholder="e.g. B.Tech / ITI Electrician"
-                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Section 6: Address Details */}
-              <div className="space-y-3 p-4 bg-slate-955/20 rounded-xl border border-white/5">
+              <div className="space-y-3 p-4 bg-slate-950/20 rounded-xl border border-white/5">
                 <h5 className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest border-b border-slate-900/60 pb-1.5 mb-3">
                   6. Address Details
                 </h5>
@@ -980,7 +983,7 @@ export default function TeamControl() {
                       onChange={(e) => setNewPresentAddress(e.target.value)}
                       placeholder="Current residence address"
                       rows={2}
-                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] resize-none"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] resize-none"
                     />
                   </div>
                   <div className="space-y-1">
@@ -990,14 +993,14 @@ export default function TeamControl() {
                       onChange={(e) => setNewPermanentAddress(e.target.value)}
                       placeholder="Permanent address (as in Aadhaar)"
                       rows={2}
-                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] resize-none"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] resize-none"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Section 7: Bank Account Details */}
-              <div className="space-y-3 p-4 bg-slate-955/20 rounded-xl border border-white/5">
+              <div className="space-y-3 p-4 bg-slate-950/20 rounded-xl border border-white/5">
                 <h5 className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest border-b border-slate-900/60 pb-1.5 mb-3">
                   7. Bank Account Details & Identity
                 </h5>
@@ -1009,7 +1012,7 @@ export default function TeamControl() {
                       value={newPan}
                       onChange={(e) => setNewPan(e.target.value)}
                       placeholder="e.g. ABCDE1234F"
-                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] uppercase"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] uppercase"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1019,7 +1022,7 @@ export default function TeamControl() {
                       value={newBankAccountName}
                       onChange={(e) => setNewBankAccountName(e.target.value)}
                       placeholder="As per bank record"
-                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1029,7 +1032,7 @@ export default function TeamControl() {
                       value={newBankAccountNumber}
                       onChange={(e) => setNewBankAccountNumber(e.target.value)}
                       placeholder="Bank Account No"
-                      className="w-full bg-slate-955/60 border border-slate-850 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1039,7 +1042,7 @@ export default function TeamControl() {
                       value={newBankIfsc}
                       onChange={(e) => setNewBankIfsc(e.target.value)}
                       placeholder="IFSC Code"
-                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] uppercase"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] uppercase"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1050,7 +1053,7 @@ export default function TeamControl() {
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="Min 6 characters"
                       required
-                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all placeholder:text-slate-600 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
                     />
                   </div>
                 </div>
@@ -1061,7 +1064,7 @@ export default function TeamControl() {
                 <button
                   type="submit"
                   disabled={isDbActionLoading}
-                  className="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-305 text-slate-955 rounded-xl text-xs font-bold uppercase tracking-wider shadow-[0_4px_14px_rgba(6,182,212,0.2)] hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-950 rounded-xl text-xs font-bold uppercase tracking-wider shadow-[0_4px_14px_rgba(6,182,212,0.2)] hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {isDbActionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Register Team Member'}
                 </button>
@@ -1082,14 +1085,14 @@ export default function TeamControl() {
             </h4>
             <form onSubmit={handleSaveProfileChanges} className="space-y-6">
               {/* Section 1: Profile Identity */}
-              <div className="space-y-3 p-4 bg-slate-955/20 rounded-xl border border-white/5">
+              <div className="space-y-3 p-4 bg-slate-950/20 rounded-xl border border-white/5">
                 <h5 className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest border-b border-slate-900/60 pb-1.5 mb-3">
                   1. Profile Identity
                 </h5>
                 <div className="flex gap-6">
                   {/* Photo Upload */}
                   <div className="flex flex-col items-center gap-2 shrink-0">
-                    <div className="relative w-20 h-20 rounded-xl overflow-hidden border-2 border-dashed border-slate-700 hover:border-cyan-500/50 transition-colors group cursor-pointer bg-slate-955/40">
+                    <div className="relative w-20 h-20 rounded-xl overflow-hidden border-2 border-dashed border-slate-700 hover:border-cyan-500/50 transition-colors group cursor-pointer bg-slate-950/40">
                       {editPhotoPreview ? (
                         <img src={editPhotoPreview} alt="Preview" className="w-full h-full object-cover" />
                       ) : (
@@ -1122,7 +1125,7 @@ export default function TeamControl() {
                         value={editName}
                         onChange={(e) => setEditName(e.target.value)}
                         required
-                        className="w-full bg-slate-955/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all"
+                        className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all"
                       />
                     </div>
                     <div className="space-y-1">
@@ -1132,7 +1135,7 @@ export default function TeamControl() {
                         value={editEmail}
                         onChange={(e) => setEditEmail(e.target.value)}
                         required
-                        className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all"
+                        className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all"
                       />
                     </div>
                     <div className="space-y-1">
@@ -1141,7 +1144,7 @@ export default function TeamControl() {
                         type="tel" 
                         value={editPhone}
                         onChange={(e) => setEditPhone(e.target.value)}
-                        className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all"
+                        className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all"
                       />
                     </div>
                   </div>
@@ -1149,7 +1152,7 @@ export default function TeamControl() {
               </div>
 
               {/* Section 2: Role, Branch & IDs */}
-              <div className="space-y-3 p-4 bg-slate-955/20 rounded-xl border border-white/5">
+              <div className="space-y-3 p-4 bg-slate-950/20 rounded-xl border border-white/5">
                 <h5 className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest border-b border-slate-900/60 pb-1.5 mb-3">
                   2. Role, Branch & IDs
                 </h5>
@@ -1160,7 +1163,7 @@ export default function TeamControl() {
                       type="text" 
                       value={editRole}
                       onChange={(e) => setEditRole(e.target.value)}
-                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all"
                     />
                   </div>
                   <div className="space-y-1 relative">
@@ -1168,7 +1171,7 @@ export default function TeamControl() {
                     <button
                       type="button"
                       onClick={() => setOpenEditDropdown(openEditDropdown === 'branch' ? null : 'branch')}
-                      className="w-full bg-slate-955/60 border border-slate-805 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:border-cyan-500/50 text-xs flex justify-between items-center transition-all shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] focus:ring-1 focus:ring-cyan-500/10 cursor-pointer text-left"
+                      className="w-full bg-slate-950/60 border border-slate-800 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:border-cyan-500/50 text-xs flex justify-between items-center transition-all shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] focus:ring-1 focus:ring-cyan-500/10 cursor-pointer text-left"
                     >
                       <span>{editBranch}</span>
                       <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${openEditDropdown === 'branch' ? 'rotate-180' : ''}`} />
@@ -1215,7 +1218,7 @@ export default function TeamControl() {
                       type="text" 
                       value={editEmployeeId}
                       onChange={(e) => setEditEmployeeId(e.target.value)}
-                      className="w-full bg-slate-955/60 border border-slate-850 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1224,7 +1227,7 @@ export default function TeamControl() {
                       type="text" 
                       value={editEsiNumber}
                       onChange={(e) => setEditEsiNumber(e.target.value)}
-                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1233,7 +1236,7 @@ export default function TeamControl() {
                       type="text" 
                       value={editPfNumber}
                       onChange={(e) => setEditPfNumber(e.target.value)}
-                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1242,14 +1245,14 @@ export default function TeamControl() {
                       type="text" 
                       value={editAadharNumber}
                       onChange={(e) => setEditAadharNumber(e.target.value)}
-                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Section 3: Access Control & Skills */}
-              <div className="space-y-3 p-4 bg-slate-955/20 rounded-xl border border-white/5">
+              <div className="space-y-3 p-4 bg-slate-950/20 rounded-xl border border-white/5">
                 <h5 className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest border-b border-slate-900/60 pb-1.5 mb-3">
                   3. Access Control & Skills
                 </h5>
@@ -1260,7 +1263,7 @@ export default function TeamControl() {
                       type="date" 
                       value={editJoinedDate}
                       onChange={(e) => setEditJoinedDate(e.target.value)}
-                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1269,7 +1272,7 @@ export default function TeamControl() {
                       type="text" 
                       value={editSkills}
                       onChange={(e) => setEditSkills(e.target.value)}
-                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all"
                     />
                   </div>
                 </div>
@@ -1280,7 +1283,7 @@ export default function TeamControl() {
                     <button
                       type="button"
                       onClick={() => setOpenEditDropdown(openEditDropdown === 'status' ? null : 'status')}
-                      className="w-full bg-slate-955/60 border border-slate-805 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:border-cyan-500/50 text-xs flex justify-between items-center transition-all shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] focus:ring-1 focus:ring-cyan-500/10 cursor-pointer text-left"
+                      className="w-full bg-slate-950/60 border border-slate-800 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:border-cyan-500/50 text-xs flex justify-between items-center transition-all shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] focus:ring-1 focus:ring-cyan-500/10 cursor-pointer text-left"
                     >
                       <span>{editStatus}</span>
                       <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${openEditDropdown === 'status' ? 'rotate-180' : ''}`} />
@@ -1320,7 +1323,7 @@ export default function TeamControl() {
                     <button
                       type="button"
                       onClick={() => setOpenEditDropdown(openEditDropdown === 'avatar' ? null : 'avatar')}
-                      className="w-full bg-slate-955/60 border border-slate-805 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:border-cyan-505 text-xs flex justify-between items-center transition-all shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] focus:ring-1 focus:ring-cyan-500/10 cursor-pointer text-left"
+                      className="w-full bg-slate-950/60 border border-slate-800 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:border-cyan-500 text-xs flex justify-between items-center transition-all shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] focus:ring-1 focus:ring-cyan-500/10 cursor-pointer text-left"
                     >
                       <span className="capitalize">{editAvatar} Theme</span>
                       <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${openEditDropdown === 'avatar' ? 'rotate-180' : ''}`} />
@@ -1364,7 +1367,7 @@ export default function TeamControl() {
               </div>
 
               {/* Section 4: Health & Emergency Credentials */}
-              <div className="space-y-3 p-4 bg-slate-955/20 rounded-xl border border-white/5">
+              <div className="space-y-3 p-4 bg-slate-950/20 rounded-xl border border-white/5">
                 <h5 className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest border-b border-slate-900/60 pb-1.5 mb-3">
                   4. Health & Emergency Credentials
                 </h5>
@@ -1375,7 +1378,7 @@ export default function TeamControl() {
                       type="text" 
                       value={editEmergencyName}
                       onChange={(e) => setEditEmergencyName(e.target.value)}
-                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1384,7 +1387,7 @@ export default function TeamControl() {
                       type="text" 
                       value={editEmergencyPhone}
                       onChange={(e) => setEditEmergencyPhone(e.target.value)}
-                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1392,7 +1395,7 @@ export default function TeamControl() {
                     <select
                       value={editBloodGroup}
                       onChange={(e) => setEditBloodGroup(e.target.value)}
-                      className="w-full bg-slate-955/60 border border-slate-805 text-slate-100 rounded-xl py-2.5 px-3.5 text-slate-150 focus:outline-none focus:border-cyan-500/50 text-xs cursor-pointer shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
+                      className="w-full bg-slate-950/60 border border-slate-800 text-slate-100 rounded-xl py-2.5 px-3.5 text-slate-200 focus:outline-none focus:border-cyan-500/50 text-xs cursor-pointer shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
                     >
                       <option value="">Select Blood Group...</option>
                       <option value="A+">A+</option>
@@ -1411,14 +1414,14 @@ export default function TeamControl() {
                       type="text" 
                       value={editMedicalConditions}
                       onChange={(e) => setEditMedicalConditions(e.target.value)}
-                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Section 5: Personal Details */}
-              <div className="space-y-3 p-4 bg-slate-955/20 rounded-xl border border-white/5">
+              <div className="space-y-3 p-4 bg-slate-950/20 rounded-xl border border-white/5">
                 <h5 className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest border-b border-slate-900/60 pb-1.5 mb-3">
                   5. Personal Details
                 </h5>
@@ -1429,7 +1432,7 @@ export default function TeamControl() {
                       type="text" 
                       value={editFatherName}
                       onChange={(e) => setEditFatherName(e.target.value)}
-                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1437,7 +1440,7 @@ export default function TeamControl() {
                     <select
                       value={editGender}
                       onChange={(e) => setEditGender(e.target.value)}
-                      className="w-full bg-slate-955/60 border border-slate-805 text-slate-100 rounded-xl py-2.5 px-3.5 text-slate-150 focus:outline-none focus:border-cyan-500/50 text-xs cursor-pointer shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] bg-[#090d16]"
+                      className="w-full bg-slate-950/60 border border-slate-800 text-slate-100 rounded-xl py-2.5 px-3.5 text-slate-200 focus:outline-none focus:border-cyan-500/50 text-xs cursor-pointer shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] bg-[#090d16]"
                     >
                       <option value="Male">Male</option>
                       <option value="Female">Female</option>
@@ -1450,7 +1453,7 @@ export default function TeamControl() {
                       type="text" 
                       value={editDob}
                       onChange={(e) => setEditDob(e.target.value)}
-                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1458,7 +1461,7 @@ export default function TeamControl() {
                     <select
                       value={editMaritalStatus}
                       onChange={(e) => setEditMaritalStatus(e.target.value)}
-                      className="w-full bg-slate-955/60 border border-slate-805 text-slate-100 rounded-xl py-2.5 px-3.5 text-slate-150 focus:outline-none focus:border-cyan-500/50 text-xs cursor-pointer shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] bg-[#090d16]"
+                      className="w-full bg-slate-950/60 border border-slate-800 text-slate-100 rounded-xl py-2.5 px-3.5 text-slate-200 focus:outline-none focus:border-cyan-500/50 text-xs cursor-pointer shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] bg-[#090d16]"
                     >
                       <option value="Married">Married</option>
                       <option value="Un-Married">Un-Married</option>
@@ -1470,14 +1473,14 @@ export default function TeamControl() {
                       type="text" 
                       value={editQualification}
                       onChange={(e) => setEditQualification(e.target.value)}
-                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Section 6: Address Details */}
-              <div className="space-y-3 p-4 bg-slate-955/20 rounded-xl border border-white/5">
+              <div className="space-y-3 p-4 bg-slate-950/20 rounded-xl border border-white/5">
                 <h5 className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest border-b border-slate-900/60 pb-1.5 mb-3">
                   6. Address Details
                 </h5>
@@ -1488,7 +1491,7 @@ export default function TeamControl() {
                       value={editPresentAddress}
                       onChange={(e) => setEditPresentAddress(e.target.value)}
                       rows={2}
-                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all resize-none"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all resize-none"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1497,14 +1500,14 @@ export default function TeamControl() {
                       value={editPermanentAddress}
                       onChange={(e) => setEditPermanentAddress(e.target.value)}
                       rows={2}
-                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all resize-none"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all resize-none"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Section 7: Bank Account Details */}
-              <div className="space-y-3 p-4 bg-slate-955/20 rounded-xl border border-white/5">
+              <div className="space-y-3 p-4 bg-slate-950/20 rounded-xl border border-white/5">
                 <h5 className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest border-b border-slate-900/60 pb-1.5 mb-3">
                   7. Bank Account Details & Identity
                 </h5>
@@ -1515,7 +1518,7 @@ export default function TeamControl() {
                       type="text" 
                       value={editPan}
                       onChange={(e) => setEditPan(e.target.value)}
-                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all uppercase"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all uppercase"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1524,7 +1527,7 @@ export default function TeamControl() {
                       type="text" 
                       value={editBankAccountName}
                       onChange={(e) => setEditBankAccountName(e.target.value)}
-                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1533,7 +1536,7 @@ export default function TeamControl() {
                       type="text" 
                       value={editBankAccountNumber}
                       onChange={(e) => setEditBankAccountNumber(e.target.value)}
-                      className="w-full bg-slate-955/60 border border-slate-850 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1542,7 +1545,7 @@ export default function TeamControl() {
                       type="text" 
                       value={editBankIfsc}
                       onChange={(e) => setEditBankIfsc(e.target.value)}
-                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all uppercase"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all uppercase"
                     />
                   </div>
                   <div className="space-y-1">
@@ -1559,7 +1562,7 @@ export default function TeamControl() {
                       value={editPassword}
                       onChange={(e) => setEditPassword(e.target.value)}
                       placeholder="Enter new password"
-                      className="w-full bg-slate-955/60 border border-slate-805 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all"
+                      className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/10 text-xs transition-all"
                     />
                   </div>
                 </div>
@@ -1569,7 +1572,7 @@ export default function TeamControl() {
                 <button
                   type="submit"
                   disabled={isDbActionLoading}
-                  className="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-305 text-slate-955 rounded-xl text-xs font-bold uppercase tracking-wider shadow-[0_4px_14px_rgba(6,182,212,0.2)] hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+                  className="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-950 rounded-xl text-xs font-bold uppercase tracking-wider shadow-[0_4px_14px_rgba(6,182,212,0.2)] hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
                 >
                   {isDbActionLoading ? (
                     <>
@@ -1586,7 +1589,7 @@ export default function TeamControl() {
                     setIsEditingProfile(false);
                     setSelectedProfile(null);
                   }}
-                  className="w-full py-3.5 bg-slate-805 border border-slate-700 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
+                  className="w-full py-3.5 bg-slate-800 border border-slate-700 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -1643,7 +1646,7 @@ export default function TeamControl() {
                 <p className="text-sm font-medium text-slate-400">
                   {teamList.length === 0 ? "Database registry is empty" : "No matching members found"}
                 </p>
-                <p className="text-xs text-slate-505 mt-1">
+                <p className="text-xs text-slate-500 mt-1">
                   {teamList.length === 0 ? "Populate users by clicking 'Add Team Member'." : "Try changing the status filter."}
                 </p>
               </div>
@@ -1651,7 +1654,7 @@ export default function TeamControl() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
-                    <tr className="border-b border-slate-800 bg-slate-955/45 uppercase tracking-wider text-slate-400 font-semibold">
+                    <tr className="border-b border-slate-800 bg-slate-950/45 uppercase tracking-wider text-slate-400 font-semibold">
                       <th className="p-4 text-center">S.No</th>
                       <th className="p-4">Employee ID</th>
                       <th className="p-4">Name</th>
@@ -1693,7 +1696,7 @@ export default function TeamControl() {
                           </td>
                           <td className="p-4">
                             <div className="font-medium text-slate-205 truncate max-w-[150px]">{m.role}</div>
-                            <div className="text-[10px] text-slate-505 font-mono mt-0.5">{m.branch || m.department || 'Vijayawada'}</div>
+                            <div className="text-[10px] text-slate-500 font-mono mt-0.5">{m.branch || m.department || 'Vijayawada'}</div>
                           </td>
                           <td className="p-4 font-mono text-xs text-slate-400">
                             {m.phone || 'N/A'}
@@ -1726,7 +1729,7 @@ export default function TeamControl() {
                                 title={m.status === 'Inactive' ? 'Activate Account' : 'Deactivate Account'}
                               >
                                 <span
-                                  className={`pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-slate-955 shadow-md ring-0 transition duration-200 ease-in-out ${
+                                  className={`pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-slate-950 shadow-md ring-0 transition duration-200 ease-in-out ${
                                     m.status !== 'Inactive' ? 'translate-x-4' : 'translate-x-0'
                                   }`}
                                 />
@@ -1792,7 +1795,7 @@ export default function TeamControl() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-slate-955/65 backdrop-blur-sm"
+              className="absolute inset-0 bg-slate-950/65 backdrop-blur-sm"
               onClick={() => setSelectedProfile(null)}
             />
             <motion.div 
@@ -2008,7 +2011,7 @@ export default function TeamControl() {
                           value={editName}
                           onChange={(e) => setEditName(e.target.value)}
                           required
-                          className="w-full bg-slate-955/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/10 transition-all"
+                          className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/10 transition-all"
                         />
                       </div>
                       <div className="space-y-1">
@@ -2017,7 +2020,7 @@ export default function TeamControl() {
                           type="text" 
                           value={editRole}
                           onChange={(e) => setEditRole(e.target.value)}
-                          className="w-full bg-slate-955/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/10 transition-all"
+                          className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/10 transition-all"
                         />
                       </div>
                       <div className="space-y-1">
@@ -2026,7 +2029,7 @@ export default function TeamControl() {
                           type="text" 
                           value={editEmployeeId}
                           onChange={(e) => setEditEmployeeId(e.target.value)}
-                          className="w-full bg-slate-955/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/10 transition-all font-mono"
+                          className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/10 transition-all font-mono"
                         />
                       </div>
                       <div className="space-y-1">
@@ -2035,7 +2038,7 @@ export default function TeamControl() {
                           type="text" 
                           value={editPhone}
                           onChange={(e) => setEditPhone(e.target.value)}
-                          className="w-full bg-slate-955/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/10 transition-all"
+                          className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/10 transition-all"
                         />
                       </div>
                       <div className="space-y-1 col-span-2">
@@ -2045,14 +2048,14 @@ export default function TeamControl() {
                           value={editEmail}
                           onChange={(e) => setEditEmail(e.target.value)}
                           required
-                          className="w-full bg-slate-955/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/10 transition-all"
+                          className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/10 transition-all"
                         />
                       </div>
                     </div>
                   </div>
 
                   {/* Section 2: Branch, Status & Details */}
-                  <div className="space-y-3 p-4 bg-slate-955/20 rounded-xl border border-white/5">
+                  <div className="space-y-3 p-4 bg-slate-950/20 rounded-xl border border-white/5">
                     <h5 className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest border-b border-slate-900/60 pb-1.5 mb-2">
                       2. Access & Operations
                     </h5>
@@ -2063,7 +2066,7 @@ export default function TeamControl() {
                         <button
                           type="button"
                           onClick={() => setOpenEditDropdown(openEditDropdown === 'branch' ? null : 'branch')}
-                          className="w-full bg-slate-955/60 border border-slate-800 text-slate-100 rounded-xl py-2 px-3 focus:outline-none focus:border-cyan-500/50 text-xs flex justify-between items-center transition-all cursor-pointer text-left"
+                          className="w-full bg-slate-950/60 border border-slate-800 text-slate-100 rounded-xl py-2 px-3 focus:outline-none focus:border-cyan-500/50 text-xs flex justify-between items-center transition-all cursor-pointer text-left"
                         >
                           <span>{editBranch}</span>
                           <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${openEditDropdown === 'branch' ? 'rotate-180' : ''}`} />
@@ -2112,7 +2115,7 @@ export default function TeamControl() {
                           type="text" 
                           value={editEsiNumber}
                           onChange={(e) => setEditEsiNumber(e.target.value)}
-                          className="w-full bg-slate-955/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/10 transition-all font-mono"
+                          className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/10 transition-all font-mono"
                         />
                       </div>
 
@@ -2123,7 +2126,7 @@ export default function TeamControl() {
                           type="text" 
                           value={editPfNumber}
                           onChange={(e) => setEditPfNumber(e.target.value)}
-                          className="w-full bg-slate-955/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/10 transition-all font-mono"
+                          className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/10 transition-all font-mono"
                         />
                       </div>
 
@@ -2134,7 +2137,7 @@ export default function TeamControl() {
                           type="text" 
                           value={editAadharNumber}
                           onChange={(e) => setEditAadharNumber(e.target.value)}
-                          className="w-full bg-slate-955/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/10 transition-all font-mono"
+                          className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/10 transition-all font-mono"
                         />
                       </div>
 
@@ -2144,7 +2147,7 @@ export default function TeamControl() {
                         <button
                           type="button"
                           onClick={() => setOpenEditDropdown(openEditDropdown === 'status' ? null : 'status')}
-                          className="w-full bg-slate-955/60 border border-slate-800 text-slate-100 rounded-xl py-2 px-3 focus:outline-none focus:border-cyan-500/50 text-xs flex justify-between items-center transition-all cursor-pointer text-left"
+                          className="w-full bg-slate-950/60 border border-slate-800 text-slate-100 rounded-xl py-2 px-3 focus:outline-none focus:border-cyan-500/50 text-xs flex justify-between items-center transition-all cursor-pointer text-left"
                         >
                           <span>{editStatus}</span>
                           <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${openEditDropdown === 'status' ? 'rotate-180' : ''}`} />
@@ -2187,7 +2190,7 @@ export default function TeamControl() {
                           type="date" 
                           value={editJoinedDate}
                           onChange={(e) => setEditJoinedDate(e.target.value)}
-                          className="w-full bg-slate-955/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/10 transition-all font-mono"
+                          className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/10 transition-all font-mono"
                         />
                       </div>
 
@@ -2197,7 +2200,7 @@ export default function TeamControl() {
                         <button
                           type="button"
                           onClick={() => setOpenEditDropdown(openEditDropdown === 'avatar' ? null : 'avatar')}
-                          className="w-full bg-slate-955/60 border border-slate-800 text-slate-100 rounded-xl py-2 px-3 focus:outline-none focus:border-cyan-505 text-xs flex justify-between items-center transition-all cursor-pointer text-left font-mono"
+                          className="w-full bg-slate-950/60 border border-slate-800 text-slate-100 rounded-xl py-2 px-3 focus:outline-none focus:border-cyan-500 text-xs flex justify-between items-center transition-all cursor-pointer text-left font-mono"
                         >
                           <span className="capitalize">{editAvatar} Theme</span>
                           <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${openEditDropdown === 'avatar' ? 'rotate-180' : ''}`} />
@@ -2246,7 +2249,7 @@ export default function TeamControl() {
                           value={editSkills}
                           onChange={(e) => setEditSkills(e.target.value)}
                           placeholder="e.g. Solar, HV Safety, LOTO"
-                          className="w-full bg-slate-955/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/10 transition-all"
+                          className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/10 transition-all"
                         />
                       </div>
                     </div>
@@ -2265,7 +2268,7 @@ export default function TeamControl() {
                           value={editEmergencyName}
                           onChange={(e) => setEditEmergencyName(e.target.value)}
                           placeholder="Contact name"
-                          className="w-full bg-slate-955/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/10 transition-all"
+                          className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/10 transition-all"
                         />
                       </div>
                       <div className="space-y-1">
@@ -2275,7 +2278,7 @@ export default function TeamControl() {
                           value={editEmergencyPhone}
                           onChange={(e) => setEditEmergencyPhone(e.target.value)}
                           placeholder="Contact phone"
-                          className="w-full bg-slate-955/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/10 transition-all"
+                          className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/10 transition-all"
                         />
                       </div>
                       <div className="space-y-1">
@@ -2283,7 +2286,7 @@ export default function TeamControl() {
                         <select
                           value={editBloodGroup}
                           onChange={(e) => setEditBloodGroup(e.target.value)}
-                          className="w-full bg-slate-955/60 border border-slate-800 text-slate-150 focus:outline-none focus:border-cyan-500/50 text-xs cursor-pointer rounded-xl py-2 px-3 text-slate-100 bg-[#090d16]"
+                          className="w-full bg-slate-950/60 border border-slate-800 text-slate-200 focus:outline-none focus:border-cyan-500/50 text-xs cursor-pointer rounded-xl py-2 px-3 text-slate-100 bg-[#090d16]"
                         >
                           <option value="">Select Blood Group...</option>
                           <option value="A+">A+</option>
@@ -2303,7 +2306,7 @@ export default function TeamControl() {
                           value={editMedicalConditions}
                           onChange={(e) => setEditMedicalConditions(e.target.value)}
                           placeholder="Allergies, chronic conditions"
-                          className="w-full bg-slate-955/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/10 transition-all"
+                          className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/10 transition-all"
                         />
                       </div>
                     </div>
@@ -2313,7 +2316,7 @@ export default function TeamControl() {
                     <button
                       type="submit"
                       disabled={isDbActionLoading}
-                      className="w-full py-2.5 bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-955 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                      className="w-full py-2.5 bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-950 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
                     >
                       {isDbActionLoading ? (
                         <>
@@ -2327,7 +2330,7 @@ export default function TeamControl() {
                     <button
                       type="button"
                       onClick={() => setIsEditingProfile(false)}
-                      className="w-full py-2.5 bg-slate-805 border border-slate-700 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                      className="w-full py-2.5 bg-slate-800 border border-slate-700 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-bold transition-all cursor-pointer"
                     >
                       Cancel
                     </button>
@@ -2335,7 +2338,7 @@ export default function TeamControl() {
                 </form>
               ) : (
                 <>
-                  <div className="grid grid-cols-2 gap-4 text-xs bg-slate-955/45 p-4 rounded-xl border border-slate-900/60 font-mono">
+                  <div className="grid grid-cols-2 gap-4 text-xs bg-slate-950/45 p-4 rounded-xl border border-slate-900/60 font-mono">
                     <div className="space-y-1">
                       <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Branch</span>
                       <span className="text-slate-350 font-bold flex items-center gap-1.5">
@@ -2457,7 +2460,7 @@ export default function TeamControl() {
                   {/* Bank Account Details */}
                   <div className="space-y-2">
                     <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Bank Account Details & ID</span>
-                    <div className="grid grid-cols-2 gap-4 text-xs bg-slate-955/20 p-4 rounded-xl border border-white/5 font-mono">
+                    <div className="grid grid-cols-2 gap-4 text-xs bg-slate-950/20 p-4 rounded-xl border border-white/5 font-mono">
                       <div className="space-y-1">
                         <span className="text-slate-500 block uppercase tracking-wider text-[9px]">PAN Card</span>
                         <span className="text-slate-200 font-bold block truncate select-all">{selectedProfile.pan || 'N/A'}</span>
@@ -2521,7 +2524,7 @@ export default function TeamControl() {
                           </span>
                         ))
                       ) : (
-                        <span className="text-xs text-slate-505 italic">No specialized skills/certifications listed</span>
+                        <span className="text-xs text-slate-500 italic">No specialized skills/certifications listed</span>
                       )}
                     </div>
                   </div>

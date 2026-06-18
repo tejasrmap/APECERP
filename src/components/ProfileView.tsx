@@ -183,7 +183,7 @@ export default function ProfileView() {
       {loading && (
         <div className="flex flex-col items-center justify-center min-h-[80vh] gap-4">
           <div className="relative w-12 h-12">
-            <div className="absolute inset-0 rounded-full border-2 border-slate-850 animate-spin border-t-[#DC2626]" />
+            <div className="absolute inset-0 rounded-full border-2 border-slate-800 animate-spin border-t-[#DC2626]" />
             <Activity className="absolute inset-0 m-auto w-5 h-5 text-[#DC2626] animate-pulse" />
           </div>
           <p className="text-xs font-mono text-slate-500 tracking-wider uppercase">Loading Employee Record...</p>
@@ -265,7 +265,7 @@ export default function ProfileView() {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35 }}
-                className="bg-[#1E293B] rounded-2xl border border-slate-805 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300"
+                className="bg-[#1E293B] rounded-2xl border border-slate-800 overflow-hidden shadow-sm hover:shadow-md transition-all duration-300"
               >
                 {/* Solid corporate header banner */}
                 <div className="h-32 bg-[#070C16] relative flex items-center justify-between px-6">
@@ -413,7 +413,7 @@ export default function ProfileView() {
                 transition={{ duration: 0.35, delay: 0.08 }}
                 className={`bg-[#1E293B] border border-slate-800 rounded-xl p-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300 ${activeTab === 'contact' ? 'block' : 'hidden md:block'}`}
               >
-                <div className="flex items-center gap-2 border-b border-slate-805 pb-2.5">
+                <div className="flex items-center gap-2 border-b border-slate-800 pb-2.5">
                   <User className="w-4 h-4 text-cyan-400" />
                   <span className="text-xs font-bold text-slate-100 uppercase tracking-wider">Personal & Address Details</span>
                 </div>
@@ -459,7 +459,7 @@ export default function ProfileView() {
                   transition={{ duration: 0.35, delay: 0.1 }}
                   className={`bg-[#1E293B] border border-slate-800 rounded-xl p-6 space-y-4 shadow-sm hover:shadow-md transition-all duration-300 ${activeTab === 'contact' ? 'block' : 'hidden md:block'}`}
                 >
-                  <div className="flex items-center gap-2 border-b border-slate-805 pb-2.5">
+                  <div className="flex items-center gap-2 border-b border-slate-800 pb-2.5">
                     <Award className="w-4 h-4 text-[#DC2626]" />
                     <span className="text-xs font-bold text-slate-100 uppercase tracking-wider">Skills & Certifications</span>
                   </div>

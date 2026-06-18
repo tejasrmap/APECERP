@@ -87,6 +87,7 @@ export default function Scheduling() {
 
   const [projectsList, setProjectsList] = useState<any[]>([]);
   const [schedules, setSchedules] = useState<Shift[]>([]);
+  const [leavesList, setLeavesList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Calendar / Planner States
@@ -193,6 +194,18 @@ export default function Scheduling() {
         }
       ];
       setAttendanceLogs(mockAttendance);
+      setLeavesList([
+        {
+          id: 'mock-leave-1',
+          employeeId: '1',
+          employeeName: 'Rahul Sharma',
+          employeeEmail: 'rahul@apecpowersolutions.com',
+          leaveType: 'Sick',
+          startDate: todayStr,
+          endDate: todayStr,
+          status: 'Approved'
+        }
+      ]);
       setLoading(false);
       return;
     }
@@ -231,11 +244,18 @@ export default function Scheduling() {
       setLoading(false);
     });
 
+    const unsubLeaves = onSnapshot(collection(db, 'leaves'), (snap) => {
+      setLeavesList(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    }, (err) => {
+      console.error('Leaves listener error in Scheduling:', err);
+    });
+
     return () => {
       unsubTeam();
       unsubProjects();
       unsubSchedules();
       unsubAttendance();
+      unsubLeaves();
     };
   }, [setFirestoreError]);
 
@@ -629,6 +649,17 @@ export default function Scheduling() {
     return lookup;
   }, [schedules, selectedDateStr]);
 
+  const getApprovedLeave = (techId: string, techEmail: string, dateStr: string) => {
+    return leavesList.find(l => {
+      if (l.status !== 'Approved') return false;
+      const isTechMatch = 
+        (l.employeeId && l.employeeId === techId) || 
+        (l.employeeEmail && techEmail && l.employeeEmail.toLowerCase() === techEmail.toLowerCase());
+      if (!isTechMatch) return false;
+      return dateStr >= l.startDate && dateStr <= l.endDate;
+    });
+  };
+
   if (loading) {
     return (
       <div className="absolute inset-0 flex items-center justify-center bg-[#070a13]/50 backdrop-blur-sm z-30">
@@ -838,6 +869,7 @@ export default function Scheduling() {
                       const techShifts = shiftsByTechLookup[tech.id] || [];
                       const weeklyHours = weeklyHoursLookup[tech.id] || 0;
                       const isOvertimeLimit = weeklyHours > 48;
+                      const activeLeave = getApprovedLeave(tech.id, tech.email, selectedDateStr);
 
                       return (
                         <div 
@@ -878,6 +910,13 @@ export default function Scheduling() {
                                   />
                                 ))}
                               </div>
+
+                              {activeLeave && (
+                                <div className="absolute inset-0 bg-purple-950/60 border border-purple-500/30 text-purple-400 flex items-center justify-center gap-2 font-mono text-[10px] font-bold z-20 pointer-events-none select-none backdrop-blur-[0.5px]">
+                                  <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
+                                  ON LEAVE ({activeLeave.leaveType.toUpperCase()})
+                                </div>
+                              )}
 
                               {/* Click-to-assign background layer */}
                               <div 
@@ -1006,6 +1045,7 @@ export default function Scheduling() {
                   const techShifts = shiftsByTechLookup[tech.id] || [];
                   const weeklyHours = weeklyHoursLookup[tech.id] || 0;
                   const isOvertimeLimit = weeklyHours > 48;
+                  const activeLeave = getApprovedLeave(tech.id, tech.email, selectedDateStr);
 
                   return (
                     <div 
@@ -1034,7 +1074,13 @@ export default function Scheduling() {
 
                       {/* Technician Agenda Shifts */}
                       <div className="space-y-3">
-                        {techShifts.length === 0 ? (
+                        {activeLeave && (
+                          <div className="p-3 bg-purple-500/10 border border-purple-500/20 text-purple-400 rounded-xl text-center flex items-center justify-center gap-2 font-mono text-[10px] font-bold">
+                            <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
+                            ON LEAVE ({activeLeave.leaveType.toUpperCase()})
+                          </div>
+                        )}
+                        {techShifts.length === 0 && !activeLeave ? (
                           <div className="text-center py-4 bg-slate-950/10 border border-slate-900/40 rounded-xl">
                             <span className="text-[10px] text-slate-500 font-mono">Rest Day / Off</span>
                           </div>
@@ -1103,6 +1149,8 @@ export default function Scheduling() {
                 const dateStr = getLocalDateString(dayDate);
                 const isTodayStr = getLocalDateString(new Date()) === dateStr;
                 const myId = userProfile?.id || visibleTeamList[0]?.id;
+                const myTech = teamList.find(t => t.id === myId);
+                const activeLeave = getApprovedLeave(myId, myTech?.email, dateStr);
                 
                 // Get all shifts for this specific day
                 const dayShifts = schedules.filter(s => s.technicianId === myId && s.date === dateStr);
@@ -1147,7 +1195,14 @@ export default function Scheduling() {
 
                     {/* Shifts for this day */}
                     <div className="flex-1 space-y-2">
-                      {dayShifts.length === 0 ? (
+                      {activeLeave && (
+                        <div className="p-2.5 bg-purple-500/10 border border-purple-500/20 text-purple-400 rounded-xl text-center flex flex-col items-center justify-center gap-1 font-mono text-[9px] font-bold">
+                          <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
+                          <span>ON LEAVE</span>
+                          <span className="text-[7.5px] opacity-75">({activeLeave.leaveType})</span>
+                        </div>
+                      )}
+                      {dayShifts.length === 0 && !activeLeave ? (
                         <div className="h-full flex flex-col items-center justify-center py-6 text-center select-none opacity-40">
                           <span className="text-[10px] text-slate-500 font-mono font-semibold tracking-wider uppercase">Rest Day</span>
                         </div>
@@ -1367,7 +1422,7 @@ export default function Scheduling() {
                     onChange={(e) => setShiftTime(e.target.value)}
                     required
                     placeholder="e.g. 08:00 - 17:00"
-                    className="w-full bg-slate-955 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 text-sm"
+                    className="w-full bg-slate-950 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 text-sm"
                   />
                 </div>
 

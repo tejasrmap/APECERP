@@ -598,10 +598,10 @@ export default function Login() {
                     <button
                       type="submit"
                       disabled={isLoading || !phone || !password}
-                      className="w-full bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-955 font-extrabold py-3.5 rounded-xl transition-all relative overflow-hidden group flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed shadow-[0_4px_14px_rgba(6,182,212,0.3)] hover:shadow-[0_4px_20px_rgba(6,182,212,0.45)]"
+                      className="w-full bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-950 font-extrabold py-3.5 rounded-xl transition-all relative overflow-hidden group flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed shadow-[0_4px_14px_rgba(6,182,212,0.3)] hover:shadow-[0_4px_20px_rgba(6,182,212,0.45)]"
                     >
                       {isLoading ? (
-                        <Loader2 className="w-5 h-5 animate-spin text-slate-955" />
+                        <Loader2 className="w-5 h-5 animate-spin text-slate-950" />
                       ) : (
                         <>
                           Sign In
