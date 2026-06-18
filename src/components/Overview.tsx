@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { 
   Activity, 
@@ -22,6 +22,7 @@ export default function Overview() {
   const [alertsList, setAlertsList] = useState<any[]>([]);
   const [tasksList, setTasksList] = useState<any[]>([]);
   const [activitiesList, setActivitiesList] = useState<any[]>([]);
+  const [schedulesList, setSchedulesList] = useState<any[]>([]);
 
   const [activeProjectsCount, setActiveProjectsCount] = useState(0);
   const [pendingAlertsCount, setPendingAlertsCount] = useState(0);
@@ -68,14 +69,16 @@ export default function Overview() {
     projects: false,
     alerts: false,
     tasks: false,
-    activities: false
+    activities: false,
+    schedules: false
   });
 
   const isOverviewLoading = 
     !loadedCollections.projects || 
     !loadedCollections.alerts || 
     !loadedCollections.tasks || 
-    !loadedCollections.activities;
+    !loadedCollections.activities ||
+    !loadedCollections.schedules;
 
   // Safety fallback timeout to prevent infinite loading state
   useEffect(() => {
@@ -102,8 +105,15 @@ export default function Overview() {
         projects: true,
         alerts: true,
         tasks: true,
-        activities: true
+        activities: true,
+        schedules: true
       });
+      // Mock data for schedules if no DB
+      setSchedulesList([
+        { id: '1', date: new Date().toISOString().slice(0, 10), status: 'On Time' },
+        { id: '2', date: new Date().toISOString().slice(0, 10), status: 'Delayed' },
+        { id: '3', date: new Date().toISOString().slice(0, 10), status: 'Absent' }
+      ]);
       return;
     }
 
@@ -180,19 +190,70 @@ export default function Overview() {
       setLoadedCollections(prev => ({ ...prev, activities: true }));
     });
 
+    // 5. Schedules listener
+    const unsubSchedules = onSnapshot(collection(db, 'schedules'), (snapshot) => {
+      const schs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      setSchedulesList(schs);
+      setLoadedCollections(prev => ({ ...prev, schedules: true }));
+    }, (err) => {
+      console.error('Schedules listener error:', err);
+      setFirestoreError(err.code);
+      setLoadedCollections(prev => ({ ...prev, schedules: true }));
+    });
+
     return () => {
       unsubProjects();
       unsubAlerts();
       unsubTasks();
       unsubActivities();
+      unsubSchedules();
     };
   }, [setFirestoreError]);
+
+  const computedStats = useMemo(() => {
+    let onTime = 0;
+    let delayed = 0;
+    let absent = 0;
+    
+    schedulesList.forEach(s => {
+      if (s.status === 'On Time') onTime++;
+      else if (s.status === 'Delayed') delayed++;
+      else if (s.status === 'Absent') absent++;
+    });
+    
+    const checkedShifts = onTime + delayed + absent;
+    const compliance = checkedShifts > 0 ? Math.round((onTime / checkedShifts) * 100) : 100;
+    return { compliance };
+  }, [schedulesList]);
+
+  const monthlyData = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    const counts = Array(12).fill(0);
+    
+    schedulesList.forEach(s => {
+      if (s.date) {
+        const parts = s.date.split('-');
+        if (parts.length === 3) {
+          const year = parseInt(parts[0], 10);
+          const month = parseInt(parts[1], 10) - 1; // 0-indexed
+          if (year === currentYear && month >= 0 && month < 12) {
+            counts[month]++;
+          }
+        }
+      }
+    });
+
+    const maxCount = Math.max(...counts, 1);
+    const heights = counts.map(count => Math.round((count / maxCount) * 100));
+    
+    return { counts, heights };
+  }, [schedulesList]);
 
   const stats = [
     { title: 'Active Projects', value: !loadedCollections.projects ? '...' : activeProjectsCount.toString(), icon: Activity, color: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/20' },
     { title: 'Pending Alerts', value: !loadedCollections.alerts ? '...' : pendingAlertsCount.toString(), icon: AlertTriangle, color: 'text-rose-500', bg: 'bg-rose-500/10', border: 'border-rose-500/20' },
     { title: 'Completed Tasks', value: !loadedCollections.tasks ? '...' : completedTasksCount.toString(), icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
-    { title: 'Efficiency Rate', value: '94%', icon: TrendingUp, color: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/20' },
+    { title: 'Attendance Compliance', value: !loadedCollections.schedules ? '...' : `${computedStats.compliance}%`, icon: TrendingUp, color: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/20' },
   ];
 
   const getActivityIcon = (type: string) => {
@@ -289,16 +350,23 @@ export default function Overview() {
                      <div key={val} className="w-full border-t border-slate-800/40 print:border-slate-200/50 flex items-center" />
                   ))}
                 </div>
-                {[40, 70, 45, 90, 65, 85, 100, 50, 75, 60, 30, 80].map((h, i) => (
-                  <div key={i} className="flex-1 flex flex-col justify-end group h-full relative z-10">
-                    <div 
-                      className="w-full bg-gradient-to-t from-cyan-500/20 to-cyan-500 group-hover:from-cyan-500/40 group-hover:to-cyan-400 rounded-t-lg transition-all duration-300 shadow-[0_0_15px_rgba(6,182,212,0.15)] relative border border-white/10 print:bg-slate-300 print:border-slate-400 print:shadow-none"
-                      style={{ height: `${h}%` }}
-                    >
+                {monthlyData.heights.map((h, i) => {
+                  const count = monthlyData.counts[i];
+                  return (
+                    <div key={i} className="flex-1 flex flex-col justify-end group h-full relative z-10">
+                      {/* Tooltip */}
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 border border-slate-800 text-slate-200 text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-20 font-mono shadow-md">
+                        {count} {count === 1 ? 'Dispatch' : 'Dispatches'}
+                      </div>
+                      <div 
+                        className="w-full bg-gradient-to-t from-cyan-500/20 to-cyan-500 group-hover:from-cyan-500/40 group-hover:to-cyan-400 rounded-t-lg transition-all duration-300 shadow-[0_0_15px_rgba(6,182,212,0.15)] relative border border-white/10 print:bg-slate-300 print:border-slate-400 print:shadow-none cursor-pointer"
+                        style={{ height: `${Math.max(h, 2)}%` }}
+                      >
+                      </div>
+                      <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[9px] text-slate-500 uppercase font-mono print:text-slate-700">{['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][i]}</span>
                     </div>
-                    <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[9px] text-slate-500 uppercase font-mono print:text-slate-700">{['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][i]}</span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
