@@ -60,6 +60,8 @@ export default function Login() {
           isAdminUser = true;
         }
 
+        let matchedDoc: any = null;
+
         if (!isAllowed && db && cleanUserPhone) {
           try {
             // Find employee profile in Firestore
@@ -68,8 +70,6 @@ export default function Login() {
               cleanUserPhone,
               cleanUserPhone.slice(-10),
             ].filter(Boolean);
-
-            let matchedDoc = null;
             for (const candidate of phoneCandidates) {
               const q = query(collection(db, 'team'), where('phone', '==', candidate));
               const snap = await getDocs(q);
