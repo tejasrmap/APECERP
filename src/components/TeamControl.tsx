@@ -1515,7 +1515,14 @@ export default function TeamControl() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Portal Login Password</label>
+                    <div className="flex justify-between items-center px-1">
+                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">Portal Login Password</label>
+                      {selectedProfile?.password && (
+                        <span className="text-[9.5px] font-mono text-cyan-400 bg-cyan-950/45 px-1.5 py-0.5 rounded border border-cyan-500/20">
+                          Current: {selectedProfile.password}
+                        </span>
+                      )}
+                    </div>
                     <input 
                       type="password" 
                       value={editPassword}
@@ -2365,6 +2372,10 @@ export default function TeamControl() {
                       <div className="space-y-1">
                         <span className="text-slate-500 block uppercase tracking-wider text-[9px]">IFSC Code</span>
                         <span className="text-cyan-400 font-bold block truncate select-all">{selectedProfile.bankIfsc || 'N/A'}</span>
+                      </div>
+                      <div className="space-y-1 col-span-2 border-t border-slate-900/60 pt-2 mt-1">
+                        <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Portal Login Password</span>
+                        <span className="text-cyan-400 font-bold block select-all">{selectedProfile.password || 'N/A'}</span>
                       </div>
                     </div>
                   </div>
