@@ -198,19 +198,19 @@ export default function Dashboard() {
   }, []);
 
   const navItems = [
+    { name: 'Attendance', icon: Clock },
     { name: 'Dashboard', icon: LayoutDashboard },
     { name: 'My Profile', icon: User },
-    { name: 'Projects', icon: Activity },
     { name: 'Daily Reports', icon: ClipboardList },
-    { name: 'Scheduling', icon: Calendar },
-    { name: 'Workforce', icon: Users },
-    { name: 'Attendance', icon: Clock },
-    { name: 'Leaves', icon: CalendarRange },
+    { name: 'Projects', icon: Activity },
     { name: 'Leads', icon: Briefcase },
+    { name: 'Scheduling', icon: Calendar },
+    { name: 'Leaves', icon: CalendarRange },
+    { name: 'Workforce', icon: Users },
     { name: 'Settings', icon: Settings },
     ...(isAdmin ? [
-      { name: 'Team Control', icon: Shield },
       { name: 'Live Tracking', icon: Map },
+      { name: 'Team Control', icon: Shield },
       { name: 'Reports', icon: FileText }
     ] : [])
   ];
