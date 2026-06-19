@@ -57,6 +57,7 @@ export default function Projects() {
   // Gantt / Milestones States
   const [expandedProjectId, setExpandedProjectId] = useState<string | null>(null);
   const [isManagerDropdownOpen, setIsManagerDropdownOpen] = useState(false);
+  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
 
   const mapContainerRef = React.useRef<HTMLDivElement>(null);
   const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
@@ -411,15 +412,47 @@ export default function Projects() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-slate-400 uppercase ml-1 tracking-wider">Status</label>
-                  <select
-                    value={newProjectStatus}
-                    onChange={(e) => setNewProjectStatus(e.target.value)}
-                    className="w-full bg-slate-950/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all text-sm cursor-pointer shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
-                  >
-                    <option value="Active" className="bg-slate-900 text-slate-100">Active</option>
-                    <option value="Pending" className="bg-slate-900 text-slate-100">Pending</option>
-                    <option value="Completed" className="bg-slate-900 text-slate-100">Completed</option>
-                  </select>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
+                      className="w-full bg-slate-950/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 text-sm cursor-pointer flex justify-between items-center text-left transition-all"
+                    >
+                      <span className="text-slate-100">{newProjectStatus}</span>
+                      <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${isStatusDropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    <AnimatePresence>
+                      {isStatusDropdownOpen && (
+                        <>
+                          <div className="fixed inset-0 z-10" onClick={() => setIsStatusDropdownOpen(false)} />
+                          <motion.div
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -4 }}
+                            className="absolute z-20 w-full mt-1.5 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl p-1.5 space-y-0.5"
+                          >
+                            {['Active', 'Pending', 'Completed'].map(status => (
+                              <button
+                                key={status}
+                                type="button"
+                                onClick={() => {
+                                  setNewProjectStatus(status);
+                                  setIsStatusDropdownOpen(false);
+                                }}
+                                className={`w-full text-left px-3.5 py-2.5 rounded-lg text-xs font-semibold transition-colors flex items-center justify-between ${
+                                  newProjectStatus === status 
+                                    ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' 
+                                    : 'text-slate-350 hover:bg-slate-800 border border-transparent'
+                                }`}
+                              >
+                                <span>{status}</span>
+                              </button>
+                            ))}
+                          </motion.div>
+                        </>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-slate-400 uppercase ml-1 tracking-wider">Location Site</label>
