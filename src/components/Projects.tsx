@@ -60,7 +60,7 @@ export default function Projects() {
   const [isManagerDropdownOpen, setIsManagerDropdownOpen] = useState(false);
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
 
-  const mapContainerRef = React.useRef<HTMLDivElement>(null);
+  const [mapContainer, setMapContainer] = useState<HTMLDivElement | null>(null);
   const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
   const [layerGroup, setLayerGroup] = useState<L.LayerGroup | null>(null);
   const [mapError, setMapError] = useState<string | null>(null);
@@ -163,9 +163,9 @@ export default function Projects() {
   // Leaflet map initialization
   useEffect(() => {
     if (isProjectsLoading) return;
-    if (!mapContainerRef.current) return;
+    if (!mapContainer) return;
     try {
-      const map = L.map(mapContainerRef.current, {
+      const map = L.map(mapContainer, {
         zoomControl: true,
         attributionControl: true
       }).setView([16.5062, 80.6480], 7);
@@ -194,7 +194,7 @@ export default function Projects() {
       console.error('Leaflet Map Initialization Error:', err);
       setMapError(err.message || String(err));
     }
-  }, [isProjectsLoading, isAddingProject]);
+  }, [isProjectsLoading, mapContainer]);
 
   // Update map markers & circles when projectsList, mapInstance, or layerGroup changes
   useEffect(() => {
@@ -575,7 +575,7 @@ export default function Projects() {
               {/* GIS Leaflet Map Container */}
               <div className="relative h-64 w-full rounded-xl overflow-hidden border border-slate-900 shadow-[inset_0_4px_12px_rgba(0,0,0,0.5)] z-0 bg-slate-950/60">
                 <div 
-                  ref={mapContainerRef} 
+                  ref={setMapContainer} 
                   className="absolute inset-0"
                 />
                 {mapError && (
