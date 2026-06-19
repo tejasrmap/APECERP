@@ -250,13 +250,13 @@ export default function Projects() {
       if (p.status === 'Active') color = '#10b981'; // Active: Green
       else if (p.status === 'Completed') color = '#06b6d4'; // Completed: Cyan
 
-      // Area Circle (30km radius)
+      // Area Circle (500m radius)
       L.circle(pos, {
         color: color,
         fillColor: color,
         fillOpacity: 0.12,
         weight: 1.5,
-        radius: 30000
+        radius: 500
       }).addTo(layerGroup).bindPopup(`
         <div style="font-family: sans-serif; color: #f1f5f9; background: #0b1329; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; width: 180px;">
           <h4 style="margin: 0 0 4px 0; font-size: 13px; font-weight: bold; color: #22d3ee;">${p.name}</h4>
