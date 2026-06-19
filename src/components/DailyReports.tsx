@@ -87,6 +87,8 @@ export default function DailyReports() {
   const [searchTerm, setSearchTerm] = useState('');
   const [projectFilter, setProjectFilter] = useState('All');
   const [techFilter, setTechFilter] = useState('All');
+  const [isSiteFilterOpen, setIsSiteFilterOpen] = useState(false);
+  const [isTechFilterOpen, setIsTechFilterOpen] = useState(false);
 
   // Preview / Print States
   const [activeDetailReport, setActiveDetailReport] = useState<DailyReport | null>(null);
@@ -1011,33 +1013,131 @@ export default function DailyReports() {
                     />
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 relative">
                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Site:</span>
-                    <select
-                      value={projectFilter}
-                      onChange={(e) => setProjectFilter(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none cursor-pointer"
-                    >
-                      <option value="All">All Active Sites</option>
-                      {projectsList.map(p => (
-                        <option key={p.id} value={p.id}>{p.name}</option>
-                      ))}
-                    </select>
+                    <div className="relative w-full">
+                      <button
+                        type="button"
+                        onClick={() => setIsSiteFilterOpen(!isSiteFilterOpen)}
+                        className="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl px-3 py-2.5 text-xs flex justify-between items-center text-left focus:outline-none focus:border-cyan-500 cursor-pointer transition-all"
+                      >
+                        <span className="truncate">
+                          {projectFilter === 'All' 
+                            ? 'All Active Sites' 
+                            : (projectsList.find(p => p.id === projectFilter)?.name || projectFilter)}
+                        </span>
+                        <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform ${isSiteFilterOpen ? 'rotate-180' : ''}`} />
+                      </button>
+                      <AnimatePresence>
+                        {isSiteFilterOpen && (
+                          <>
+                            <div className="fixed inset-0 z-10" onClick={() => setIsSiteFilterOpen(false)} />
+                            <motion.div
+                              initial={{ opacity: 0, y: -4 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -4 }}
+                              className="absolute z-20 w-full mt-1 bg-slate-900 border border-slate-800 rounded-xl max-h-48 overflow-y-auto shadow-2xl p-1 space-y-0.5"
+                            >
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setProjectFilter('All');
+                                  setIsSiteFilterOpen(false);
+                                }}
+                                className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold ${
+                                  projectFilter === 'All' 
+                                    ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' 
+                                    : 'text-slate-350 hover:bg-slate-800 border border-transparent'
+                                }`}
+                              >
+                                All Active Sites
+                              </button>
+                              {projectsList.map(p => (
+                                <button
+                                  key={p.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setProjectFilter(p.id);
+                                    setIsSiteFilterOpen(false);
+                                  }}
+                                  className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold ${
+                                    projectFilter === p.id 
+                                      ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' 
+                                      : 'text-slate-350 hover:bg-slate-800 border border-transparent'
+                                  }`}
+                                >
+                                  {p.name}
+                                </button>
+                              ))}
+                            </motion.div>
+                          </>
+                        )}
+                      </AnimatePresence>
+                    </div>
                   </div>
 
                   {isAdmin && (
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 relative">
                       <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Employee:</span>
-                      <select
-                        value={techFilter}
-                        onChange={(e) => setTechFilter(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none cursor-pointer"
-                      >
-                        <option value="All">All Employees</option>
-                        {teamList.map(t => (
-                          <option key={t.id} value={t.employeeId || t.id}>{t.name} ({t.employeeId || 'Staff'})</option>
-                        ))}
-                      </select>
+                      <div className="relative w-full">
+                        <button
+                          type="button"
+                          onClick={() => setIsTechFilterOpen(!isTechFilterOpen)}
+                          className="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl px-3 py-2.5 text-xs flex justify-between items-center text-left focus:outline-none focus:border-cyan-500 cursor-pointer transition-all"
+                        >
+                          <span className="truncate">
+                            {techFilter === 'All' 
+                              ? 'All Employees' 
+                              : (teamList.find(t => (t.employeeId || t.id) === techFilter)?.name || techFilter)}
+                          </span>
+                          <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform ${isTechFilterOpen ? 'rotate-180' : ''}`} />
+                        </button>
+                        <AnimatePresence>
+                          {isTechFilterOpen && (
+                            <>
+                              <div className="fixed inset-0 z-10" onClick={() => setIsTechFilterOpen(false)} />
+                              <motion.div
+                                initial={{ opacity: 0, y: -4 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -4 }}
+                                className="absolute z-20 w-full mt-1 bg-slate-900 border border-slate-800 rounded-xl max-h-48 overflow-y-auto shadow-2xl p-1 space-y-0.5"
+                              >
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setTechFilter('All');
+                                    setIsTechFilterOpen(false);
+                                  }}
+                                  className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold ${
+                                    techFilter === 'All' 
+                                      ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' 
+                                      : 'text-slate-350 hover:bg-slate-800 border border-transparent'
+                                  }`}
+                                >
+                                  All Employees
+                                </button>
+                                {teamList.map(t => (
+                                  <button
+                                    key={t.id}
+                                    type="button"
+                                    onClick={() => {
+                                      setTechFilter(t.employeeId || t.id);
+                                      setIsTechFilterOpen(false);
+                                    }}
+                                    className={`w-full text-left px-3 py-2 rounded-lg text-xs font-semibold ${
+                                      techFilter === (t.employeeId || t.id) 
+                                        ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' 
+                                        : 'text-slate-350 hover:bg-slate-800 border border-transparent'
+                                    }`}
+                                  >
+                                    {t.name} ({t.employeeId || 'Staff'})
+                                  </button>
+                                ))}
+                              </motion.div>
+                            </>
+                          )}
+                        </AnimatePresence>
+                      </div>
                     </div>
                   )}
 

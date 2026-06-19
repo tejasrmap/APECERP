@@ -11,6 +11,20 @@ import {
 import { collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { useOutletContext } from 'react-router-dom';
 import { db } from '../firebase';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
+
+let DefaultIcon = L.icon({
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34]
+});
+L.Marker.prototype.options.icon = DefaultIcon;
+
 
 const getDefaultCoordinates = (siteName: string) => {
   const name = siteName.toLowerCase();
@@ -23,8 +37,26 @@ const getDefaultCoordinates = (siteName: string) => {
   if (name.includes('dharwad')) {
     return { latitude: 15.4589, longitude: 75.0078 };
   }
-  // Default to Hubli as global fallback
-  return { latitude: 15.3647, longitude: 75.1240 };
+  if (name.includes('vijayawada') || name.includes('vja')) {
+    return { latitude: 16.5062, longitude: 80.6480 };
+  }
+  if (name.includes('gudivada') || name.includes('gdv')) {
+    return { latitude: 16.4419, longitude: 80.9928 };
+  }
+  if (name.includes('hyderabad') || name.includes('hyd')) {
+    return { latitude: 17.3850, longitude: 78.4867 };
+  }
+  if (name.includes('karimnagar')) {
+    return { latitude: 18.4386, longitude: 79.1288 };
+  }
+  if (name.includes('visakhapatnam') || name.includes('vizag')) {
+    return { latitude: 17.6868, longitude: 83.2185 };
+  }
+  if (name.includes('tirupati')) {
+    return { latitude: 13.6288, longitude: 79.4192 };
+  }
+  // Default to Vijayawada center coordinates as regional default fallback
+  return { latitude: 16.5062, longitude: 80.6480 };
 };
 
 export default function Projects() {
@@ -37,6 +69,10 @@ export default function Projects() {
   // Gantt / Milestones States
   const [expandedProjectId, setExpandedProjectId] = useState<string | null>(null);
   const [isManagerDropdownOpen, setIsManagerDropdownOpen] = useState(false);
+
+  const mapContainerRef = React.useRef<HTMLDivElement>(null);
+  const mapInstanceRef = React.useRef<L.Map | null>(null);
+  const layerGroupRef = React.useRef<L.LayerGroup | null>(null);
 
   const milestonesList = [
     'Site Audit & Clearance',
@@ -103,6 +139,45 @@ export default function Projects() {
       const projs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       setProjectsList(projs);
       setIsProjectsLoading(false);
+
+      // Auto-calibrate coordinates in Firestore if they are set to old Hubli fallback (15.3647, 75.1240)
+      if (isAdmin && db) {
+        projs.forEach(async (p) => {
+          const name = (p.name || '').toLowerCase();
+          const site = (p.site || '').toLowerCase();
+          const pLat = parseFloat(p.latitude);
+          const pLng = parseFloat(p.longitude);
+          const isOldDefault = Math.abs(pLat - 15.3647) < 0.001 && Math.abs(pLng - 75.1240) < 0.001;
+          
+          if (isOldDefault) {
+            let nextLat = pLat;
+            let nextLng = pLng;
+            let updated = false;
+
+            if (site.includes('vja') || name.includes('apec')) {
+              nextLat = 16.5062;
+              nextLng = 80.6480;
+              updated = true;
+            } else if (site.includes('gdv') || name.includes('gtx')) {
+              nextLat = 16.4419;
+              nextLng = 80.9928;
+              updated = true;
+            }
+
+            if (updated) {
+              try {
+                await updateDoc(doc(db, 'projects', p.id), {
+                  latitude: nextLat,
+                  longitude: nextLng
+                });
+                console.log(`Calibrated coordinates for project ${p.name} in Firestore`);
+              } catch (err) {
+                console.error(`Calibration error for ${p.name}:`, err);
+              }
+            }
+          }
+        });
+      }
     }, (err) => {
       console.error('Projects listener error:', err);
       setFirestoreError(err.code);
@@ -120,6 +195,117 @@ export default function Projects() {
       unsubTeam();
     };
   }, [setFirestoreError]);
+
+  // Leaflet map initialization
+  useEffect(() => {
+    if (!mapContainerRef.current) return;
+
+    if (mapInstanceRef.current) {
+      mapInstanceRef.current.remove();
+      mapInstanceRef.current = null;
+    }
+
+    const map = L.map(mapContainerRef.current, {
+      zoomControl: true,
+      attributionControl: true
+    }).setView([16.5062, 80.6480], 7);
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 20,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+    }).addTo(map);
+
+    const layerGroup = L.layerGroup().addTo(map);
+    layerGroupRef.current = layerGroup;
+    mapInstanceRef.current = map;
+
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, []);
+
+  // Update map markers & circles when projectsList changes
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    const layerGroup = layerGroupRef.current;
+    if (!map || !layerGroup) return;
+
+    layerGroup.clearLayers();
+
+    if (projectsList.length === 0) return;
+
+    const bounds: L.LatLngBoundsExpression = [];
+
+    projectsList.forEach(p => {
+      const lat = parseFloat(p.latitude);
+      const lng = parseFloat(p.longitude);
+      if (isNaN(lat) || isNaN(lng)) return;
+
+      const pos: L.LatLngExpression = [lat, lng];
+      bounds.push(pos);
+
+      let color = '#f59e0b'; // Pending: Amber
+      if (p.status === 'Active') color = '#10b981'; // Active: Green
+      else if (p.status === 'Completed') color = '#06b6d4'; // Completed: Cyan
+
+      // Area Circle (30km radius)
+      L.circle(pos, {
+        color: color,
+        fillColor: color,
+        fillOpacity: 0.12,
+        weight: 1.5,
+        radius: 30000
+      }).addTo(layerGroup).bindPopup(`
+        <div style="font-family: sans-serif; color: #f1f5f9; background: #0b1329; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; width: 180px;">
+          <h4 style="margin: 0 0 4px 0; font-size: 13px; font-weight: bold; color: #22d3ee;">${p.name}</h4>
+          <div style="font-size: 11px; margin-bottom: 2px;"><strong>Site:</strong> ${p.site}</div>
+          <div style="font-size: 11px; margin-bottom: 2px;"><strong>Manager:</strong> ${p.manager}</div>
+          <div style="font-size: 11px; margin-bottom: 6px;"><strong>Status:</strong> <span style="color: ${color}; font-weight: bold;">${p.status}</span></div>
+          <div style="font-size: 10px; color: #94a3b8; margin-bottom: 4px;"><strong>Progress:</strong> ${(p.completedMilestones || []).length}/5 Milestones (${Math.round(((p.completedMilestones || []).length / 5) * 100)}%)</div>
+          <div style="background: #1e293b; height: 4px; border-radius: 2px; overflow: hidden;">
+            <div style="background: ${color}; width: ${Math.round(((p.completedMilestones || []).length / 5) * 100)}%; height: 100%;"></div>
+          </div>
+        </div>
+      `, {
+        className: 'leaflet-custom-popup',
+        closeButton: false
+      });
+
+      // Center CircleMarker
+      L.circleMarker(pos, {
+        color: color,
+        fillColor: color,
+        fillOpacity: 0.9,
+        radius: 6.5,
+        weight: 2
+      }).addTo(layerGroup).bindPopup(`
+        <div style="font-family: sans-serif; color: #f1f5f9; background: #0b1329; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; width: 180px;">
+          <h4 style="margin: 0 0 4px 0; font-size: 13px; font-weight: bold; color: #22d3ee;">${p.name}</h4>
+          <div style="font-size: 11px; margin-bottom: 2px;"><strong>Site:</strong> ${p.site}</div>
+          <div style="font-size: 11px; margin-bottom: 2px;"><strong>Manager:</strong> ${p.manager}</div>
+          <div style="font-size: 11px; margin-bottom: 6px;"><strong>Status:</strong> <span style="color: ${color}; font-weight: bold;">${p.status}</span></div>
+          <div style="font-size: 10px; color: #94a3b8; margin-bottom: 4px;"><strong>Progress:</strong> ${(p.completedMilestones || []).length}/5 Milestones (${Math.round(((p.completedMilestones || []).length / 5) * 100)}%)</div>
+          <div style="background: #1e293b; height: 4px; border-radius: 2px; overflow: hidden;">
+            <div style="background: ${color}; width: ${Math.round(((p.completedMilestones || []).length / 5) * 100)}%; height: 100%;"></div>
+          </div>
+        </div>
+      `, {
+        className: 'leaflet-custom-popup',
+        closeButton: false
+      });
+    });
+
+    if (bounds.length > 0) {
+      // Small timeout to ensure container dimensions are set before panning
+      setTimeout(() => {
+        map.invalidateSize();
+        map.fitBounds(bounds, { padding: [30, 30] });
+      }, 100);
+    }
+  }, [projectsList]);
 
   const handleAddProject = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -359,91 +545,11 @@ export default function Projects() {
                 </div>
               </div>
 
-              {/* Futuristic SVG Map Layout */}
-              <div className="relative h-64 bg-slate-950/50 border border-slate-900 rounded-xl overflow-hidden flex items-center justify-center shadow-[inset_0_4px_12px_rgba(0,0,0,0.5)]">
-                {/* Cyber-grid background */}
-                <div className="absolute inset-0 cyber-grid opacity-20 pointer-events-none" />
-                
-                {projectsList.length === 0 ? (
-                  <div className="text-xs text-slate-500 font-mono">No active nodes to map.</div>
-                ) : (
-                  <svg className="w-full h-full min-w-[500px]" viewBox="0 0 800 300">
-                    <path d="M50 150 Q 150 50, 250 150 T 450 150 T 650 150 T 750 150" fill="none" stroke="rgba(6, 182, 212, 0.08)" strokeWidth="4" />
-                    <path d="M100 200 Q 300 100, 500 200 T 700 200" fill="none" stroke="rgba(6, 182, 212, 0.04)" strokeWidth="2" />
-                    
-                    {/* Draw connections */}
-                    {projectsList.map((p, idx) => {
-                      if (idx === 0) return null;
-                      const x1 = 150 + (idx - 1) * 120;
-                      const y1 = 150 + (idx % 2 === 0 ? 40 : -40);
-                      const x2 = 150 + idx * 120;
-                      const y2 = 150 + ((idx + 1) % 2 === 0 ? 40 : -40);
-                      return (
-                        <line key={idx} x1={x1} y1={y1} x2={x2} y2={y2} stroke="rgba(6,182,212,0.15)" strokeWidth="1" strokeDasharray="5,5" />
-                      );
-                    })}
-
-                    {/* Radar sweeps */}
-                    <circle cx="400" cy="150" r="120" fill="none" stroke="rgba(6, 182, 212, 0.08)" strokeWidth="1" />
-                    <circle cx="400" cy="150" r="60" fill="none" stroke="rgba(6, 182, 212, 0.04)" strokeWidth="1" />
-
-                    {/* Active Project Markers */}
-                    {projectsList.map((p, idx) => {
-                      const x = 150 + idx * 120;
-                      const y = 150 + ((idx + 1) % 2 === 0 ? 40 : -40);
-                      const isActive = p.status === 'Active';
-                      const isCompleted = p.status === 'Completed';
-                      return (
-                        <g key={p.id} className="cursor-pointer group" onClick={() => setExpandedProjectId(expandedProjectId === p.id ? null : p.id)}>
-                          <circle 
-                            cx={x} 
-                            cy={y} 
-                            r={isActive ? "10" : "6"} 
-                            className={`fill-none ${
-                              isCompleted ? 'stroke-cyan-500/20' : 
-                              isActive ? 'stroke-green-500/30 animate-pulse' : 
-                              'stroke-amber-500/20'
-                            }`} 
-                            strokeWidth="3" 
-                          />
-                          <circle 
-                            cx={x} 
-                            cy={y} 
-                            r={isActive ? "5" : "4"} 
-                            className={`${
-                              isCompleted ? 'fill-cyan-400' : 
-                              isActive ? 'fill-green-400 animate-ping' : 
-                              'fill-amber-400'
-                            }`} 
-                          />
-                          <circle 
-                            cx={x} 
-                            cy={y} 
-                            r={isActive ? "4" : "3"} 
-                            className={`${
-                              isCompleted ? 'fill-cyan-500' : 
-                              isActive ? 'fill-green-500' : 
-                              'fill-amber-500'
-                            }`} 
-                          />
-                          <text 
-                            x={x + 10} 
-                            y={y + 4} 
-                            className="text-[9px] fill-slate-500 font-mono select-none group-hover:fill-slate-200 transition-colors font-bold"
-                          >
-                            {p.name.slice(0, 10)}
-                          </text>
-                        </g>
-                      );
-                    })}
-                  </svg>
-                )}
-                
-                <div className="absolute bottom-3 left-3 bg-slate-950/80 border border-slate-900 px-3 py-1.5 rounded-lg text-[10px] text-slate-400 font-mono">
-                   <span className="font-bold text-slate-300 block mb-0.5">Substation Grid Radar</span>
-                   Scanning {projectsList.length} operational hubs...
-                </div>
-              </div>
+              {/* GIS Leaflet Map Container */}
+              <div 
+                ref={mapContainerRef} 
+                className="relative h-64 w-full rounded-xl overflow-hidden border border-slate-900 shadow-[inset_0_4px_12px_rgba(0,0,0,0.5)] z-0"
+              />
             </div>
 
             {/* Project List Table */}
