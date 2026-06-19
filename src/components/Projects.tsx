@@ -189,6 +189,7 @@ export default function Projects() {
 
   // Leaflet map initialization
   useEffect(() => {
+    if (isProjectsLoading) return;
     if (!mapContainerRef.current) return;
     try {
       const map = L.map(mapContainerRef.current, {
@@ -220,7 +221,7 @@ export default function Projects() {
       console.error('Leaflet Map Initialization Error:', err);
       setMapError(err.message || String(err));
     }
-  }, []);
+  }, [isProjectsLoading]);
 
   // Update map markers & circles when projectsList, mapInstance, or layerGroup changes
   useEffect(() => {
