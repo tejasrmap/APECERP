@@ -17,6 +17,38 @@ import { useOutletContext } from 'react-router-dom';
 import { db } from '../firebase';
 import L from 'leaflet';
 
+const getDefaultCoordinates = (siteName: string) => {
+  const name = siteName.toLowerCase();
+  if (name.includes('hubli')) {
+    return { latitude: 15.3647, longitude: 75.1240 };
+  }
+  if (name.includes('koppal')) {
+    return { latitude: 15.3533, longitude: 76.1554 };
+  }
+  if (name.includes('dharwad')) {
+    return { latitude: 15.4589, longitude: 75.0078 };
+  }
+  if (name.includes('vijayawada') || name.includes('vja')) {
+    return { latitude: 16.5062, longitude: 80.6480 };
+  }
+  if (name.includes('gudivada') || name.includes('gdv')) {
+    return { latitude: 16.4419, longitude: 80.9928 };
+  }
+  if (name.includes('hyderabad') || name.includes('hyd')) {
+    return { latitude: 17.3850, longitude: 78.4867 };
+  }
+  if (name.includes('karimnagar')) {
+    return { latitude: 18.4386, longitude: 79.1288 };
+  }
+  if (name.includes('visakhapatnam') || name.includes('vizag')) {
+    return { latitude: 17.6868, longitude: 83.2185 };
+  }
+  if (name.includes('tirupati')) {
+    return { latitude: 13.6288, longitude: 79.4192 };
+  }
+  return { latitude: 15.3647, longitude: 75.1240 }; // default Hubli center
+};
+
 interface ActiveEmployee {
   id: string;
   name: string;
@@ -57,6 +89,7 @@ export default function LiveTracking() {
   const [mapError, setMapError] = useState<string | null>(null);
   const markersRef = useRef<{ [key: string]: L.Marker }>({});
   const polylinesRef = useRef<{ [key: string]: L.Polyline }>({});
+  const projectMarkersRef = useRef<L.Marker[]>([]);
 
   // 1. Fetch metadata (team, projects, schedules)
   useEffect(() => {
@@ -285,6 +318,7 @@ export default function LiveTracking() {
       return () => {
         map.remove();
         setMapInstance(null);
+        projectMarkersRef.current = [];
       };
     } catch (err: any) {
       console.error('Leaflet Map Initialization Error (LiveTracking):', err);
@@ -297,7 +331,7 @@ export default function LiveTracking() {
     if (!mapInstance) return;
     const map = mapInstance;
 
-    // Clear existing markers
+    // Clear existing employee markers
     Object.keys(markersRef.current).forEach(id => {
       markersRef.current[id].remove();
     });
@@ -308,6 +342,72 @@ export default function LiveTracking() {
       polylinesRef.current[id].remove();
     });
     polylinesRef.current = {};
+
+    // Clear existing project markers
+    projectMarkersRef.current.forEach(m => m.remove());
+    projectMarkersRef.current = [];
+
+    // Plot Project Location Markers (without radius circles)
+    projectsList.forEach(p => {
+      let lat = parseFloat(p.latitude);
+      let lng = parseFloat(p.longitude);
+
+      if (isNaN(lat) || isNaN(lng)) {
+        const defaults = getDefaultCoordinates(p.site || p.name || '');
+        lat = defaults.latitude;
+        lng = defaults.longitude;
+      }
+
+      const pos: L.LatLngExpression = [lat, lng];
+
+      let colorClass = 'border-amber-500 text-amber-500 bg-amber-950/20';
+      let statusColor = '#f59e0b';
+      if (p.status === 'Active') {
+        colorClass = 'border-emerald-500 text-emerald-500 bg-emerald-950/20';
+        statusColor = '#10b981';
+      } else if (p.status === 'Completed') {
+        colorClass = 'border-cyan-500 text-cyan-500 bg-cyan-950/20';
+        statusColor = '#06b6d4';
+      }
+
+      const projectHtml = `
+        <div class="relative flex items-center justify-center w-8 h-8 rounded-full border-2 shadow-lg bg-slate-900/90 ${colorClass}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        </div>
+      `;
+
+      const projectIcon = L.divIcon({
+        className: 'custom-project-marker',
+        html: projectHtml,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
+        popupAnchor: [0, -16]
+      });
+
+      const popupContent = `
+        <div class="p-3 min-w-[180px] text-slate-200 bg-[#0e1422]/95 backdrop-blur border border-slate-800 rounded-xl font-sans shadow-2xl">
+          <h4 class="text-xs font-bold text-cyan-400 mb-1 leading-normal">${p.name}</h4>
+          <div class="space-y-0.5 text-[10px] text-slate-400">
+            <p><strong class="text-slate-300 font-semibold">Site:</strong> ${p.site}</p>
+            <p><strong class="text-slate-300 font-semibold">Manager:</strong> ${p.manager}</p>
+            <p><strong class="text-slate-300 font-semibold">Status:</strong> <span style="color: ${statusColor}; font-weight: bold;">${p.status}</span></p>
+          </div>
+        </div>
+      `;
+
+      const marker = L.marker(pos, {
+        icon: projectIcon,
+        title: p.name
+      })
+        .addTo(map)
+        .bindPopup(popupContent, {
+          closeButton: false,
+          className: 'leaflet-custom-popup',
+          offset: [0, -8]
+        });
+
+      projectMarkersRef.current.push(marker);
+    });
 
     if (filteredEmployees.length === 0) return;
 
@@ -441,7 +541,7 @@ export default function LiveTracking() {
         map.fitBounds(bounds, { padding: [50, 50] });
       }, 100);
     }
-  }, [filteredEmployees, mapInstance]);
+  }, [filteredEmployees, mapInstance, projectsList]);
 
   // Center map on selected employee
   const handleSelectEmployee = (emp: ActiveEmployee) => {
