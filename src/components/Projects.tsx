@@ -26,7 +26,7 @@ const getDefaultCoordinates = (siteName: string) => {
   if (name.includes('dharwad')) {
     return { latitude: 15.4589, longitude: 75.0078 };
   }
-  if (name.includes('vijayawada') || name.includes('vja')) {
+  if (name.includes('vijayawada') || name.includes('vja') || name.includes('vga')) {
     return { latitude: 16.5062, longitude: 80.6480 };
   }
   if (name.includes('gudivada') || name.includes('gdv')) {
@@ -142,46 +142,6 @@ export default function Projects() {
       const projs = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as any));
       setProjectsList(projs);
       setIsProjectsLoading(false);
-
-      // Auto-calibrate coordinates in Firestore if they are set to old Hubli fallback or are missing entirely
-      if (isAdmin && db) {
-        projs.forEach(async (p) => {
-          const name = (p.name || '').toLowerCase();
-          const site = (p.site || '').toLowerCase();
-          const pLat = parseFloat(p.latitude);
-          const pLng = parseFloat(p.longitude);
-          const isMissing = isNaN(pLat) || isNaN(pLng) || p.latitude === undefined || p.longitude === undefined;
-          const isOldDefault = !isMissing && Math.abs(pLat - 15.3647) < 0.001 && Math.abs(pLng - 75.1240) < 0.001;
-          
-          if (isOldDefault || isMissing) {
-            let nextLat = isMissing ? NaN : pLat;
-            let nextLng = isMissing ? NaN : pLng;
-            let updated = false;
-
-            if (site.includes('vja') || name.includes('apec')) {
-              nextLat = 16.5062;
-              nextLng = 80.6480;
-              updated = true;
-            } else if (site.includes('gdv') || name.includes('gtx') || site.includes('gudivada')) {
-              nextLat = 16.4419;
-              nextLng = 80.9928;
-              updated = true;
-            }
-
-            if (updated && !isNaN(nextLat) && !isNaN(nextLng)) {
-              try {
-                await updateDoc(doc(db, 'projects', p.id), {
-                  latitude: nextLat,
-                  longitude: nextLng
-                });
-                console.log(`Calibrated coordinates for project ${p.name} in Firestore`);
-              } catch (err) {
-                console.error(`Calibration error for ${p.name}:`, err);
-              }
-            }
-          }
-        });
-      }
     }, (err) => {
       console.error('Projects listener error:', err);
       setFirestoreError(err.code);
@@ -234,7 +194,7 @@ export default function Projects() {
       console.error('Leaflet Map Initialization Error:', err);
       setMapError(err.message || String(err));
     }
-  }, [isProjectsLoading]);
+  }, [isProjectsLoading, isAddingProject]);
 
   // Update map markers & circles when projectsList, mapInstance, or layerGroup changes
   useEffect(() => {
@@ -313,9 +273,11 @@ export default function Projects() {
     if (bounds.length > 0) {
       // Small timeout to ensure container dimensions are set before panning
       setTimeout(() => {
-        mapInstance.invalidateSize();
-        mapInstance.fitBounds(bounds, { padding: [30, 30] });
-      }, 100);
+        if (mapInstance) {
+          mapInstance.invalidateSize();
+          mapInstance.fitBounds(bounds, { padding: [30, 30], maxZoom: 14 });
+        }
+      }, 350);
     }
   }, [projectsList, mapInstance, layerGroup]);
 

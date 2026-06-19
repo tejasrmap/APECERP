@@ -28,7 +28,7 @@ const getDefaultCoordinates = (siteName: string) => {
   if (name.includes('dharwad')) {
     return { latitude: 15.4589, longitude: 75.0078 };
   }
-  if (name.includes('vijayawada') || name.includes('vja')) {
+  if (name.includes('vijayawada') || name.includes('vja') || name.includes('vga')) {
     return { latitude: 16.5062, longitude: 80.6480 };
   }
   if (name.includes('gudivada') || name.includes('gdv')) {
@@ -409,9 +409,16 @@ export default function LiveTracking() {
       projectMarkersRef.current.push(marker);
     });
 
-    if (filteredEmployees.length === 0) return;
-
     const bounds: L.LatLngBoundsExpression = [];
+
+    // Include project locations in initial bounds so map centers correctly on active zones
+    projectsList.forEach(p => {
+      let lat = parseFloat(p.latitude);
+      let lng = parseFloat(p.longitude);
+      if (!isNaN(lat) && !isNaN(lng)) {
+        bounds.push([lat, lng]);
+      }
+    });
 
     filteredEmployees.forEach(emp => {
       const pos: L.LatLngExpression = [emp.latitude, emp.longitude];
@@ -538,7 +545,7 @@ export default function LiveTracking() {
     if (bounds.length > 0 && map.getZoom() <= 7) {
       setTimeout(() => {
         map.invalidateSize();
-        map.fitBounds(bounds, { padding: [50, 50] });
+        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
       }, 100);
     }
   }, [filteredEmployees, mapInstance, projectsList]);
@@ -555,11 +562,25 @@ export default function LiveTracking() {
     }
   };
 
-  // Fit map to show all filtered employees
+  // Fit map to show all filtered employees & projects
   const handleFitAllBounds = () => {
-    if (!mapInstance || filteredEmployees.length === 0) return;
-    const bounds: L.LatLngBoundsExpression = filteredEmployees.map(emp => [emp.latitude, emp.longitude]);
-    mapInstance.fitBounds(bounds, { padding: [50, 50] });
+    if (!mapInstance) return;
+    const bounds: L.LatLngBoundsExpression = [];
+    
+    projectsList.forEach(p => {
+      let lat = parseFloat(p.latitude);
+      let lng = parseFloat(p.longitude);
+      if (!isNaN(lat) && !isNaN(lng)) {
+        bounds.push([lat, lng]);
+      }
+    });
+
+    filteredEmployees.forEach(emp => {
+      bounds.push([emp.latitude, emp.longitude]);
+    });
+
+    if (bounds.length === 0) return;
+    mapInstance.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
   };
 
   return (

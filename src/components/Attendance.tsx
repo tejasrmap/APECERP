@@ -54,8 +54,26 @@ const getDefaultCoordinates = (siteName: string) => {
   if (name.includes('dharwad')) {
     return { latitude: 15.4589, longitude: 75.0078 };
   }
-  // Default to Hubli as global fallback
-  return { latitude: 15.3647, longitude: 75.1240 };
+  if (name.includes('vijayawada') || name.includes('vja') || name.includes('vga')) {
+    return { latitude: 16.5062, longitude: 80.6480 };
+  }
+  if (name.includes('gudivada') || name.includes('gdv')) {
+    return { latitude: 16.4419, longitude: 80.9928 };
+  }
+  if (name.includes('hyderabad') || name.includes('hyd')) {
+    return { latitude: 17.3850, longitude: 78.4867 };
+  }
+  if (name.includes('karimnagar')) {
+    return { latitude: 18.4386, longitude: 79.1288 };
+  }
+  if (name.includes('visakhapatnam') || name.includes('vizag')) {
+    return { latitude: 17.6868, longitude: 83.2185 };
+  }
+  if (name.includes('tirupati')) {
+    return { latitude: 13.6288, longitude: 79.4192 };
+  }
+  // Default to Vijayawada center coordinates as regional default fallback
+  return { latitude: 16.5062, longitude: 80.6480 };
 };
 
 const getLocalDateString = () => {
