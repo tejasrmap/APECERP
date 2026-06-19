@@ -67,7 +67,7 @@ export default function LiveTracking() {
   const [loading, setLoading] = useState(true);
 
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<L.Map | null>(null);
+  const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
   const markersRef = useRef<{ [key: string]: L.Marker }>({});
   const polylinesRef = useRef<{ [key: string]: L.Polyline }>({});
 
@@ -272,12 +272,6 @@ export default function LiveTracking() {
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
-    // Destroy previous instance if it exists
-    if (mapInstanceRef.current) {
-      mapInstanceRef.current.remove();
-      mapInstanceRef.current = null;
-    }
-
     // Centered at South/Central India operations area
     const map = L.map(mapContainerRef.current, {
       zoomControl: false // custom zoom control position
@@ -293,20 +287,18 @@ export default function LiveTracking() {
       position: 'bottomright'
     }).addTo(map);
 
-    mapInstanceRef.current = map;
+    setMapInstance(map);
 
     return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-      }
+      map.remove();
+      setMapInstance(null);
     };
   }, []);
 
-  // 5. Update Map Markers when filteredEmployees list changes
+  // 5. Update Map Markers when filteredEmployees list changes or mapInstance is ready
   useEffect(() => {
-    const map = mapInstanceRef.current;
-    if (!map) return;
+    if (!mapInstance) return;
+    const map = mapInstance;
 
     // Clear existing markers
     Object.keys(markersRef.current).forEach(id => {
@@ -447,16 +439,18 @@ export default function LiveTracking() {
 
     // Fit bounds only on initial render/load or filter change to prevent disruptive panning while user interacts
     if (bounds.length > 0 && map.getZoom() <= 7) {
-      map.fitBounds(bounds, { padding: [50, 50] });
+      setTimeout(() => {
+        map.invalidateSize();
+        map.fitBounds(bounds, { padding: [50, 50] });
+      }, 100);
     }
-  }, [filteredEmployees]);
+  }, [filteredEmployees, mapInstance]);
 
   // Center map on selected employee
   const handleSelectEmployee = (emp: ActiveEmployee) => {
     setSelectedEmpId(emp.id);
-    const map = mapInstanceRef.current;
-    if (map) {
-      map.setView([emp.latitude, emp.longitude], 14);
+    if (mapInstance) {
+      mapInstance.setView([emp.latitude, emp.longitude], 14);
       const marker = markersRef.current[emp.id];
       if (marker) {
         marker.openPopup();
@@ -466,10 +460,9 @@ export default function LiveTracking() {
 
   // Fit map to show all filtered employees
   const handleFitAllBounds = () => {
-    const map = mapInstanceRef.current;
-    if (!map || filteredEmployees.length === 0) return;
+    if (!mapInstance || filteredEmployees.length === 0) return;
     const bounds: L.LatLngBoundsExpression = filteredEmployees.map(emp => [emp.latitude, emp.longitude]);
-    map.fitBounds(bounds, { padding: [50, 50] });
+    mapInstance.fitBounds(bounds, { padding: [50, 50] });
   };
 
   return (

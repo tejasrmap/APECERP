@@ -71,8 +71,8 @@ export default function Projects() {
   const [isManagerDropdownOpen, setIsManagerDropdownOpen] = useState(false);
 
   const mapContainerRef = React.useRef<HTMLDivElement>(null);
-  const mapInstanceRef = React.useRef<L.Map | null>(null);
-  const layerGroupRef = React.useRef<L.LayerGroup | null>(null);
+  const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
+  const [layerGroup, setLayerGroup] = useState<L.LayerGroup | null>(null);
 
   const milestonesList = [
     'Site Audit & Clearance',
@@ -200,11 +200,6 @@ export default function Projects() {
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
-    if (mapInstanceRef.current) {
-      mapInstanceRef.current.remove();
-      mapInstanceRef.current = null;
-    }
-
     const map = L.map(mapContainerRef.current, {
       zoomControl: true,
       attributionControl: true
@@ -215,23 +210,20 @@ export default function Projects() {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
     }).addTo(map);
 
-    const layerGroup = L.layerGroup().addTo(map);
-    layerGroupRef.current = layerGroup;
-    mapInstanceRef.current = map;
+    const lg = L.layerGroup().addTo(map);
+    setLayerGroup(lg);
+    setMapInstance(map);
 
     return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-      }
+      map.remove();
+      setMapInstance(null);
+      setLayerGroup(null);
     };
   }, []);
 
-  // Update map markers & circles when projectsList changes
+  // Update map markers & circles when projectsList, mapInstance, or layerGroup changes
   useEffect(() => {
-    const map = mapInstanceRef.current;
-    const layerGroup = layerGroupRef.current;
-    if (!map || !layerGroup) return;
+    if (!mapInstance || !layerGroup) return;
 
     layerGroup.clearLayers();
 
@@ -301,11 +293,11 @@ export default function Projects() {
     if (bounds.length > 0) {
       // Small timeout to ensure container dimensions are set before panning
       setTimeout(() => {
-        map.invalidateSize();
-        map.fitBounds(bounds, { padding: [30, 30] });
+        mapInstance.invalidateSize();
+        mapInstance.fitBounds(bounds, { padding: [30, 30] });
       }, 100);
     }
-  }, [projectsList]);
+  }, [projectsList, mapInstance, layerGroup]);
 
   const handleAddProject = async (e: React.FormEvent) => {
     e.preventDefault();
