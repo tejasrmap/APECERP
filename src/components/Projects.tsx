@@ -136,7 +136,7 @@ export default function Projects() {
     }
 
     const unsubProjects = onSnapshot(collection(db, 'projects'), (snapshot) => {
-      const projs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      const projs = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as any));
       setProjectsList(projs);
       setIsProjectsLoading(false);
 
