@@ -226,19 +226,24 @@ export default function Overview() {
     return { compliance };
   }, [schedulesList]);
 
-  const monthlyData = useMemo(() => {
-    const currentYear = new Date().getFullYear();
-    const counts = Array(12).fill(0);
+  const dailyData = useMemo(() => {
+    const dates: string[] = [];
+    const counts = Array(7).fill(0);
+    const labels: string[] = [];
+    
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      dates.push(dateStr);
+      labels.push(d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+    }
     
     schedulesList.forEach(s => {
       if (s.date) {
-        const parts = s.date.split('-');
-        if (parts.length === 3) {
-          const year = parseInt(parts[0], 10);
-          const month = parseInt(parts[1], 10) - 1; // 0-indexed
-          if (year === currentYear && month >= 0 && month < 12) {
-            counts[month]++;
-          }
+        const idx = dates.indexOf(s.date);
+        if (idx !== -1) {
+          counts[idx]++;
         }
       }
     });
@@ -246,7 +251,7 @@ export default function Overview() {
     const maxCount = Math.max(...counts, 1);
     const heights = counts.map(count => Math.round((count / maxCount) * 100));
     
-    return { counts, heights };
+    return { counts, heights, labels };
   }, [schedulesList]);
 
   const stats = [
@@ -333,7 +338,7 @@ export default function Overview() {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h3 className="text-lg font-semibold text-slate-100 print:text-slate-900">Project Analytics</h3>
-              <p className="text-xs text-slate-400 mt-0.5 print:text-slate-500">Monthly workflow distribution</p>
+              <p className="text-xs text-slate-400 mt-0.5 print:text-slate-500">Daily workflow distribution (Last 7 Days)</p>
             </div>
           </div>
           {projectsList.length === 0 ? (
@@ -350,8 +355,8 @@ export default function Overview() {
                      <div key={val} className="w-full border-t border-slate-800/40 print:border-slate-200/50 flex items-center" />
                   ))}
                 </div>
-                {monthlyData.heights.map((h, i) => {
-                  const count = monthlyData.counts[i];
+                {dailyData.heights.map((h, i) => {
+                  const count = dailyData.counts[i];
                   return (
                     <div key={i} className="flex-1 flex flex-col justify-end group h-full relative z-10">
                       {/* Tooltip */}
@@ -363,7 +368,7 @@ export default function Overview() {
                         style={{ height: `${Math.max(h, 2)}%` }}
                       >
                       </div>
-                      <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[9px] text-slate-500 uppercase font-mono print:text-slate-700">{['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][i]}</span>
+                      <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[9px] text-slate-500 uppercase font-mono print:text-slate-700 whitespace-nowrap">{dailyData.labels[i]}</span>
                     </div>
                   );
                 })}
