@@ -15,7 +15,8 @@ import {
   VideoOff, 
   RefreshCw,
   Eye,
-  Calendar
+  Calendar,
+  ChevronDown
 } from 'lucide-react';
 import { collection, onSnapshot, addDoc, Timestamp } from 'firebase/firestore';
 import { useOutletContext } from 'react-router-dom';
@@ -94,6 +95,7 @@ export default function Attendance() {
   const [punchSuccess, setPunchSuccess] = useState<{ type: string; time: Date } | null>(null);
   const [teamList, setTeamList] = useState<any[]>([]);
   const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [isSimulatedTechDropdownOpen, setIsSimulatedTechDropdownOpen] = useState(false);
 
   // History & Filters
   const [logs, setLogs] = useState<any[]>([]);
@@ -887,24 +889,55 @@ export default function Attendance() {
 
             {/* Simulated Profiles Dropdown for Dev/Test fallbacks */}
             {isAdmin && teamList.length > 0 && (
-              <div className="space-y-1 bg-slate-950/40 p-3 rounded-xl border border-slate-900">
-                <label className="text-[9px] font-extrabold uppercase tracking-wider text-slate-500 block">
+              <div className="space-y-1 bg-slate-950/40 p-3 rounded-xl border border-slate-900 relative">
+                <label className="text-[9px] font-extrabold uppercase tracking-wider text-slate-500 block mb-1">
                   Console Simulator (Select Team Member)
                 </label>
-                <select
-                  value={selectedUser?.id || ''}
-                  onChange={(e) => {
-                    const matched = teamList.find(t => t.id === e.target.value);
-                    if (matched) setSelectedUser(matched);
-                  }}
-                  className="w-full bg-slate-900 border border-slate-800 text-slate-200 rounded-lg py-1.5 px-2.5 text-xs focus:outline-none focus:border-cyan-500 cursor-pointer"
-                >
-                  {teamList.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.name} ({t.employeeId || 'N/A'}) - {t.role}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsSimulatedTechDropdownOpen(!isSimulatedTechDropdownOpen)}
+                    className="w-full bg-slate-900 border border-slate-800 text-slate-200 rounded-lg py-2 px-3 text-xs focus:outline-none focus:border-cyan-500 cursor-pointer flex justify-between items-center text-left"
+                  >
+                    <span>
+                      {selectedUser 
+                        ? `${selectedUser.name} (${selectedUser.employeeId || 'N/A'}) - ${selectedUser.role}` 
+                        : 'Select Team Member...'}
+                    </span>
+                    <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform ${isSimulatedTechDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  <AnimatePresence>
+                    {isSimulatedTechDropdownOpen && (
+                      <>
+                        <div className="fixed inset-0 z-10" onClick={() => setIsSimulatedTechDropdownOpen(false)} />
+                        <motion.div
+                          initial={{ opacity: 0, y: -4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -4 }}
+                          className="absolute z-20 w-full mt-1 bg-slate-900 border border-slate-800 rounded-lg max-h-48 overflow-y-auto shadow-2xl p-1 space-y-0.5"
+                        >
+                          {teamList.map((t) => (
+                            <button
+                              key={t.id}
+                              type="button"
+                              onClick={() => {
+                                setSelectedUser(t);
+                                setIsSimulatedTechDropdownOpen(false);
+                              }}
+                              className={`w-full text-left px-2.5 py-1.5 rounded text-xs font-semibold ${
+                                selectedUser?.id === t.id 
+                                  ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' 
+                                  : 'text-slate-300 hover:bg-slate-800 border border-transparent'
+                              }`}
+                            >
+                              {t.name} ({t.employeeId || 'N/A'}) - {t.role}
+                            </button>
+                          ))}
+                        </motion.div>
+                      </>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
             )}
 
