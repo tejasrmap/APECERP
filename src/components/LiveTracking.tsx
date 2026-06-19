@@ -277,6 +277,11 @@ export default function LiveTracking() {
       setMapInstance(map);
       setMapError(null);
 
+      // Force size recalculation to prevent grey maps or collapsed tiles in production
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 250);
+
       return () => {
         map.remove();
         setMapInstance(null);
@@ -629,7 +634,7 @@ export default function LiveTracking() {
       <div className="flex-1 h-full glass-card border border-white/10 rounded-2xl overflow-hidden shadow-xl relative flex flex-col">
         {/* Map Wrapper */}
         <div className="flex-1 w-full relative z-0 bg-[#f8fafc]/5">
-          <div ref={mapContainerRef} className="w-full h-full" />
+          <div ref={mapContainerRef} className="absolute inset-0" />
           {mapError && (
             <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-rose-500 bg-slate-950/95 font-mono text-xs z-10 text-center">
               <p className="font-bold mb-2">Map Load Error:</p>

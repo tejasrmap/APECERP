@@ -206,6 +206,11 @@ export default function Projects() {
       setMapInstance(map);
       setMapError(null);
 
+      // Force size recalculation to prevent grey maps or collapsed tiles in production
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 250);
+
       return () => {
         map.remove();
         setMapInstance(null);
@@ -574,7 +579,7 @@ export default function Projects() {
               <div className="relative h-64 w-full rounded-xl overflow-hidden border border-slate-900 shadow-[inset_0_4px_12px_rgba(0,0,0,0.5)] z-0 bg-slate-950/60">
                 <div 
                   ref={mapContainerRef} 
-                  className="w-full h-full"
+                  className="absolute inset-0"
                 />
                 {mapError && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-rose-500 bg-slate-950/95 font-mono text-xs z-10 text-center">
