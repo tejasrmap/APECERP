@@ -79,9 +79,7 @@ export default function DailyReports() {
 
   // Filters State
   const [startDateStr, setStartDateStr] = useState(() => {
-    const d = new Date();
-    d.setDate(d.getDate() - 30);
-    return d.toISOString().slice(0, 10);
+    return new Date().toISOString().slice(0, 10);
   });
   const [endDateStr, setEndDateStr] = useState(() => new Date().toISOString().slice(0, 10));
   const [searchTerm, setSearchTerm] = useState('');

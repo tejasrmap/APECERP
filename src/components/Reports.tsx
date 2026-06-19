@@ -39,9 +39,7 @@ export default function Reports() {
 
   // Filter States
   const [startDateStr, setStartDateStr] = useState(() => {
-    const d = new Date();
-    d.setDate(d.getDate() - 30); // Default to last 30 days
-    return d.toISOString().slice(0, 10);
+    return new Date().toISOString().slice(0, 10);
   });
   const [endDateStr, setEndDateStr] = useState(() => {
     return new Date().toISOString().slice(0, 10);
