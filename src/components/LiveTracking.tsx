@@ -49,6 +49,21 @@ const getDefaultCoordinates = (siteName: string) => {
   return { latitude: 15.3647, longitude: 75.1240 }; // default Hubli center
 };
 
+const getHaversineDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+  const R = 6371e3; // Earth radius in meters
+  const phi1 = (lat1 * Math.PI) / 180;
+  const phi2 = (lat2 * Math.PI) / 180;
+  const deltaPhi = ((lat2 - lat1) * Math.PI) / 180;
+  const deltaLambda = ((lon2 - lon1) * Math.PI) / 180;
+
+  const a =
+    Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
+    Math.cos(phi1) * Math.cos(phi2) * Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  return R * c; // Distance in meters
+};
+
 interface ActiveEmployee {
   id: string;
   name: string;
@@ -202,6 +217,52 @@ export default function LiveTracking() {
             timestamp: i.timestamp
           }));
 
+        // Compute real-time geofence verification based on latest tracked coordinates
+        let currentlyOnSite = false;
+        let activeProjectName = project?.name || latestPunch.geofenceStatus?.assignedProjectName || null;
+
+        const currentLat = latestItem.location?.latitude;
+        const currentLng = latestItem.location?.longitude;
+
+        if (currentLat && currentLng) {
+          // 1. First, check distance to the assigned project (from schedule)
+          if (project) {
+            let projLat = parseFloat(project.latitude);
+            let projLng = parseFloat(project.longitude);
+            if (isNaN(projLat) || isNaN(projLng)) {
+              const defaults = getDefaultCoordinates(project.site || project.name || '');
+              projLat = defaults.latitude;
+              projLng = defaults.longitude;
+            }
+            const dist = getHaversineDistance(currentLat, currentLng, projLat, projLng);
+            if (dist <= 500) {
+              currentlyOnSite = true;
+            }
+          }
+
+          // 2. If not on-site at assigned project, check if they are near ANY project in projectsList
+          if (!currentlyOnSite) {
+            for (const p of projectsList) {
+              let pLat = parseFloat(p.latitude);
+              let pLng = parseFloat(p.longitude);
+              if (isNaN(pLat) || isNaN(pLng)) {
+                const defaults = getDefaultCoordinates(p.site || p.name || '');
+                pLat = defaults.latitude;
+                pLng = defaults.longitude;
+              }
+              const dist = getHaversineDistance(currentLat, currentLng, pLat, pLng);
+              if (dist <= 500) {
+                currentlyOnSite = true;
+                activeProjectName = p.name;
+                break;
+              }
+            }
+          }
+        } else {
+          // Fallback if current coordinates are missing
+          currentlyOnSite = latestPunch.geofenceStatus?.isVerifiedOnSite || false;
+        }
+
         activeList.push({
           id: teamMember?.id || latestPunch.employeeId || email,
           name: teamMember?.name || latestPunch.userName || 'Unknown Staff',
@@ -216,8 +277,8 @@ export default function LiveTracking() {
           longitude: latestItem.location?.longitude || 75.1240,
           address: latestItem.location?.address || 'Background Telemetry',
           accuracy: latestItem.location?.accuracy,
-          assignedProjectName: project?.name || latestPunch.geofenceStatus?.assignedProjectName || null,
-          isVerifiedOnSite: latestPunch.geofenceStatus?.isVerifiedOnSite || false,
+          assignedProjectName: activeProjectName,
+          isVerifiedOnSite: currentlyOnSite,
           routePoints: routePoints
         });
       }
