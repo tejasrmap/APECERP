@@ -16,20 +16,6 @@ import { collection, onSnapshot, query, where, Timestamp } from 'firebase/firest
 import { useOutletContext } from 'react-router-dom';
 import { db } from '../firebase';
 import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-
-// Fix Leaflet's default marker icon bug in Vite/Webpack build setups
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-
-const DefaultIcon = L.icon({
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-});
-L.Marker.prototype.options.icon = DefaultIcon;
 
 interface ActiveEmployee {
   id: string;

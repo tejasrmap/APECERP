@@ -12,18 +12,6 @@ import { collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc, Timestamp } 
 import { useOutletContext } from 'react-router-dom';
 import { db } from '../firebase';
 import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-
-let DefaultIcon = L.icon({
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34]
-});
-L.Marker.prototype.options.icon = DefaultIcon;
 
 
 const getDefaultCoordinates = (siteName: string) => {
@@ -140,31 +128,32 @@ export default function Projects() {
       setProjectsList(projs);
       setIsProjectsLoading(false);
 
-      // Auto-calibrate coordinates in Firestore if they are set to old Hubli fallback (15.3647, 75.1240)
+      // Auto-calibrate coordinates in Firestore if they are set to old Hubli fallback or are missing entirely
       if (isAdmin && db) {
         projs.forEach(async (p) => {
           const name = (p.name || '').toLowerCase();
           const site = (p.site || '').toLowerCase();
           const pLat = parseFloat(p.latitude);
           const pLng = parseFloat(p.longitude);
-          const isOldDefault = Math.abs(pLat - 15.3647) < 0.001 && Math.abs(pLng - 75.1240) < 0.001;
+          const isMissing = isNaN(pLat) || isNaN(pLng) || p.latitude === undefined || p.longitude === undefined;
+          const isOldDefault = !isMissing && Math.abs(pLat - 15.3647) < 0.001 && Math.abs(pLng - 75.1240) < 0.001;
           
-          if (isOldDefault) {
-            let nextLat = pLat;
-            let nextLng = pLng;
+          if (isOldDefault || isMissing) {
+            let nextLat = isMissing ? NaN : pLat;
+            let nextLng = isMissing ? NaN : pLng;
             let updated = false;
 
             if (site.includes('vja') || name.includes('apec')) {
               nextLat = 16.5062;
               nextLng = 80.6480;
               updated = true;
-            } else if (site.includes('gdv') || name.includes('gtx')) {
+            } else if (site.includes('gdv') || name.includes('gtx') || site.includes('gudivada')) {
               nextLat = 16.4419;
               nextLng = 80.9928;
               updated = true;
             }
 
-            if (updated) {
+            if (updated && !isNaN(nextLat) && !isNaN(nextLng)) {
               try {
                 await updateDoc(doc(db, 'projects', p.id), {
                   latitude: nextLat,
@@ -232,9 +221,14 @@ export default function Projects() {
     const bounds: L.LatLngBoundsExpression = [];
 
     projectsList.forEach(p => {
-      const lat = parseFloat(p.latitude);
-      const lng = parseFloat(p.longitude);
-      if (isNaN(lat) || isNaN(lng)) return;
+      let lat = parseFloat(p.latitude);
+      let lng = parseFloat(p.longitude);
+      
+      if (isNaN(lat) || isNaN(lng)) {
+        const defaults = getDefaultCoordinates(p.site || p.name || '');
+        lat = defaults.latitude;
+        lng = defaults.longitude;
+      }
 
       const pos: L.LatLngExpression = [lat, lng];
       bounds.push(pos);
@@ -520,15 +514,15 @@ export default function Projects() {
           </motion.div>
         ) : (
           <div className="space-y-6">
-            {/* GIS Operations Map */}
+            {/* Project Locations Map */}
             <div className="p-5 lg:p-6 rounded-2xl glass-card relative overflow-hidden border border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.3)]">
               <div className="flex justify-between items-center mb-4">
                 <div>
                   <h4 className="text-sm font-bold text-slate-100 flex items-center gap-2">
                     <Activity className="w-4 h-4 text-cyan-400 animate-pulse" />
-                    GIS Grid Operations Map
+                    Active Project Locations Map
                   </h4>
-                  <p className="text-xs text-slate-400 mt-0.5">Substation coordinates and telemetry positions</p>
+                  <p className="text-xs text-slate-400 mt-0.5">Real-time installation coordinates and coverage zones</p>
                 </div>
                 <div className="flex items-center gap-4 text-[10px] font-mono">
                   <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-ping" /> Active Site</span>
@@ -584,11 +578,20 @@ export default function Projects() {
                               className="p-4 hidden sm:table-cell font-medium cursor-pointer"
                             >
                               <div>{p.site}</div>
-                              {p.latitude !== undefined && p.longitude !== undefined && (
-                                <div className="text-[10px] text-slate-500 font-mono mt-0.5">
-                                  {Number(p.latitude).toFixed(4)}, {Number(p.longitude).toFixed(4)}
-                                </div>
-                              )}
+                              {(() => {
+                                let lat = parseFloat(p.latitude);
+                                let lng = parseFloat(p.longitude);
+                                if (isNaN(lat) || isNaN(lng)) {
+                                  const defaults = getDefaultCoordinates(p.site || p.name || '');
+                                  lat = defaults.latitude;
+                                  lng = defaults.longitude;
+                                }
+                                return (
+                                  <div className="text-[10px] text-slate-500 font-mono mt-0.5">
+                                    {lat.toFixed(4)}, {lng.toFixed(4)}
+                                  </div>
+                                );
+                              })()}
                             </td>
                             <td 
                               onClick={() => setExpandedProjectId(expandedProjectId === p.id ? null : p.id)}
