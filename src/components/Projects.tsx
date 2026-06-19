@@ -6,7 +6,8 @@ import {
   ArrowLeft, 
   Trash2, 
   Loader2,
-  ChevronDown
+  ChevronDown,
+  SquarePen
 } from 'lucide-react';
 import { collection, onSnapshot, addDoc, doc, deleteDoc, updateDoc, Timestamp } from 'firebase/firestore';
 import { useOutletContext } from 'react-router-dom';
@@ -104,6 +105,18 @@ export default function Projects() {
   const [newProjectLat, setNewProjectLat] = useState('');
   const [newProjectLng, setNewProjectLng] = useState('');
   const [isAddingProject, setIsAddingProject] = useState(false);
+  const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
+
+  const resetForm = () => {
+    setNewProjectName('');
+    setNewProjectStatus('Active');
+    setNewProjectSite('');
+    setNewProjectManager('');
+    setNewProjectLat('');
+    setNewProjectLng('');
+    setIsAddingProject(false);
+    setEditingProjectId(null);
+  };
 
   // Safety fallback timeout to prevent infinite loading state
   useEffect(() => {
@@ -318,29 +331,42 @@ export default function Projects() {
       if (isNaN(latVal)) latVal = defaults.latitude;
       if (isNaN(lngVal)) lngVal = defaults.longitude;
 
-      await addDoc(collection(db, 'projects'), {
-        name: newProjectName,
-        status: newProjectStatus,
-        site: newProjectSite || 'General Site',
-        manager: newProjectManager || 'Unassigned',
-        latitude: latVal,
-        longitude: lngVal
-      });
-      // Add activity
-      await addDoc(collection(db, 'activities'), {
-        title: 'New project registered',
-        desc: `Project "${newProjectName}" was added under ${newProjectSite || 'General Site'} (Coordinates: ${latVal.toFixed(4)}, ${lngVal.toFixed(4)})`,
-        type: 'task',
-        timestamp: Timestamp.now()
-      });
-      setNewProjectName('');
-      setNewProjectSite('');
-      setNewProjectManager('');
-      setNewProjectLat('');
-      setNewProjectLng('');
-      setIsAddingProject(false);
+      if (editingProjectId) {
+        await updateDoc(doc(db, 'projects', editingProjectId), {
+          name: newProjectName,
+          status: newProjectStatus,
+          site: newProjectSite || 'General Site',
+          manager: newProjectManager || 'Unassigned',
+          latitude: latVal,
+          longitude: lngVal
+        });
+        // Add activity
+        await addDoc(collection(db, 'activities'), {
+          title: 'Project details updated',
+          desc: `Project "${newProjectName}" was updated (Coordinates: ${latVal.toFixed(4)}, ${lngVal.toFixed(4)})`,
+          type: 'settings',
+          timestamp: Timestamp.now()
+        });
+      } else {
+        await addDoc(collection(db, 'projects'), {
+          name: newProjectName,
+          status: newProjectStatus,
+          site: newProjectSite || 'General Site',
+          manager: newProjectManager || 'Unassigned',
+          latitude: latVal,
+          longitude: lngVal
+        });
+        // Add activity
+        await addDoc(collection(db, 'activities'), {
+          title: 'New project registered',
+          desc: `Project "${newProjectName}" was added under ${newProjectSite || 'General Site'} (Coordinates: ${latVal.toFixed(4)}, ${lngVal.toFixed(4)})`,
+          type: 'task',
+          timestamp: Timestamp.now()
+        });
+      }
+      resetForm();
     } catch (err) {
-      console.error('Error adding project:', err);
+      console.error('Error saving project:', err);
     } finally {
       setIsDbActionLoading(false);
     }
@@ -389,7 +415,13 @@ export default function Projects() {
         </div>
         {isAdmin && (
           <button 
-            onClick={() => setIsAddingProject(!isAddingProject)}
+            onClick={() => {
+              if (isAddingProject) {
+                resetForm();
+              } else {
+                setIsAddingProject(true);
+              }
+            }}
             disabled={isDbActionLoading}
             className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-950 text-xs font-bold flex items-center gap-1.5 transition-all shadow-[0_4px_12px_rgba(6,182,212,0.15)] hover:shadow-lg disabled:opacity-50"
           >
@@ -408,7 +440,9 @@ export default function Projects() {
             exit={{ opacity: 0, y: -10 }}
             className="max-w-xl glass-card p-6 rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.3)]"
           >
-            <h4 className="text-sm font-bold text-slate-100 mb-4">Register New APEC Installation</h4>
+            <h4 className="text-sm font-bold text-slate-100 mb-4">
+              {editingProjectId ? 'Edit APEC Installation' : 'Register New APEC Installation'}
+            </h4>
             <form onSubmit={handleAddProject} className="space-y-4">
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-slate-400 uppercase ml-1 tracking-wider">Project Name</label>
@@ -553,7 +587,7 @@ export default function Projects() {
                 disabled={isDbActionLoading}
                 className="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-950 rounded-xl text-xs font-bold uppercase tracking-wider shadow-[0_4px_14px_rgba(6,182,212,0.2)] hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
-                {isDbActionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Submit Project'}
+                {isDbActionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : (editingProjectId ? 'Save Changes' : 'Submit Project')}
               </button>
             </form>
           </motion.div>
@@ -667,13 +701,33 @@ export default function Projects() {
                             </td>
                             {isAdmin && (
                               <td className="p-4 text-center">
-                                <button 
-                                  onClick={() => handleDeleteDocument('projects', p.id, p.name)}
-                                  disabled={isDbActionLoading}
-                                  className="p-1.5 text-slate-500 hover:text-rose-500 transition-colors rounded hover:bg-rose-950/20 disabled:opacity-50"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
+                                <div className="flex items-center justify-center gap-1.5">
+                                  <button 
+                                    onClick={() => {
+                                      setNewProjectName(p.name || '');
+                                      setNewProjectStatus(p.status || 'Active');
+                                      setNewProjectSite(p.site || '');
+                                      setNewProjectManager(p.manager || '');
+                                      setNewProjectLat(p.latitude !== undefined && p.latitude !== null ? String(p.latitude) : '');
+                                      setNewProjectLng(p.longitude !== undefined && p.longitude !== null ? String(p.longitude) : '');
+                                      setEditingProjectId(p.id);
+                                      setIsAddingProject(true);
+                                    }}
+                                    disabled={isDbActionLoading}
+                                    className="p-1.5 text-slate-500 hover:text-cyan-400 transition-colors rounded hover:bg-cyan-950/25 disabled:opacity-50"
+                                    title="Edit Project"
+                                  >
+                                    <SquarePen className="w-4 h-4" />
+                                  </button>
+                                  <button 
+                                    onClick={() => handleDeleteDocument('projects', p.id, p.name)}
+                                    disabled={isDbActionLoading}
+                                    className="p-1.5 text-slate-500 hover:text-rose-500 transition-colors rounded hover:bg-rose-950/20 disabled:opacity-50"
+                                    title="Delete Project"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                </div>
                               </td>
                             )}
                           </tr>

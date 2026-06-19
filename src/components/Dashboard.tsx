@@ -197,9 +197,19 @@ export default function Dashboard() {
     };
   }, []);
 
+  // Redirect non-admins trying to access the main Dashboard (Overview)
+  useEffect(() => {
+    if (isDbActionLoading) return;
+    if (auth && auth.currentUser && userProfile === null) return;
+
+    if (!isAdmin && (location.pathname === '/dashboard' || location.pathname === '/dashboard/')) {
+      navigate('/dashboard/my-profile', { replace: true });
+    }
+  }, [isAdmin, location.pathname, userProfile, isDbActionLoading, navigate]);
+
   const navItems = [
     { name: 'Attendance', icon: Clock },
-    { name: 'Dashboard', icon: LayoutDashboard },
+    ...(isAdmin ? [{ name: 'Dashboard', icon: LayoutDashboard }] : []),
     { name: 'My Profile', icon: User },
     { name: 'Daily Reports', icon: ClipboardList },
     { name: 'Projects', icon: Activity },
