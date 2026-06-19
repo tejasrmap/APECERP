@@ -54,6 +54,7 @@ export default function LiveTracking() {
 
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
+  const [mapError, setMapError] = useState<string | null>(null);
   const markersRef = useRef<{ [key: string]: L.Marker }>({});
   const polylinesRef = useRef<{ [key: string]: L.Polyline }>({});
 
@@ -257,28 +258,33 @@ export default function LiveTracking() {
   // 4. Initialize Map
   useEffect(() => {
     if (!mapContainerRef.current) return;
+    try {
+      // Centered at South/Central India operations area
+      const map = L.map(mapContainerRef.current, {
+        zoomControl: false // custom zoom control position
+      }).setView([15.3647, 75.1240], 6);
 
-    // Centered at South/Central India operations area
-    const map = L.map(mapContainerRef.current, {
-      zoomControl: false // custom zoom control position
-    }).setView([15.3647, 75.1240], 6);
+      // Apply CartoDB Positron tile layer (Premium clean light aesthetic)
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 20,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+      }).addTo(map);
 
-    // Apply CartoDB Positron tile layer (Premium clean light aesthetic)
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      maxZoom: 20,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-    }).addTo(map);
+      L.control.zoom({
+        position: 'bottomright'
+      }).addTo(map);
 
-    L.control.zoom({
-      position: 'bottomright'
-    }).addTo(map);
+      setMapInstance(map);
+      setMapError(null);
 
-    setMapInstance(map);
-
-    return () => {
-      map.remove();
-      setMapInstance(null);
-    };
+      return () => {
+        map.remove();
+        setMapInstance(null);
+      };
+    } catch (err: any) {
+      console.error('Leaflet Map Initialization Error (LiveTracking):', err);
+      setMapError(err.message || String(err));
+    }
   }, []);
 
   // 5. Update Map Markers when filteredEmployees list changes or mapInstance is ready
@@ -622,7 +628,16 @@ export default function LiveTracking() {
       {/* RIGHT PANEL: Live Interactive Map */}
       <div className="flex-1 h-full glass-card border border-white/10 rounded-2xl overflow-hidden shadow-xl relative flex flex-col">
         {/* Map Wrapper */}
-        <div ref={mapContainerRef} className="flex-1 w-full relative z-0" />
+        <div className="flex-1 w-full relative z-0 bg-[#f8fafc]/5">
+          <div ref={mapContainerRef} className="w-full h-full" />
+          {mapError && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-rose-500 bg-slate-950/95 font-mono text-xs z-10 text-center">
+              <p className="font-bold mb-2">Map Load Error:</p>
+              <p className="max-w-md">{mapError}</p>
+              <p className="text-[10px] text-slate-500 mt-2">Check console for detailed stack trace</p>
+            </div>
+          )}
+        </div>
         
         {/* Map aesthetic overlay (dark glass header) */}
         <div className="absolute top-4 left-4 z-10 p-3 bg-slate-950/85 backdrop-blur border border-slate-800 rounded-xl shadow-lg pointer-events-none flex items-center gap-3.5">

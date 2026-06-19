@@ -62,6 +62,7 @@ export default function Projects() {
   const mapContainerRef = React.useRef<HTMLDivElement>(null);
   const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
   const [layerGroup, setLayerGroup] = useState<L.LayerGroup | null>(null);
+  const [mapError, setMapError] = useState<string | null>(null);
 
   const milestonesList = [
     'Site Audit & Clearance',
@@ -189,26 +190,31 @@ export default function Projects() {
   // Leaflet map initialization
   useEffect(() => {
     if (!mapContainerRef.current) return;
+    try {
+      const map = L.map(mapContainerRef.current, {
+        zoomControl: true,
+        attributionControl: true
+      }).setView([16.5062, 80.6480], 7);
 
-    const map = L.map(mapContainerRef.current, {
-      zoomControl: true,
-      attributionControl: true
-    }).setView([16.5062, 80.6480], 7);
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 20,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+      }).addTo(map);
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      maxZoom: 20,
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-    }).addTo(map);
+      const lg = L.layerGroup().addTo(map);
+      setLayerGroup(lg);
+      setMapInstance(map);
+      setMapError(null);
 
-    const lg = L.layerGroup().addTo(map);
-    setLayerGroup(lg);
-    setMapInstance(map);
-
-    return () => {
-      map.remove();
-      setMapInstance(null);
-      setLayerGroup(null);
-    };
+      return () => {
+        map.remove();
+        setMapInstance(null);
+        setLayerGroup(null);
+      };
+    } catch (err: any) {
+      console.error('Leaflet Map Initialization Error:', err);
+      setMapError(err.message || String(err));
+    }
   }, []);
 
   // Update map markers & circles when projectsList, mapInstance, or layerGroup changes
@@ -565,10 +571,19 @@ export default function Projects() {
               </div>
 
               {/* GIS Leaflet Map Container */}
-              <div 
-                ref={mapContainerRef} 
-                className="relative h-64 w-full rounded-xl overflow-hidden border border-slate-900 shadow-[inset_0_4px_12px_rgba(0,0,0,0.5)] z-0"
-              />
+              <div className="relative h-64 w-full rounded-xl overflow-hidden border border-slate-900 shadow-[inset_0_4px_12px_rgba(0,0,0,0.5)] z-0 bg-slate-950/60">
+                <div 
+                  ref={mapContainerRef} 
+                  className="w-full h-full"
+                />
+                {mapError && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-rose-500 bg-slate-950/95 font-mono text-xs z-10 text-center">
+                    <p className="font-bold mb-2">Map Load Error:</p>
+                    <p className="max-w-md">{mapError}</p>
+                    <p className="text-[10px] text-slate-500 mt-2">Check console for detailed stack trace</p>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Project List Table */}
