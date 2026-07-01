@@ -27,6 +27,8 @@ import {
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { auth, db } from '../firebase';
 import { collection, query, where, onSnapshot, getDocs } from 'firebase/firestore';
+import { Capacitor } from '@capacitor/core';
+import { LocalNotifications } from '@capacitor/local-notifications';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -42,6 +44,144 @@ export default function Dashboard() {
   // Notifications State
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [activeToast, setActiveToast] = useState<{ id: string; title: string; desc: string; senderEmail: string } | null>(null);
+
+  const playChime = () => {
+    try {
+      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContext) return;
+      const ctx = new AudioContext();
+      const playTone = (freq: number, startTime: number, duration: number) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, startTime);
+        gain.gain.setValueAtTime(0.15, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(startTime);
+        osc.stop(startTime + duration);
+      };
+      const now = ctx.currentTime;
+      playTone(587.33, now, 0.15); // D5
+      playTone(880.00, now + 0.1, 0.25); // A5
+    } catch (e) {
+      console.error('Audio chime play failed:', e);
+    }
+  };
+
+  // Request native/browser notification permissions
+  useEffect(() => {
+    const requestNotificationPermission = async () => {
+      if (Capacitor.isNativePlatform()) {
+        try {
+          const perm = await LocalNotifications.checkPermissions();
+          if (perm.display !== 'granted') {
+            await LocalNotifications.requestPermissions();
+          }
+        } catch (e) {
+          console.error('Error requesting Capacitor local notification permissions:', e);
+        }
+      } else if (typeof window !== 'undefined' && 'Notification' in window) {
+        if (Notification.permission === 'default') {
+          await Notification.requestPermission();
+        }
+      }
+    };
+    requestNotificationPermission();
+  }, []);
+
+  // Listen to new direct messages globally
+  useEffect(() => {
+    if (!db || !auth) return;
+
+    let unsubscribe: (() => void) | null = null;
+    const authUnsub = auth.onAuthStateChanged((user) => {
+      if (unsubscribe) {
+        unsubscribe();
+        unsubscribe = null;
+      }
+      
+      if (!user) return;
+      const email = user.email || '';
+      if (!email) return;
+
+      const q = query(
+        collection(db, 'messages'),
+        where('recipientEmail', '==', email)
+      );
+
+      const listenerInitTime = Date.now();
+
+      unsubscribe = onSnapshot(q, (snapshot) => {
+        snapshot.docChanges().forEach(async (change) => {
+          if (change.type === 'added') {
+            const msg = change.doc.data();
+            const msgTime = msg.timestamp?.toDate ? msg.timestamp.toDate().getTime() : Date.now();
+
+            if (msgTime > listenerInitTime - 5000) {
+              const isChatPage = location.pathname === '/dashboard/workforce';
+              const isBackground = document.hidden;
+
+              if (!isChatPage || isBackground) {
+                // 1. Play Audio Chime
+                playChime();
+
+                const titleText = `New Message from ${msg.senderName || 'Technician'}`;
+                const bodyText = msg.text || 'Sent an attachment';
+
+                // 2. Trigger native APK notification or browser push notification
+                if (Capacitor.isNativePlatform()) {
+                  try {
+                    await LocalNotifications.schedule({
+                      notifications: [
+                        {
+                          title: titleText,
+                          body: bodyText,
+                          id: Math.floor(Math.random() * 100000),
+                          schedule: { at: new Date(Date.now() + 50) }
+                        }
+                      ]
+                    });
+                  } catch (e) {
+                    console.error('Error scheduling native local notification:', e);
+                  }
+                } else {
+                  if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+                    new Notification(titleText, {
+                      body: bodyText,
+                      icon: '/logo.png'
+                    });
+                  }
+                }
+
+                // 3. Show In-App sliding Toast alert
+                setActiveToast({
+                  id: change.doc.id,
+                  title: titleText,
+                  desc: bodyText,
+                  senderEmail: msg.senderEmail
+                });
+
+                // Auto-close toast
+                setTimeout(() => {
+                  setActiveToast(current => current?.id === change.doc.id ? null : current);
+                }, 5000);
+              }
+            }
+          }
+        });
+      }, (err) => {
+        console.error('Real-time message notification listener error:', err);
+      });
+    });
+
+    return () => {
+      authUnsub();
+      if (unsubscribe) unsubscribe();
+    };
+  }, [location.pathname]);
 
   useEffect(() => {
     if (!db) {
@@ -492,6 +632,46 @@ export default function Dashboard() {
           </div>
         </div>
       </main>
+
+      {/* In-App Toast Notification popup */}
+      <AnimatePresence>
+        {activeToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+            onClick={() => {
+              navigate('/dashboard/workforce');
+              setActiveToast(null);
+            }}
+            className="fixed bottom-6 right-6 z-[100] max-w-sm bg-[#0e1422]/95 backdrop-blur-md border border-cyan-500/30 p-4 rounded-2xl shadow-[0_10px_35px_rgba(6,182,212,0.15)] flex gap-3 cursor-pointer hover:border-cyan-500/50 transition-all group"
+          >
+            <div className="w-10 h-10 rounded-full bg-cyan-950/40 border border-cyan-500/20 flex items-center justify-center text-cyan-400 shrink-0">
+              <MessageSquare className="w-5 h-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex justify-between items-start">
+                <h4 className="text-xs font-bold text-slate-100 group-hover:text-cyan-400 transition-colors">
+                  {activeToast.title}
+                </h4>
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveToast(null);
+                  }}
+                  className="p-0.5 rounded text-slate-500 hover:text-slate-300"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+              <p className="text-xs text-slate-400 mt-1 truncate pr-2">
+                {activeToast.desc}
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
     </div>
   );

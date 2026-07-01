@@ -194,6 +194,7 @@ export default function Chat() {
         senderEmail: currentUserEmail,
         senderName: currentUserName,
         timestamp: Timestamp.now(),
+        ...(selectedChat !== 'group' ? { recipientEmail: selectedChat.email } : {}),
         ...(fileUrl ? { fileUrl, fileName, fileType } : {})
       });
     } catch (err: any) {
