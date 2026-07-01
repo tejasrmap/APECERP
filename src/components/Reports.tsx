@@ -129,6 +129,21 @@ export default function Reports() {
     }
   };
 
+  const calculateGap = (checkInTime: string | null | undefined, checkOutTime: string | null | undefined): string => {
+    if (!checkInTime || !checkOutTime) return '-';
+    const start = new Date(checkInTime);
+    const end = new Date(checkOutTime);
+    const diffMs = end.getTime() - start.getTime();
+    if (diffMs <= 0) return '0 hrs';
+    
+    const diffHrs = diffMs / (1000 * 60 * 60);
+    const hrs = Math.floor(diffHrs);
+    const mins = Math.round((diffHrs - hrs) * 60);
+    
+    if (hrs === 0) return `${mins} mins`;
+    return `${hrs} hr ${mins} min`;
+  };
+
   // Quick preset ranges
   const applyPreset = (preset: 'today' | 'yesterday' | 'week' | 'month') => {
     const today = new Date();
@@ -182,6 +197,78 @@ export default function Reports() {
     }).sort((a, b) => b.timestamp.localeCompare(a.timestamp));
   }, [attendanceLogs, startDateStr, endDateStr, searchTerm]);
 
+  const pairedAttendance = useMemo(() => {
+    const groups: { [email: string]: any[] } = {};
+    filteredAttendance.forEach(log => {
+      const email = log.userEmail || 'unknown';
+      if (!groups[email]) {
+        groups[email] = [];
+      }
+      groups[email].push(log);
+    });
+
+    const allPairs: any[] = [];
+
+    Object.keys(groups).forEach(email => {
+      const logs = [...groups[email]].sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+      let activeIn: any = null;
+
+      logs.forEach(log => {
+        if (log.type === 'punch_in') {
+          if (activeIn) {
+            allPairs.push({
+              id: activeIn.id,
+              userName: activeIn.userName,
+              userEmail: activeIn.userEmail,
+              employeeId: activeIn.employeeId,
+              checkIn: activeIn,
+              checkOut: null
+            });
+          }
+          activeIn = log;
+        } else if (log.type === 'punch_out') {
+          if (activeIn) {
+            allPairs.push({
+              id: `${activeIn.id}--${log.id}`,
+              userName: activeIn.userName,
+              userEmail: activeIn.userEmail,
+              employeeId: activeIn.employeeId,
+              checkIn: activeIn,
+              checkOut: log
+            });
+            activeIn = null;
+          } else {
+            allPairs.push({
+              id: log.id,
+              userName: log.userName,
+              userEmail: log.userEmail,
+              employeeId: log.employeeId,
+              checkIn: null,
+              checkOut: log
+            });
+          }
+        }
+      });
+
+      if (activeIn) {
+        allPairs.push({
+          id: activeIn.id,
+          userName: activeIn.userName,
+          userEmail: activeIn.userEmail,
+          employeeId: activeIn.employeeId,
+          checkIn: activeIn,
+          checkOut: null
+        });
+      }
+    });
+
+    return allPairs.sort((a, b) => {
+      const timeA = a.checkIn?.timestamp || a.checkOut?.timestamp || '';
+      const timeB = b.checkIn?.timestamp || b.checkOut?.timestamp || '';
+      return timeB.localeCompare(timeA);
+    });
+  }, [filteredAttendance]);
+
   // Statistics Summary
   const stats = useMemo(() => {
     let totalShifts = filteredSchedules.length;
@@ -225,12 +312,14 @@ export default function Reports() {
       fileName = `APEC_Shifts_Report_${startDateStr}_to_${endDateStr}.csv`;
     } else {
       csvContent = "data:text/csv;charset=utf-8," 
-        + "Timestamp,Technician,Email,Access Code,Type,Location,Latitude,Longitude\n"
-        + filteredAttendance.map(log => {
-            const locStr = log.location?.address ? `"${log.location.address.replace(/"/g, '""')}"` : "Unknown";
-            const lat = log.location?.latitude || "";
-            const lng = log.location?.longitude || "";
-            return `"${log.timestamp}","${log.userName || ''}","${log.userEmail || ''}","${log.employeeId || ''}","${log.type || ''}",${locStr},"${lat}","${lng}"`;
+        + "Technician,Email,Access Code,Check-In Time,Check-In Location,Check-Out Time,Check-Out Location,Duration\n"
+        + pairedAttendance.map(p => {
+            const inTime = p.checkIn ? new Date(p.checkIn.timestamp).toLocaleString() : '-';
+            const inLoc = p.checkIn?.location?.address ? `"${p.checkIn.location.address.replace(/"/g, '""')}"` : '-';
+            const outTime = p.checkOut ? new Date(p.checkOut.timestamp).toLocaleString() : (p.checkIn ? 'Still Checked In' : '-');
+            const outLoc = p.checkOut?.location?.address ? `"${p.checkOut.location.address.replace(/"/g, '""')}"` : '-';
+            const gap = calculateGap(p.checkIn?.timestamp, p.checkOut?.timestamp);
+            return `"${p.userName || ''}","${p.userEmail || ''}","${p.employeeId || 'N/A'}","${inTime}",${inLoc},"${outTime}",${outLoc},"${gap}"`;
           }).join("\n");
       fileName = `APEC_Attendance_Report_${startDateStr}_to_${endDateStr}.csv`;
     }
@@ -598,9 +687,9 @@ export default function Reports() {
             )}
           </div>
         ) : (
-          /* Tab 2: Attendance Logs Table */
+          /* Tab 2: Attendance Logs Table (Paired check-in and check-out logs) */
           <div className="overflow-x-auto">
-            {filteredAttendance.length === 0 ? (
+            {pairedAttendance.length === 0 ? (
               <div className="p-12 text-center text-slate-500 italic text-sm">
                 No matching attendance log entries found in the specified range.
               </div>
@@ -608,39 +697,84 @@ export default function Reports() {
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="border-b border-slate-900 text-slate-400 uppercase text-[9.5px] font-mono tracking-wider">
-                    <th className="py-3.5 px-3">Timestamp</th>
                     <th className="py-3.5 px-3">Technician</th>
-                    <th className="py-3.5 px-3">Type</th>
-                    <th className="py-3.5 px-3">Access Code</th>
-                    <th className="py-3.5 px-3">Matched Location Address</th>
+                    <th className="py-3.5 px-3">Check-In</th>
+                    <th className="py-3.5 px-3">Check-Out</th>
+                    <th className="py-3.5 px-3 text-center">Time Gap</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-900/60">
-                  {filteredAttendance.map((log) => {
-                    const punchDate = new Date(log.timestamp);
-                    const punchStr = punchDate.toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' });
+                  {pairedAttendance.map((pair) => {
+                    const inDate = pair.checkIn ? new Date(pair.checkIn.timestamp) : null;
+                    const inStr = inDate ? inDate.toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' }) : '-';
+                    
+                    const outDate = pair.checkOut ? new Date(pair.checkOut.timestamp) : null;
+                    const outStr = outDate 
+                      ? outDate.toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' }) 
+                      : (pair.checkIn ? 'Still Checked In' : '-');
+                    
+                    const gapStr = calculateGap(pair.checkIn?.timestamp, pair.checkOut?.timestamp);
+
                     return (
-                      <tr key={log.id} className="hover:bg-slate-900/20 text-slate-200">
-                        <td className="py-3.5 px-3 font-mono">{punchStr}</td>
+                      <tr key={pair.id} className="hover:bg-slate-900/20 text-slate-200">
+                        {/* Technician details */}
                         <td className="py-3.5 px-3">
                           <div>
-                            <span className="font-bold block">{log.userName || 'Unknown'}</span>
-                            <span className="text-[9.5px] text-slate-500 font-mono">{log.userEmail || ''}</span>
+                            <span className="font-bold block">{pair.userName || 'Unknown'}</span>
+                            <div className="flex flex-wrap items-center gap-2 mt-0.5">
+                              <span className="text-[9.5px] text-slate-550 font-mono">{pair.userEmail || ''}</span>
+                              {pair.employeeId && (
+                                <span className="text-[8px] px-1.5 py-0.25 rounded bg-slate-800 text-slate-400 font-mono">
+                                  {pair.employeeId}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </td>
+                        
+                        {/* Check-In Details */}
                         <td className="py-3.5 px-3">
-                          <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[9px] font-bold uppercase tracking-wider ${
-                            log.type === 'punch_in' ? 'bg-cyan-500/10 border-cyan-500/20 text-cyan-400' :
-                            'bg-indigo-500/10 border-indigo-500/20 text-indigo-400'
-                          }`}>
-                            {log.type === 'punch_in' ? 'CHECK-IN' : 'CHECK-OUT'}
-                          </span>
+                          {pair.checkIn ? (
+                            <div>
+                              <span className="font-mono text-cyan-400 text-[11px] block">{inStr}</span>
+                              <span className="flex items-center gap-1 text-[10px] text-slate-500 mt-1 max-w-[280px] truncate" title={pair.checkIn.location?.address}>
+                                <MapPin className="w-3 h-3 text-slate-500 shrink-0" />
+                                {pair.checkIn.location?.address || 'Geolocation Recorded'}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-slate-600 font-mono">-</span>
+                          )}
                         </td>
-                        <td className="py-3.5 px-3 font-mono">{log.employeeId || 'N/A'}</td>
-                        <td className="py-3.5 px-3 max-w-[250px] truncate" title={log.location?.address}>
-                          <span className="flex items-center gap-1">
-                            <MapPin className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                            {log.location?.address || 'Geolocation Recorded'}
+
+                        {/* Check-Out Details */}
+                        <td className="py-3.5 px-3">
+                          {pair.checkOut ? (
+                            <div>
+                              <span className="font-mono text-indigo-400 text-[11px] block">{outStr}</span>
+                              <span className="flex items-center gap-1 text-[10px] text-slate-500 mt-1 max-w-[280px] truncate" title={pair.checkOut.location?.address}>
+                                <MapPin className="w-3 h-3 text-slate-500 shrink-0" />
+                                {pair.checkOut.location?.address || 'Geolocation Recorded'}
+                              </span>
+                            </div>
+                          ) : pair.checkIn ? (
+                            <div>
+                              <span className="text-emerald-400 font-semibold text-[10px] uppercase tracking-wider block bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 w-fit">
+                                Active Sync
+                              </span>
+                              <span className="text-[10px] text-slate-500 block mt-1">Punch Out Pending</span>
+                            </div>
+                          ) : (
+                            <span className="text-slate-600 font-mono">-</span>
+                          )}
+                        </td>
+
+                        {/* Time Gap */}
+                        <td className="py-3.5 px-3 text-center">
+                          <span className={`font-mono font-bold text-[13px] ${
+                            gapStr !== '-' ? 'text-slate-100' : 'text-slate-600'
+                          }`}>
+                            {gapStr}
                           </span>
                         </td>
                       </tr>
