@@ -262,53 +262,134 @@ export default function Reports() {
       {/* Print Overrides Style */}
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
-          body {
+          @page {
+            size: A4 portrait;
+            margin: 15mm;
+          }
+          html, body, #root, .h-\\[100dvh\\], main, .flex-1, .max-w-7xl, .p-3, .p-6, .p-8 {
+            background: white !important;
             background-color: white !important;
-            color: black !important;
+            color: #1e293b !important;
+            width: 100% !important;
+            height: auto !important;
+            min-height: auto !important;
+            max-height: none !important;
+            overflow: visible !important;
+            position: static !important;
+            display: block !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            box-shadow: none !important;
+          }
+          aside, header, nav, .sidebar, button, input, select, .print\\:hidden {
+            display: none !important;
           }
           .glass-card {
             background: none !important;
-            border: 1px solid #ddd !important;
+            border: none !important;
             box-shadow: none !important;
-            color: black !important;
           }
-          .print\\:hidden {
-            display: none !important;
+          .print-stats-grid {
+            display: grid !important;
+            grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+            gap: 12px !important;
+            margin-bottom: 20px !important;
           }
-          aside, header, nav, .sidebar, button, input, select {
-            display: none !important;
+          .print-stats-grid > div {
+            background-color: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            padding: 12px !important;
           }
-          .print-header {
-            display: block !important;
-            margin-bottom: 20px;
-          }
-          h3, h4, p, span, th, td {
-            color: black !important;
+          h1, h2, h3, h4, p, span, th, td {
+            color: #0f172a !important;
           }
           table {
-            border-collapse: collapse;
-            width: 100%;
+            border-collapse: collapse !important;
+            width: 100% !important;
+            margin-top: 10px !important;
           }
           th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
+            border-bottom: 1px solid #e2e8f0 !important;
+            padding: 8px 10px !important;
+            text-align: left !important;
+            font-size: 10px !important;
+            word-break: break-word !important;
+            white-space: normal !important;
+          }
+          th {
+            background-color: #f1f5f9 !important;
+            font-weight: bold !important;
+          }
+          tr:nth-child(even) td {
+            background-color: #f8fafc !important;
+          }
+          .truncate, td.max-w-\\[250px\\] {
+            overflow: visible !important;
+            text-overflow: unset !important;
+            white-space: normal !important;
+            max-width: none !important;
+          }
+          /* Custom status badge print colors for better readability on white paper */
+          .text-green-400 {
+            color: #15803d !important;
+            background-color: #f0fdf4 !important;
+            border-color: #bbf7d0 !important;
+          }
+          .text-amber-400 {
+            color: #b45309 !important;
+            background-color: #fef3c7 !important;
+            border-color: #fde68a !important;
+          }
+          .text-rose-400 {
+            color: #b91c1c !important;
+            background-color: #fef2f2 !important;
+            border-color: #fecaca !important;
+          }
+          .text-cyan-400 {
+            color: #0369a1 !important;
+            background-color: #f0f9ff !important;
+            border-color: #bae6fd !important;
+          }
+          .text-indigo-400 {
+            color: #4338ca !important;
+            background-color: #eef2ff !important;
+            border-color: #e0e7ff !important;
           }
         }
       `}} />
 
+      {/* Dedicated Print Header (Only visible on paper print) */}
+      <div className="hidden print:flex items-center justify-between border-b-2 border-slate-800 pb-4 mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-full bg-slate-900 flex items-center justify-center overflow-hidden border border-slate-700 shrink-0">
+            <img src="/logo.jpeg" alt="APEC Logo" className="w-full h-full object-contain p-0.5" onError={(e) => {
+              (e.currentTarget as HTMLImageElement).src = '/logo.png';
+            }} />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-slate-900 leading-tight">APEC Power Solutions</h1>
+            <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest font-mono">Enterprise Resource Planning</p>
+          </div>
+        </div>
+        <div className="text-right">
+          <h2 className="text-base font-bold text-slate-900">{activeTab === 'shifts' ? 'Shift Dispatch Log' : 'Attendance Log'}</h2>
+          <p className="text-[10px] text-slate-500 mt-0.5 font-mono font-medium">Period: {startDateStr} to {endDateStr}</p>
+        </div>
+      </div>
+
       {/* Header Panel */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 lg:p-6 rounded-2xl glass-card border border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.3)] print:border-none print:shadow-none print:p-0">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 lg:p-6 rounded-2xl glass-card border border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.3)] print:hidden">
         <div>
-          <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest font-mono print:hidden">Operations Center</span>
-          <h3 className="text-xl font-bold text-slate-100 flex items-center gap-2 print:text-black print:text-2xl">
-            <FileText className="w-5 h-5 text-cyan-400 print:text-black" />
+          <span className="text-[10px] font-bold text-cyan-400 uppercase tracking-widest font-mono">Operations Center</span>
+          <h3 className="text-xl font-bold text-slate-100 flex items-center gap-2">
+            <FileText className="w-5 h-5 text-cyan-400" />
             Operational & Attendance Reports
           </h3>
-          <p className="text-xs text-slate-400 mt-1 print:text-slate-600">Generated for dates: <span className="font-mono text-cyan-400 font-bold print:text-black">{startDateStr}</span> to <span className="font-mono text-cyan-400 font-bold print:text-black">{endDateStr}</span></p>
+          <p className="text-xs text-slate-400 mt-1">Generated for dates: <span className="font-mono text-cyan-400 font-bold">{startDateStr}</span> to <span className="font-mono text-cyan-400 font-bold">{endDateStr}</span></p>
         </div>
         
-        <div className="flex items-center gap-2.5 w-full sm:w-auto print:hidden">
+        <div className="flex items-center gap-2.5 w-full sm:w-auto">
           <button 
             onClick={handlePrint}
             className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-slate-950 border border-slate-900 hover:border-slate-800 text-slate-300 hover:text-slate-100 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
@@ -319,7 +400,7 @@ export default function Reports() {
           
           <button 
             onClick={handleExportCSV}
-            className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-950 text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-[0_4px_12px_rgba(6,182,212,0.15)] hover:shadow-lg cursor-pointer"
+            className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-955 text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-[0_4px_12px_rgba(6,182,212,0.15)] hover:shadow-lg cursor-pointer"
           >
             <Download className="w-4 h-4" />
             Export to CSV
@@ -428,7 +509,7 @@ export default function Reports() {
       </div>
 
       {/* Summary KPI Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 print-stats-grid">
         
         {/* Total Persons Allotted */}
         <div className="p-4 rounded-2xl glass-card border border-white/10 flex flex-col justify-between space-y-2">
