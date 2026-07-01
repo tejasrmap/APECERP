@@ -210,6 +210,10 @@ export default function Chat() {
     member.email?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Partition contacts into active and inactive
+  const activeContacts = filteredContacts.filter(c => c.status !== 'Inactive');
+  const inactiveContacts = filteredContacts.filter(c => c.status === 'Inactive');
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Active':
@@ -217,13 +221,53 @@ export default function Chat() {
       case 'Site Visit':
         return 'bg-blue-500';
       case 'On Leave':
-      default:
         return 'bg-amber-500';
+      case 'Inactive':
+        return 'bg-rose-500';
+      default:
+        return 'bg-green-500';
     }
   };
 
   const getInitials = (name: string) => {
     return name ? name.slice(0, 2).toUpperCase() : 'PM';
+  };
+
+  const renderContactCard = (contact: any) => {
+    const isSelected = selectedChat !== 'group' && selectedChat.email === contact.email;
+    const isInactive = contact.status === 'Inactive';
+    
+    return (
+      <button
+        key={contact.id}
+        onClick={() => { setSelectedChat(contact); setMobileView('chat'); }}
+        className={`w-full text-left p-3 rounded-xl flex items-center gap-3 transition-all duration-300 border ${
+          isSelected
+            ? 'bg-cyan-955/40 border-cyan-500/35 text-cyan-400 font-semibold shadow-[0_4px_16px_rgba(0,0,0,0.2)] glowing-active' 
+            : 'hover:bg-slate-900/30 border-transparent hover:border-slate-800/40 text-slate-400 hover:text-slate-100'
+        }`}
+      >
+        {/* Avatar Initials with online status indicator */}
+        <div className="relative shrink-0">
+          <div className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-semibold text-slate-200 shadow-sm">
+            {getInitials(contact.name)}
+          </div>
+          <span className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-slate-950 ${getStatusColor(contact.status)}`}></span>
+        </div>
+        
+        <div className="flex-1 min-w-0">
+          <div className="flex justify-between items-baseline">
+            <span className="text-xs font-semibold truncate text-slate-200">{contact.name}</span>
+            <span className={`text-[8px] uppercase tracking-widest font-bold font-sans ${
+              isInactive ? 'text-rose-500' : 'text-emerald-500'
+            }`}>
+              {contact.status || 'Active'}
+            </span>
+          </div>
+          <p className="text-[10px] text-slate-400 truncate mt-0.5">{contact.role}</p>
+        </div>
+      </button>
+    );
   };
 
   return (
@@ -278,43 +322,36 @@ export default function Chat() {
             </div>
           </button>
 
-          <div className="pt-3 pb-1 px-3">
-            <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Direct Messages</span>
+          {/* Active Members Partition */}
+          <div className="pt-3 pb-1 px-3 flex items-center gap-1.5">
+            <span className="text-[9px] text-emerald-400 font-bold uppercase tracking-wider">Active Members</span>
+            <span className="text-[8px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-mono">
+              {activeContacts.length}
+            </span>
           </div>
 
-          {/* Contacts List */}
-          {filteredContacts.length === 0 ? (
-            <div className="py-8 text-center text-xs text-slate-550">
-              No contacts found
+          {activeContacts.length === 0 ? (
+            <div className="py-4 text-center text-[10px] text-slate-500 italic">
+              No active contacts
             </div>
           ) : (
-            filteredContacts.map((contact) => (
-              <button
-                key={contact.id}
-                onClick={() => { setSelectedChat(contact); setMobileView('chat'); }}
-                className={`w-full text-left p-3 rounded-xl flex items-center gap-3 transition-all duration-300 border ${
-                  selectedChat !== 'group' && selectedChat.email === contact.email
-                    ? 'bg-cyan-950/40 border-cyan-500/35 text-cyan-400 font-semibold shadow-[0_4px_16px_rgba(0,0,0,0.2)] glowing-active' 
-                    : 'hover:bg-slate-900/30 border-transparent hover:border-slate-800/40 text-slate-400 hover:text-slate-100'
-                }`}
-              >
-                {/* Avatar Initials with online status indicator */}
-                <div className="relative shrink-0">
-                  <div className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-semibold text-slate-200 shadow-sm">
-                    {getInitials(contact.name)}
-                  </div>
-                  <span className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-slate-950 ${getStatusColor(contact.status)}`}></span>
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-baseline">
-                    <span className="text-xs font-semibold truncate text-slate-200">{contact.name}</span>
-                    <span className="text-[8px] text-rose-500 uppercase tracking-widest font-bold font-sans">{contact.status}</span>
-                  </div>
-                  <p className="text-[10px] text-slate-400 truncate mt-0.5">{contact.role}</p>
-                </div>
-              </button>
-            ))
+            activeContacts.map((contact) => renderContactCard(contact))
+          )}
+
+          {/* Inactive Members Partition */}
+          <div className="pt-4 pb-1 px-3 flex items-center gap-1.5 border-t border-slate-900/60 mt-2">
+            <span className="text-[9px] text-rose-500/80 font-bold uppercase tracking-wider">Inactive Members</span>
+            <span className="text-[8px] px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-500 font-mono">
+              {inactiveContacts.length}
+            </span>
+          </div>
+
+          {inactiveContacts.length === 0 ? (
+            <div className="py-4 text-center text-[10px] text-slate-500 italic">
+              No inactive contacts
+            </div>
+          ) : (
+            inactiveContacts.map((contact) => renderContactCard(contact))
           )}
 
         </div>
