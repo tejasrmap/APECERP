@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   History, 
   Download, 
@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase';
+import L from 'leaflet';
 
 interface TelemetryPoint {
   id: string;
@@ -45,6 +46,12 @@ export default function LocationHistory() {
   const [data, setData] = useState<TelemetryPoint[]>([]);
   const [error, setError] = useState<string | null>(null);
 
+  // Map state and refs
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
+  const markersRef = useRef<L.Marker[]>([]);
+  const polylineRef = useRef<L.Polyline[]>([]);
+
   // Fetch employees on mount
   useEffect(() => {
     const fetchEmployees = async () => {
@@ -66,6 +73,170 @@ export default function LocationHistory() {
     };
     fetchEmployees();
   }, []);
+
+  // 1. Initialize Map
+  useEffect(() => {
+    if (!mapContainerRef.current) return;
+
+    try {
+      // Centered at South/Central India operations area initially
+      const map = L.map(mapContainerRef.current, {
+        zoomControl: false // custom position
+      }).setView([15.3647, 75.1240], 6);
+
+      // Apply CartoDB Positron tile layer (Premium clean light aesthetic)
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 20,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+      }).addTo(map);
+
+      L.control.zoom({
+        position: 'bottomright'
+      }).addTo(map);
+
+      setMapInstance(map);
+
+      // Force size recalculation to prevent grey maps or collapsed tiles
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 250);
+
+      return () => {
+        map.remove();
+        setMapInstance(null);
+      };
+    } catch (err) {
+      console.error('Error initializing map in LocationHistory:', err);
+    }
+  }, []);
+
+  // 2. Update Map Path & Markers when telemetry data changes
+  useEffect(() => {
+    if (!mapInstance) return;
+    const map = mapInstance;
+
+    // Clear existing markers and polylines
+    markersRef.current.forEach(m => m.remove());
+    markersRef.current = [];
+    polylineRef.current.forEach(p => p.remove());
+    polylineRef.current = [];
+
+    // Filter points that have valid coordinates
+    const pathPoints = data
+      .filter(pt => pt.location?.latitude && pt.location?.longitude)
+      .map(pt => [pt.location.latitude, pt.location.longitude] as L.LatLngExpression);
+
+    if (pathPoints.length === 0) return;
+
+    // Draw route lines connecting coordinates chronologically
+    if (pathPoints.length >= 2) {
+      // Outer glow line (darker blue shadow)
+      const glowLine = L.polyline(pathPoints, {
+        color: '#2563eb',
+        weight: 6,
+        opacity: 0.15,
+        lineJoin: 'round',
+        lineCap: 'round'
+      }).addTo(map);
+      polylineRef.current.push(glowLine);
+
+      // Core route line (cyan dash/dotted line)
+      const coreLine = L.polyline(pathPoints, {
+        color: '#06b6d4',
+        weight: 3.5,
+        opacity: 0.85,
+        lineJoin: 'round',
+        lineCap: 'round',
+        dashArray: '1, 5' // dotted path style
+      }).addTo(map);
+      polylineRef.current.push(coreLine);
+    }
+
+    // Add Start and End markers (points are sorted latest first, so last element is start, first is end)
+    const endPoint = data[0];
+    const startPoint = data[data.length - 1];
+
+    if (startPoint && startPoint.location?.latitude && startPoint.location?.longitude) {
+      const startPos: L.LatLngExpression = [startPoint.location.latitude, startPoint.location.longitude];
+      
+      const startHtml = `
+        <div class="relative flex items-center justify-center w-6 h-6 rounded-full border border-emerald-500 text-emerald-500 bg-emerald-950/90 font-bold text-[9px] shadow-md font-mono">
+          S
+        </div>
+      `;
+      const startIcon = L.divIcon({
+        className: 'custom-route-marker-start',
+        html: startHtml,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+      });
+
+      const startMarker = L.marker(startPos, { icon: startIcon })
+        .addTo(map)
+        .bindPopup(`
+          <div class="p-2.5 min-w-[140px] text-slate-200 bg-[#0e1422]/95 border border-slate-800 rounded-xl text-[10px] font-sans shadow-2xl">
+            <strong class="text-emerald-400 font-bold">Route Start</strong>
+            <p class="mt-0.5 font-mono text-[9px] text-slate-400">${startPoint.timestamp.toLocaleString('en-IN')}</p>
+            <p class="text-[9px] text-slate-500 mt-1 leading-tight border-t border-slate-900 pt-1">${startPoint.location.address || 'Background Telemetry'}</p>
+          </div>
+        `, { closeButton: false, className: 'leaflet-custom-popup', offset: [0, -4] });
+      markersRef.current.push(startMarker);
+    }
+
+    if (endPoint && endPoint.location?.latitude && endPoint.location?.longitude && data.length >= 2) {
+      const endPos: L.LatLngExpression = [endPoint.location.latitude, endPoint.location.longitude];
+
+      const endHtml = `
+        <div class="relative flex items-center justify-center w-6 h-6 rounded-full border border-rose-500 text-rose-500 bg-rose-950/90 font-bold text-[9px] shadow-md font-mono animate-pulse">
+          E
+        </div>
+      `;
+      const endIcon = L.divIcon({
+        className: 'custom-route-marker-end',
+        html: endHtml,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+      });
+
+      const endMarker = L.marker(endPos, { icon: endIcon })
+        .addTo(map)
+        .bindPopup(`
+          <div class="p-2.5 min-w-[140px] text-slate-200 bg-[#0e1422]/95 border border-slate-800 rounded-xl text-[10px] font-sans shadow-2xl">
+            <strong class="text-rose-400 font-bold">Route End (Latest)</strong>
+            <p class="mt-0.5 font-mono text-[9px] text-slate-400">${endPoint.timestamp.toLocaleString('en-IN')}</p>
+            <p class="text-[9px] text-slate-500 mt-1 leading-tight border-t border-slate-900 pt-1">${endPoint.location.address || 'Background Telemetry'}</p>
+          </div>
+        `, { closeButton: false, className: 'leaflet-custom-popup', offset: [0, -4] });
+      markersRef.current.push(endMarker);
+    }
+
+    // Zoom/fit map to bounds of the route points
+    try {
+      const bounds = L.latLngBounds(pathPoints);
+      map.fitBounds(bounds, { padding: [40, 40] });
+    } catch (e) {
+      console.warn("Could not fit bounds:", e);
+    }
+  }, [data, mapInstance]);
+
+  // 3. Interactive row clicking to pan/zoom map to that location
+  const handleRowClick = (point: TelemetryPoint) => {
+    if (!mapInstance || !point.location?.latitude || !point.location?.longitude) return;
+
+    const pos: L.LatLngExpression = [point.location.latitude, point.location.longitude];
+    mapInstance.setView(pos, 16);
+
+    L.popup({ closeButton: false, className: 'leaflet-custom-popup' })
+      .setLatLng(pos)
+      .setContent(`
+        <div class="p-2.5 min-w-[150px] text-slate-200 bg-[#0e1422]/95 border border-slate-800 rounded-xl text-[10px] font-sans shadow-2xl">
+          <strong class="text-cyan-400 font-bold">Visited Coordinate</strong>
+          <p class="mt-0.5 font-mono text-[9px] text-slate-400">${point.timestamp.toLocaleString('en-IN')}</p>
+          <p class="text-[9px] text-slate-500 mt-1 leading-tight border-t border-slate-900 pt-1">${point.location.address || 'Background Telemetry'}</p>
+        </div>
+      `)
+      .openOn(mapInstance);
+  };
 
   const handleSearch = async () => {
     if (!selectedEmployee) {
@@ -306,81 +477,82 @@ export default function LocationHistory() {
         )}
       </div>
 
-      {/* Main Table Content */}
-      <div className="rounded-2xl glass-card border border-white/10 shadow-xl overflow-hidden p-5">
-        <h4 className="text-xs font-bold text-slate-100 uppercase tracking-wider mb-4 border-b border-slate-900 pb-3 font-mono">
-          Telemetry Points ({data.length})
-        </h4>
+      {/* Map and Table Split Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8 items-start">
+        {/* Map Panel (2/3 width on large screens) */}
+        <div className="lg:col-span-2 rounded-2xl glass-card border border-white/10 shadow-xl overflow-hidden p-5 flex flex-col min-h-[500px]">
+          <h4 className="text-xs font-bold text-slate-100 uppercase tracking-wider mb-4 border-b border-slate-900 pb-3 font-mono flex items-center justify-between">
+            <span>Route Map Path</span>
+            {data.length > 0 && <span className="text-[10px] text-cyan-400 font-normal normal-case font-sans">Click on any table row to locate point on map</span>}
+          </h4>
+          <div 
+            ref={mapContainerRef} 
+            className="flex-1 w-full rounded-xl bg-slate-950/60 border border-slate-900 overflow-hidden min-h-[420px] z-0"
+          />
+        </div>
 
-        <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
-          {data.length === 0 && !loading ? (
-            <div className="p-12 text-center text-slate-500 italic text-sm">
-              Use the filters above to fetch location history.
-            </div>
-          ) : (
-            <table className="w-full text-left text-xs border-collapse relative">
-              <thead className="sticky top-0 bg-slate-950/80 backdrop-blur-sm z-10">
-                <tr className="border-b border-slate-900 text-slate-400 uppercase text-[9.5px] font-mono tracking-wider">
-                  <th className="py-3.5 px-3 whitespace-nowrap">Date & Time</th>
-                  <th className="py-3.5 px-3">Coordinates</th>
-                  <th className="py-3.5 px-3">Address</th>
-                  <th className="py-3.5 px-3 text-center">Accuracy</th>
-                  <th className="py-3.5 px-3 text-center">Battery</th>
-                  <th className="py-3.5 px-3 text-center">Background</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-900/60">
-                {data.map((point) => (
-                  <tr key={point.id} className="hover:bg-slate-900/20 text-slate-200">
-                    <td className="py-3 px-3">
-                      <div className="flex flex-col gap-0.5">
-                        <span className="font-mono font-bold text-[11px] text-cyan-400">
-                          {point.timestamp.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                        </span>
-                        <span className="font-mono text-[10px] text-slate-500 flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          {point.timestamp.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-3">
-                      <div className="flex flex-col gap-0.5 font-mono text-[10px] text-slate-400">
-                        <span>Lat: {point.location?.latitude?.toFixed(5) || '-'}</span>
-                        <span>Lng: {point.location?.longitude?.toFixed(5) || '-'}</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-3">
-                      <div className="flex items-start gap-1 max-w-[250px]">
-                        <MapPin className="w-3.5 h-3.5 text-slate-500 shrink-0 mt-0.5" />
-                        <span className="text-[10px] text-slate-400 leading-tight">
-                          {point.location?.address || '-'}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-3 text-center font-mono text-[10px]">
-                      {point.location?.accuracy ? `${Math.round(point.location.accuracy)}m` : '-'}
-                    </td>
-                    <td className="py-3 px-3 text-center font-mono text-[10px]">
-                      {point.batteryLevel ? (
-                        <span className={point.batteryLevel > 0.2 ? 'text-emerald-400' : 'text-rose-400'}>
-                          {Math.round(point.batteryLevel * 100)}%
-                        </span>
-                      ) : '-'}
-                    </td>
-                    <td className="py-3 px-3 text-center">
-                      <span className={`inline-flex px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${
-                        point.isBackground 
-                          ? 'bg-slate-800 text-slate-400' 
-                          : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
-                      }`}>
-                        {point.isBackground ? 'Yes' : 'No'}
-                      </span>
-                    </td>
+        {/* Telemetry Points List (1/3 width on large screens) */}
+        <div className="rounded-2xl glass-card border border-white/10 shadow-xl overflow-hidden p-5 flex flex-col h-[500px]">
+          <h4 className="text-xs font-bold text-slate-100 uppercase tracking-wider mb-4 border-b border-slate-900 pb-3 font-mono">
+            Telemetry Points ({data.length})
+          </h4>
+
+          <div className="overflow-y-auto pr-1 flex-1 min-h-[350px]">
+            {data.length === 0 && !loading ? (
+              <div className="p-12 text-center text-slate-500 italic text-sm">
+                Use the filters above to fetch location history.
+              </div>
+            ) : (
+              <table className="w-full text-left text-xs border-collapse relative">
+                <thead className="sticky top-0 bg-slate-950/90 backdrop-blur-sm z-10">
+                  <tr className="border-b border-slate-900 text-slate-400 uppercase text-[9px] font-mono tracking-wider">
+                    <th className="py-2.5 px-2">Time</th>
+                    <th className="py-2.5 px-2">Info</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+                </thead>
+                <tbody className="divide-y divide-slate-900/60">
+                  {data.map((point) => (
+                    <tr 
+                      key={point.id} 
+                      onClick={() => handleRowClick(point)}
+                      className="hover:bg-slate-900/30 text-slate-200 cursor-pointer active:bg-slate-800/50 transition-colors"
+                    >
+                      <td className="py-3 px-2 vertical-align-top">
+                        <div className="flex flex-col gap-0.5 font-mono">
+                          <span className="font-bold text-[10px] text-cyan-400 whitespace-nowrap">
+                            {point.timestamp.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                          </span>
+                          <span className="text-[8px] text-slate-500 whitespace-nowrap">
+                            {point.timestamp.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-2">
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-start gap-1">
+                            <MapPin className="w-3 h-3 text-slate-500 shrink-0 mt-0.5" />
+                            <span className="text-[9.5px] text-slate-400 leading-tight">
+                              {point.location?.address || 'Background Telemetry'}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-[8.5px] text-slate-500 font-mono">
+                            <span>Lat: {point.location?.latitude?.toFixed(4) || '-'}</span>
+                            <span>Lng: {point.location?.longitude?.toFixed(4) || '-'}</span>
+                            {point.location?.accuracy && <span>({Math.round(point.location.accuracy)}m)</span>}
+                            {point.isBackground && (
+                              <span className="px-1 py-0.5 rounded bg-slate-900 text-[7.5px] text-slate-400 uppercase font-bold border border-slate-800 shrink-0">
+                                BG
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
         </div>
       </div>
     </div>
