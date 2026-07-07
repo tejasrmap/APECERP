@@ -29,7 +29,12 @@ interface TelemetryPoint {
 }
 
 export default function LocationHistory() {
-  const [employees, setEmployees] = useState<{id: string, name: string}[]>([]);
+  const [employees, setEmployees] = useState<{
+    id: string;
+    name: string;
+    employeeId: string;
+    email: string;
+  }[]>([]);
   const [selectedEmployee, setSelectedEmployee] = useState('');
   
   // Default to today
@@ -45,10 +50,15 @@ export default function LocationHistory() {
     const fetchEmployees = async () => {
       try {
         const snap = await getDocs(collection(db, 'team'));
-        const list = snap.docs.map(doc => ({
-          id: doc.id,
-          name: doc.data().name || 'Unknown'
-        }));
+        const list = snap.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            name: data.name || 'Unknown',
+            employeeId: data.employeeId || '',
+            email: data.email || ''
+          };
+        });
         setEmployees(list.sort((a, b) => a.name.localeCompare(b.name)));
       } catch (err) {
         console.error("Error fetching team:", err);
@@ -78,24 +88,54 @@ export default function LocationHistory() {
       const end = new Date(endDateStr);
       end.setHours(23, 59, 59, 999);
 
-      // Query by employeeId (matching the Firestore database writes)
-      const q = query(
-        collection(db, 'telemetry'),
-        where('employeeId', '==', selectedEmployee)
-      );
+      const empInfo = employees.find(e => e.id === selectedEmployee);
+      const customEmpId = empInfo?.employeeId || '';
+      const empEmail = empInfo?.email || '';
 
-      let snap = await getDocs(q);
+      const queries = [];
 
-      // Fallback query in case any older telemetry records used 'userId' instead of 'employeeId'
-      if (snap.empty) {
-        const fallbackQ = query(
+      if (empEmail) {
+        queries.push(getDocs(query(
           collection(db, 'telemetry'),
-          where('userId', '==', selectedEmployee)
-        );
-        snap = await getDocs(fallbackQ);
+          where('userEmail', '==', empEmail)
+        )));
+        queries.push(getDocs(query(
+          collection(db, 'telemetry'),
+          where('userEmail', '==', empEmail.toLowerCase())
+        )));
       }
 
-      const points = snap.docs
+      if (customEmpId) {
+        queries.push(getDocs(query(
+          collection(db, 'telemetry'),
+          where('employeeId', '==', customEmpId)
+        )));
+      }
+
+      // Fallback queries (e.g. document ID used as employeeId or userId)
+      queries.push(getDocs(query(
+        collection(db, 'telemetry'),
+        where('employeeId', '==', selectedEmployee)
+      )));
+      queries.push(getDocs(query(
+        collection(db, 'telemetry'),
+        where('userId', '==', selectedEmployee)
+      )));
+
+      const snaps = await Promise.all(queries);
+      const seenIds = new Set<string>();
+      const uniqueDocs: any[] = [];
+
+      snaps.forEach(snap => {
+        snap.docs.forEach(doc => {
+          if (!seenIds.has(doc.id)) {
+            seenIds.add(doc.id);
+            uniqueDocs.push(doc);
+          }
+        });
+      });
+
+      const points = uniqueDocs
         .map(doc => {
           const d = doc.data();
           let ts = new Date();
