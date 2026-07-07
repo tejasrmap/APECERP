@@ -512,7 +512,7 @@ export default function TeamControl() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="w-full max-w-5xl glass-card p-6 rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.3)] mx-auto"
+            className="w-full max-w-5xl glass-card p-6 rounded-[2rem] relative overflow-hidden shadow-[0_12px_40px_rgba(0,0,0,0.3)] mx-auto"
           >
             <h4 className="text-sm font-bold text-slate-100 mb-4 flex items-center gap-2">
               <UserPlus className="w-4 h-4 text-cyan-400" />
@@ -1077,7 +1077,7 @@ export default function TeamControl() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="w-full max-w-5xl glass-card p-6 rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.3)] mx-auto"
+            className="w-full max-w-5xl glass-card p-6 rounded-[2rem] relative overflow-hidden shadow-[0_12px_40px_rgba(0,0,0,0.3)] mx-auto"
           >
             <h4 className="text-sm font-bold text-slate-100 mb-4 flex items-center gap-2">
               <Edit className="w-4 h-4 text-cyan-400" />
@@ -1602,7 +1602,7 @@ export default function TeamControl() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="w-full glass-card rounded-2xl overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.3)]"
+            className="w-full glass-card rounded-[2rem] overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.3)]"
           >            {/* Filter Tabs */}
             <div className="flex gap-2 p-4 border-b border-slate-800 bg-slate-950/20">
               <button
@@ -1681,7 +1681,7 @@ export default function TeamControl() {
                       const avatarClass = avatarColors[m.avatar || 'cyan'] || avatarColors.cyan;
 
                       return (
-                        <tr key={m.id} className="hover:bg-slate-900/30 transition-colors">
+                        <tr key={m.id} className="hover:bg-slate-900/40 hover:shadow-[0_0_15px_rgba(6,182,212,0.05)] transition-all duration-300 group">
                           <td className="p-4 text-center font-mono text-xs text-slate-400">{index + 1}</td>
                           <td className="p-4 font-mono text-xs text-slate-455">{m.employeeId || 'APEC-MEMBER'}</td>
                           <td className="p-4 font-bold text-slate-100 flex items-center gap-2.5">
@@ -1802,7 +1802,7 @@ export default function TeamControl() {
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="relative w-full max-w-lg glass-card p-6 rounded-2xl shadow-2xl border border-white/10 z-10 space-y-6 max-h-[90vh] overflow-y-auto custom-scrollbar"
+              className="relative w-full max-w-lg glass-card p-6 rounded-[2rem] relative overflow-hidden shadow-2xl border border-white/10 z-10 space-y-6 max-h-[90vh] overflow-y-auto custom-scrollbar"
             >
               <div className="absolute top-4 right-4 flex items-center gap-2">
                 {!isEditingProfile && (
@@ -1887,7 +1887,7 @@ export default function TeamControl() {
               </div>
 
               {/* Company ID Pass Card Container */}
-              <div className="relative w-full max-w-sm h-48 mx-auto rounded-2xl p-5 overflow-hidden border border-cyan-500/30 bg-gradient-to-br from-cyan-950/20 to-slate-900/40 backdrop-blur-md shadow-2xl flex flex-col justify-between group hover:border-cyan-500/50 transition-all duration-300">
+              <div className="relative w-full max-w-sm h-48 mx-auto rounded-[2rem] p-5 overflow-hidden border border-cyan-500/30 bg-gradient-to-br from-cyan-950/20 to-slate-900/40 backdrop-blur-md shadow-2xl flex flex-col justify-between group hover:border-cyan-500/50 transition-all duration-300">
                 {/* Grid Background */}
                 <div className="absolute inset-0 cyber-grid opacity-10" />
                 <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent pointer-events-none" />

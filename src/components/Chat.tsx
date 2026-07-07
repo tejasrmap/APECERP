@@ -242,10 +242,10 @@ export default function Chat() {
       <button
         key={contact.id}
         onClick={() => { setSelectedChat(contact); setMobileView('chat'); }}
-        className={`w-full text-left p-3 rounded-xl flex items-center gap-3 transition-all duration-300 border ${
+        className={`w-full text-left p-3 rounded-2xl flex items-center gap-3 transition-all duration-300 border ${
           isSelected
             ? 'bg-cyan-955/40 border-cyan-500/35 text-cyan-400 font-semibold shadow-[0_4px_16px_rgba(0,0,0,0.2)] glowing-active' 
-            : 'hover:bg-slate-900/30 border-transparent hover:border-slate-800/40 text-slate-400 hover:text-slate-100'
+            : 'hover:bg-slate-900/40 border-transparent hover:border-slate-800/40 hover:shadow-[0_0_15px_rgba(6,182,212,0.05)] transition-all duration-300 text-slate-400 hover:text-slate-100'
         }`}
       >
         {/* Avatar Initials with online status indicator */}
@@ -276,7 +276,7 @@ export default function Chat() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.15, ease: 'easeOut' }}
-      className="flex-1 flex glass-card rounded-2xl overflow-hidden h-[calc(100vh-115px)] md:h-[calc(100vh-160px)] min-h-[450px] md:min-h-[500px] shadow-[0_12px_40px_rgba(0,0,0,0.4)] border border-white/10"
+      className="flex-1 flex glass-card rounded-[2rem] overflow-hidden h-[calc(100vh-115px)] relative md:h-[calc(100vh-160px)] min-h-[450px] md:min-h-[500px] shadow-[0_12px_40px_rgba(0,0,0,0.4)] border border-white/10"
     >
       {/* Contact List Panel (Left) */}
       <div 
@@ -294,7 +294,7 @@ export default function Chat() {
               placeholder="Search team members..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-900/60 border border-slate-800 rounded-xl py-2 pl-10 pr-4 text-xs focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all text-slate-100 placeholder:text-slate-500 shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
+              className="w-full bg-slate-900/60 border border-slate-800 rounded-2xl py-2 pl-10 pr-4 text-xs focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all text-slate-100 placeholder:text-slate-500 shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
             />
           </div>
         </div>
@@ -305,10 +305,10 @@ export default function Chat() {
           {/* Central Channel Chat Card */}
           <button
             onClick={() => { setSelectedChat('group'); setMobileView('chat'); }}
-            className={`w-full text-left p-3 rounded-xl flex items-center gap-3 transition-all duration-300 border ${
+            className={`w-full text-left p-3 rounded-2xl flex items-center gap-3 transition-all duration-300 border ${
               selectedChat === 'group' 
                 ? 'bg-cyan-950/40 border-cyan-500/35 text-cyan-400 font-semibold shadow-[0_4px_16px_rgba(0,0,0,0.2)] glowing-active' 
-                : 'hover:bg-slate-900/30 border-transparent hover:border-slate-800/40 text-slate-400 hover:text-slate-100'
+                : 'hover:bg-slate-900/40 border-transparent hover:border-slate-800/40 hover:shadow-[0_0_15px_rgba(6,182,212,0.05)] transition-all duration-300 text-slate-400 hover:text-slate-100'
             }`}
           >
             <div className="w-10 h-10 rounded-full bg-rose-955/20 border border-rose-800/50 flex items-center justify-center text-rose-500 shrink-0 shadow-sm">

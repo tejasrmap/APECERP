@@ -649,6 +649,37 @@ export default function Scheduling() {
     return lookup;
   }, [schedules, selectedDateStr]);
 
+  const getWorkedTime = React.useCallback((tech: any, dateStr: string) => {
+    const techLogs = attendanceLogs.filter(l => {
+      const isTech = (l.employeeId && l.employeeId === tech.employeeId) || (l.userEmail && tech.email && l.userEmail.toLowerCase() === tech.email.toLowerCase());
+      if (!isTech) return false;
+      const logDate = new Date(l.timestamp).toISOString().slice(0, 10);
+      return logDate === dateStr;
+    }).sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+    if (techLogs.length === 0) return null;
+
+    let totalMs = 0;
+    let currentIn: number | null = null;
+    
+    techLogs.forEach(log => {
+      if (log.type === 'punch_in') {
+        currentIn = new Date(log.timestamp).getTime();
+      } else if (log.type === 'punch_out' && currentIn) {
+        totalMs += (new Date(log.timestamp).getTime() - currentIn);
+        currentIn = null;
+      }
+    });
+
+    if (currentIn && dateStr === new Date().toISOString().slice(0, 10)) {
+      totalMs += (new Date().getTime() - currentIn);
+    }
+
+    const hrs = Math.floor(totalMs / 3600000).toString().padStart(2, '0');
+    const mins = Math.floor((totalMs % 3600000) / 60000).toString().padStart(2, '0');
+    return `${hrs}:${mins}`;
+  }, [attendanceLogs]);
+
   const getApprovedLeave = (techId: string, techEmail: string, dateStr: string) => {
     return leavesList.find(l => {
       if (l.status !== 'Approved') return false;
@@ -870,6 +901,7 @@ export default function Scheduling() {
                       const weeklyHours = weeklyHoursLookup[tech.id] || 0;
                       const isOvertimeLimit = weeklyHours > 48;
                       const activeLeave = getApprovedLeave(tech.id, tech.email, selectedDateStr);
+                      const workedTime = getWorkedTime(tech, selectedDateStr);
 
                       return (
                         <div 
@@ -886,13 +918,28 @@ export default function Scheduling() {
                               <p className="text-[9.5px] text-slate-500 font-mono truncate leading-none mt-0.5">{tech.role}</p>
                               
                               {/* Workload hours count */}
-                              <span className={`inline-flex items-center gap-1 mt-1 text-[8px] font-bold px-1.5 py-0.5 rounded leading-none ${
-                                isOvertimeLimit 
-                                  ? 'bg-rose-500/10 border border-rose-500/25 text-rose-400' 
-                                  : 'bg-slate-900 border border-slate-800 text-slate-400'
-                              }`}>
-                                Week load: {weeklyHours}h {isOvertimeLimit ? '⚠️' : ''}
-                              </span>
+                              <div className="flex flex-col items-start gap-1 mt-1">
+                                {activeLeave ? (
+                                  <span className="inline-flex items-center justify-center gap-1 text-[8px] font-bold px-1.5 py-0.5 rounded leading-none bg-purple-500/15 border border-purple-500/30 text-purple-400">
+                                    ON LEAVE ({activeLeave.leaveType.toUpperCase()})
+                                  </span>
+                                ) : (
+                                  <>
+                                    <span className={`inline-flex items-center gap-1 text-[8px] font-bold px-1.5 py-0.5 rounded leading-none ${
+                                      isOvertimeLimit 
+                                        ? 'bg-rose-500/10 border border-rose-500/25 text-rose-400' 
+                                        : 'bg-slate-900 border border-slate-800 text-slate-400'
+                                    }`}>
+                                      Week load: {weeklyHours}h {isOvertimeLimit ? '⚠️' : ''}
+                                    </span>
+                                    {workedTime && (
+                                      <span className="inline-flex items-center gap-1 text-[8px] font-bold px-1.5 py-0.5 rounded leading-none bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                                        Worked Today: {workedTime}
+                                      </span>
+                                    )}
+                                  </>
+                                )}
+                              </div>
                             </div>
                           </div>
 
@@ -1046,6 +1093,7 @@ export default function Scheduling() {
                   const weeklyHours = weeklyHoursLookup[tech.id] || 0;
                   const isOvertimeLimit = weeklyHours > 48;
                   const activeLeave = getApprovedLeave(tech.id, tech.email, selectedDateStr);
+                      const workedTime = getWorkedTime(tech, selectedDateStr);
 
                   return (
                     <div 
@@ -1063,13 +1111,28 @@ export default function Scheduling() {
                             <p className="text-[10px] text-slate-500 font-mono mt-0.5 leading-none">{tech.role}</p>
                           </div>
                         </div>
-                        <span className={`inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded leading-none ${
-                          isOvertimeLimit 
-                            ? 'bg-rose-500/10 border border-rose-500/20 text-rose-400' 
-                            : 'bg-slate-900 border border-slate-800 text-slate-400'
-                        }`}>
-                          Week load: {weeklyHours}h {isOvertimeLimit ? '⚠️' : ''}
-                        </span>
+                        <div className="flex flex-col items-end gap-1">
+                          {activeLeave ? (
+                            <span className="inline-flex items-center justify-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded leading-none bg-purple-500/15 border border-purple-500/30 text-purple-400">
+                              ON LEAVE ({activeLeave.leaveType.toUpperCase()})
+                            </span>
+                          ) : (
+                            <>
+                              <span className={`inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded leading-none ${
+                                isOvertimeLimit 
+                                  ? 'bg-rose-500/10 border border-rose-500/20 text-rose-400' 
+                                  : 'bg-slate-900 border border-slate-800 text-slate-400'
+                              }`}>
+                                Week load: {weeklyHours}h {isOvertimeLimit ? '⚠️' : ''}
+                              </span>
+                              {workedTime && (
+                                <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded leading-none bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                                  Worked Today: {workedTime}
+                                </span>
+                              )}
+                            </>
+                          )}
+                        </div>
                       </div>
 
                       {/* Technician Agenda Shifts */}

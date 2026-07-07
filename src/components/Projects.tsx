@@ -400,7 +400,7 @@ export default function Projects() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="max-w-xl glass-card p-6 rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.3)]"
+            className="max-w-xl glass-card p-6 rounded-[2rem] shadow-sm"
           >
             <h4 className="text-sm font-bold text-slate-100 mb-4">
               {editingProjectId ? 'Edit APEC Installation' : 'Register New APEC Installation'}
@@ -414,7 +414,7 @@ export default function Projects() {
                   onChange={(e) => setNewProjectName(e.target.value)}
                   placeholder="e.g. Grid Substation Hubli"
                   required
-                  className="w-full bg-slate-950/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all text-sm shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
+                  className="w-full bg-slate-900 border border-slate-800 text-slate-200 rounded-2xl py-3.5 px-4 focus:outline-none focus:border-cyan-500 transition-all text-sm shadow-sm"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -424,7 +424,7 @@ export default function Projects() {
                     <button
                       type="button"
                       onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
-                      className="w-full bg-slate-950/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 text-sm cursor-pointer flex justify-between items-center text-left transition-all"
+                      className="w-full bg-slate-900 border border-slate-800 text-slate-200 rounded-2xl py-3.5 px-4 focus:outline-none focus:border-cyan-500 text-sm cursor-pointer flex justify-between items-center text-left transition-all shadow-sm"
                     >
                       <span className="text-slate-100">{newProjectStatus}</span>
                       <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${isStatusDropdownOpen ? 'rotate-180' : ''}`} />
@@ -469,7 +469,7 @@ export default function Projects() {
                     value={newProjectSite}
                     onChange={(e) => setNewProjectSite(e.target.value)}
                     placeholder="e.g. Site A"
-                    className="w-full bg-slate-950/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all text-sm shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
+                    className="w-full bg-slate-900 border border-slate-800 text-slate-200 rounded-2xl py-3.5 px-4 focus:outline-none focus:border-cyan-500 transition-all text-sm shadow-sm"
                   />
                 </div>
               </div>
@@ -482,7 +482,7 @@ export default function Projects() {
                     value={newProjectLat}
                     onChange={(e) => setNewProjectLat(e.target.value)}
                     placeholder="e.g. 15.3647 (Optional)"
-                    className="w-full bg-slate-950/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all text-sm shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
+                    className="w-full bg-slate-900 border border-slate-800 text-slate-200 rounded-2xl py-3.5 px-4 focus:outline-none focus:border-cyan-500 transition-all text-sm shadow-sm"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -492,7 +492,7 @@ export default function Projects() {
                     value={newProjectLng}
                     onChange={(e) => setNewProjectLng(e.target.value)}
                     placeholder="e.g. 75.1240 (Optional)"
-                    className="w-full bg-slate-950/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all text-sm shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
+                    className="w-full bg-slate-900 border border-slate-800 text-slate-200 rounded-2xl py-3.5 px-4 focus:outline-none focus:border-cyan-500 transition-all text-sm shadow-sm"
                   />
                 </div>
               </div>
@@ -502,7 +502,7 @@ export default function Projects() {
                   <button
                     type="button"
                     onClick={() => setIsManagerDropdownOpen(!isManagerDropdownOpen)}
-                    className="w-full bg-slate-950/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 text-sm cursor-pointer flex justify-between items-center text-left transition-all"
+                    className="w-full bg-slate-900 border border-slate-800 text-slate-200 rounded-2xl py-3.5 px-4 focus:outline-none focus:border-cyan-500 text-sm cursor-pointer flex justify-between items-center text-left transition-all shadow-sm"
                   >
                     <span className={newProjectManager ? 'text-slate-100' : 'text-slate-500'}>
                       {newProjectManager || 'Select Project Manager...'}
@@ -547,7 +547,7 @@ export default function Projects() {
               <button
                 type="submit"
                 disabled={isDbActionLoading}
-                className="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-950 rounded-xl text-xs font-bold uppercase tracking-wider shadow-[0_4px_14px_rgba(6,182,212,0.2)] hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full py-4 bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-950 rounded-2xl text-sm font-bold uppercase tracking-wider shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {isDbActionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : (editingProjectId ? 'Save Changes' : 'Submit Project')}
               </button>
@@ -556,7 +556,7 @@ export default function Projects() {
         ) : (
           <div className="space-y-6">
             {/* Project Locations Map */}
-            <div className="p-5 lg:p-6 rounded-2xl glass-card relative overflow-hidden border border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.3)]">
+            <div className="p-6 rounded-[2rem] glass-card relative overflow-hidden border border-white/10 shadow-sm">
               <div className="flex justify-between items-center mb-4">
                 <div>
                   <h4 className="text-sm font-bold text-slate-100 flex items-center gap-2">
@@ -593,7 +593,7 @@ export default function Projects() {
               key="project-table"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="glass-card rounded-2xl overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.3)]"
+              className="glass-card rounded-[2rem] overflow-hidden shadow-sm"
             >
               {projectsList.length === 0 ? (
                 <div className="py-20 text-center flex flex-col items-center">
@@ -736,14 +736,14 @@ export default function Projects() {
                                           />
                                         </div>
                                       </div>
-                                      <div className="p-3 bg-slate-950/40 rounded-xl border border-slate-900 text-[11px] leading-relaxed text-slate-400">
+                                      <div className="p-3 bg-slate-950/40 rounded-2xl border border-slate-900 text-[11px] leading-relaxed text-slate-400">
                                         <span className="font-bold text-slate-200 block mb-1">Status Report</span>
                                         {p.status === 'Completed' ? 'Installation is fully commissioned and synced to the local grid network.' :
                                          (p.completedMilestones || []).length === milestonesList.length ? 'All safety permits and wiring are completed. Pending final commissioning approvals.' :
                                          'Project is currently in progress. Ensure safety permits are logged under the Safety tab before wiring.'}
                                       </div>
                                       {p.latitude !== undefined && p.longitude !== undefined && (
-                                        <div className="p-3 bg-slate-950/40 rounded-xl border border-slate-900 text-[11px] leading-relaxed text-slate-400 font-mono">
+                                        <div className="p-3 bg-slate-950/40 rounded-2xl border border-slate-900 text-[11px] leading-relaxed text-slate-400 font-mono">
                                           <span className="font-bold text-slate-200 block mb-1 font-sans">Geofencing Telemetry</span>
                                           Latitude: {Number(p.latitude).toFixed(6)}<br />
                                           Longitude: {Number(p.longitude).toFixed(6)}

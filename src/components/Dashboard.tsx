@@ -22,7 +22,8 @@ import {
   Map,
   User,
   ClipboardList,
-  Briefcase
+  Briefcase,
+  History
 } from 'lucide-react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { auth, db } from '../firebase';
@@ -359,6 +360,7 @@ export default function Dashboard() {
     { name: 'Workforce', icon: Users },
     ...(isAdmin ? [
       { name: 'Live Tracking', icon: Map },
+      { name: 'Location History', icon: History },
       { name: 'Team Control', icon: Shield },
       { name: 'Reports', icon: FileText },
       { name: 'Settings', icon: Settings }
@@ -375,6 +377,7 @@ export default function Dashboard() {
     if (path === '/dashboard/settings') return 'Settings';
     if (path === '/dashboard/team-control') return 'Team Control';
     if (path === '/dashboard/live-tracking') return 'Live Tracking';
+    if (path === '/dashboard/location-history') return 'Location History';
     if (path === '/dashboard/attendance') return 'Attendance';
     if (path === '/dashboard/reports') return 'Reports';
     if (path === '/dashboard/leaves') return 'Leaves';
@@ -389,6 +392,7 @@ export default function Dashboard() {
     if (tabName === 'Dashboard') return '/dashboard';
     if (tabName === 'Team Control') return '/dashboard/team-control';
     if (tabName === 'Live Tracking') return '/dashboard/live-tracking';
+    if (tabName === 'Location History') return '/dashboard/location-history';
     if (tabName === 'My Profile') return '/dashboard/my-profile';
     if (tabName === 'Daily Reports') return '/dashboard/daily-reports';
     if (tabName === 'Leads') return '/dashboard/leads';
@@ -397,7 +401,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="h-[100dvh] w-full bg-[#05070c] flex font-sans text-slate-200 overflow-hidden relative selection:bg-cyan-500/15 selection:text-cyan-400">
+    <div className="h-[100dvh] w-full flex font-sans text-slate-200 overflow-hidden relative selection:bg-cyan-500/15 selection:text-cyan-400">
       
       {/* Background Ambience */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
@@ -415,7 +419,7 @@ export default function Dashboard() {
         />
         
         {/* Vignette fade to center */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_30%,#05070c_80%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_30%,var(--bg-app)_80%)]" />
       </div>
 
       {/* Mobile Sidebar Overlay */}
@@ -527,7 +531,7 @@ export default function Dashboard() {
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 z-10 relative overflow-hidden h-full">
         {/* Header */}
-        <header className="h-16 lg:h-20 border-b border-slate-800 bg-[#090d16]/70 backdrop-blur-md flex items-center justify-between px-4 lg:px-8 shrink-0 relative z-20">
+        <header className="h-16 lg:h-20 border-b border-slate-800 bg-slate-900/70 backdrop-blur-md flex items-center justify-between px-4 lg:px-8 shrink-0 relative z-20">
           <div className="flex items-center gap-3">
             <button 
               onClick={() => setIsSidebarOpen(true)}
@@ -549,6 +553,7 @@ export default function Dashboard() {
                 className="bg-slate-900/80 border border-slate-800 rounded-full py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 w-48 lg:w-64 placeholder:text-slate-500 transition-all text-slate-100 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]"
               />
             </div>
+
             <div className="relative">
               <button 
                 onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}

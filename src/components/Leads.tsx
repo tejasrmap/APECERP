@@ -296,7 +296,7 @@ export default function Leads() {
           <h3 className="text-base font-semibold text-slate-100 uppercase tracking-wider">Leads Pipeline</h3>
           <p className="text-xs text-slate-400 mt-1">Submit opportunities and track client conversions</p>
         </div>
-        <div className="flex gap-1.5 bg-slate-900/60 p-1 rounded-xl border border-slate-800 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]">
+        <div className="flex gap-1.5 bg-slate-900/60 p-1 rounded-2xl border border-slate-800 shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)]">
           {isAdmin && (
             <button
               onClick={() => setActiveTab('all-leads')}
@@ -346,7 +346,7 @@ export default function Leads() {
               transition={{ duration: 0.2 }}
               className="max-w-3xl mx-auto"
             >
-              <div className="glass-panel p-6 sm:p-8 rounded-2xl border border-slate-800 shadow-xl relative overflow-hidden">
+              <div className="glass-card p-6 sm:p-8 rounded-[2rem] border border-slate-800 shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-48 h-48 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
                 
                 <h4 className="text-base font-semibold text-slate-100 mb-6 flex items-center gap-2">
@@ -385,7 +385,7 @@ export default function Leads() {
                           value={companyName}
                           onChange={(e) => setCompanyName(e.target.value)}
                           placeholder="e.g., Siemens Energy"
-                          className="w-full bg-slate-900/60 border border-slate-800/80 rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/25 placeholder:text-slate-550 text-slate-100 shadow-inner"
+                          className="w-full bg-slate-900 border border-slate-800 rounded-2xl py-3.5 pl-10 pr-4 text-sm focus:outline-none focus:border-cyan-500 placeholder:text-slate-550 text-slate-200 shadow-sm"
                         />
                       </div>
                     </div>
@@ -401,7 +401,7 @@ export default function Leads() {
                           value={contactPerson}
                           onChange={(e) => setContactPerson(e.target.value)}
                           placeholder="e.g., John Doe"
-                          className="w-full bg-slate-900/60 border border-slate-800/80 rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/25 placeholder:text-slate-550 text-slate-100 shadow-inner"
+                          className="w-full bg-slate-900 border border-slate-800 rounded-2xl py-3.5 pl-10 pr-4 text-sm focus:outline-none focus:border-cyan-500 placeholder:text-slate-550 text-slate-200 shadow-sm"
                         />
                       </div>
                     </div>
@@ -417,7 +417,7 @@ export default function Leads() {
                           value={phone}
                           onChange={(e) => setPhone(e.target.value)}
                           placeholder="e.g., +91 98765 43210"
-                          className="w-full bg-slate-900/60 border border-slate-800/80 rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/25 placeholder:text-slate-550 text-slate-100 shadow-inner"
+                          className="w-full bg-slate-900 border border-slate-800 rounded-2xl py-3.5 pl-10 pr-4 text-sm focus:outline-none focus:border-cyan-500 placeholder:text-slate-550 text-slate-200 shadow-sm"
                         />
                       </div>
                     </div>
@@ -432,7 +432,7 @@ export default function Leads() {
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           placeholder="e.g., contact@company.com"
-                          className="w-full bg-slate-900/60 border border-slate-800/80 rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/25 placeholder:text-slate-550 text-slate-100 shadow-inner"
+                          className="w-full bg-slate-900 border border-slate-800 rounded-2xl py-3.5 pl-10 pr-4 text-sm focus:outline-none focus:border-cyan-500 placeholder:text-slate-550 text-slate-200 shadow-sm"
                         />
                       </div>
                     </div>
@@ -447,7 +447,7 @@ export default function Leads() {
                           value={dealValue}
                           onChange={(e) => setDealValue(e.target.value)}
                           placeholder="e.g., 250000"
-                          className="w-full bg-slate-900/60 border border-slate-800/80 rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/25 placeholder:text-slate-550 text-slate-100 shadow-inner"
+                          className="w-full bg-slate-900 border border-slate-800 rounded-2xl py-3.5 pl-10 pr-4 text-sm focus:outline-none focus:border-cyan-500 placeholder:text-slate-550 text-slate-200 shadow-sm"
                         />
                       </div>
                     </div>
@@ -463,7 +463,7 @@ export default function Leads() {
                           value={description}
                           onChange={(e) => setDescription(e.target.value)}
                           placeholder="Describe the lead, project scope, client requirements, or what products/services they are interested in..."
-                          className="w-full bg-slate-900/60 border border-slate-800/80 rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/25 placeholder:text-slate-550 text-slate-100 shadow-inner resize-none"
+                          className="w-full bg-slate-900 border border-slate-800 rounded-2xl py-3.5 pl-10 pr-4 text-sm focus:outline-none focus:border-cyan-500 placeholder:text-slate-550 text-slate-200 shadow-sm resize-none"
                         />
                       </div>
                     </div>
@@ -478,7 +478,7 @@ export default function Leads() {
                           value={notes}
                           onChange={(e) => setNotes(e.target.value)}
                           placeholder="Any initial feedback, next follow-up dates, or internal coordination detail..."
-                          className="w-full bg-slate-900/60 border border-slate-800/80 rounded-xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/25 placeholder:text-slate-550 text-slate-100 shadow-inner resize-none"
+                          className="w-full bg-slate-900 border border-slate-800 rounded-2xl py-3.5 pl-10 pr-4 text-sm focus:outline-none focus:border-cyan-500 placeholder:text-slate-550 text-slate-200 shadow-sm resize-none"
                         />
                       </div>
                     </div>
@@ -488,7 +488,7 @@ export default function Leads() {
                     <button
                       type="submit"
                       disabled={formLoading}
-                      className="bg-gradient-to-r from-cyan-600 to-cyan-500 text-white font-semibold text-xs uppercase tracking-wider px-6 py-3 rounded-xl hover:shadow-lg shadow-cyan-500/10 transition-all active:scale-95 duration-150 disabled:opacity-50 min-h-[44px] cursor-pointer"
+                      className="bg-gradient-to-r from-cyan-600 to-cyan-500 text-white font-semibold text-sm uppercase tracking-wider px-6 py-4 rounded-2xl hover:shadow-md shadow-sm transition-all active:scale-95 duration-150 disabled:opacity-50 cursor-pointer"
                     >
                       {formLoading ? 'Submitting...' : 'Register Opportunity'}
                     </button>
@@ -514,7 +514,7 @@ export default function Leads() {
                   <span>Loading submissions...</span>
                 </div>
               ) : myLeads.length === 0 ? (
-                <div className="glass-panel p-12 rounded-2xl text-center border border-slate-800/80 text-slate-500 text-sm">
+                <div className="glass-card p-12 rounded-[2rem] text-center border border-slate-800/80 text-slate-500 text-sm">
                   <Briefcase className="w-10 h-10 mx-auto text-slate-700 mb-3" />
                   <p>You haven't submitted any leads yet.</p>
                   <p className="text-xs text-slate-650 mt-1">Generate a lead and use the Submit Form to register opportunities.</p>
@@ -522,7 +522,7 @@ export default function Leads() {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 overflow-y-auto max-h-[70vh] pr-2">
                   {myLeads.map((lead) => (
-                    <div key={lead.id} className="glass-panel p-5 rounded-2xl border border-slate-800/80 hover:border-slate-750/80 shadow-md transition-all flex flex-col justify-between space-y-4 relative">
+                    <div key={lead.id} className="glass-card p-5 rounded-[2rem] border border-slate-800/80 hover:border-slate-750/80 shadow-md transition-all flex flex-col justify-between space-y-4 relative">
                       <div className="space-y-3">
                         <div className="flex justify-between items-start gap-2">
                           <h5 className="font-bold text-slate-200 text-sm truncate leading-snug">{lead.companyName}</h5>
@@ -546,7 +546,7 @@ export default function Leads() {
                           <p className="text-xs text-slate-350 line-clamp-3 mt-0.5 leading-relaxed">{lead.description}</p>
                         </div>
                         {lead.notes && (
-                          <div className="bg-slate-950/20 border border-slate-800/60 p-2.5 rounded-xl text-[11px] text-slate-400 mt-2">
+                          <div className="bg-slate-900 border border-slate-800 p-3 rounded-2xl shadow-sm text-[11px] text-slate-400 mt-2">
                             <span className="font-semibold text-cyan-405 block text-[9px] uppercase tracking-wider">Status Update Notes:</span>
                             <p className="mt-0.5 italic text-slate-400">"{lead.notes}"</p>
                           </div>
@@ -574,14 +574,14 @@ export default function Leads() {
             >
               {/* Stats Widgets */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="glass-panel p-4 rounded-xl border border-slate-800/80">
+                <div className="glass-card p-4 rounded-2xl border border-slate-800/80">
                   <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Total Opportunities</span>
                   <div className="flex items-center gap-2 mt-1">
                     <Briefcase className="w-5 h-5 text-cyan-400" />
                     <span className="text-lg font-bold text-slate-100">{stats.total}</span>
                   </div>
                 </div>
-                <div className="glass-panel p-4 rounded-xl border border-slate-800/80">
+                <div className="glass-card p-4 rounded-2xl border border-slate-800/80">
                   <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Pipeline Value</span>
                   <div className="flex items-center gap-2 mt-1">
                     <TrendingUp className="w-5 h-5 text-amber-500" />
@@ -592,7 +592,7 @@ export default function Leads() {
                     </span>
                   </div>
                 </div>
-                <div className="glass-panel p-4 rounded-xl border border-slate-800/80">
+                <div className="glass-card p-4 rounded-2xl border border-slate-800/80">
                   <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Revenue Converted</span>
                   <div className="flex items-center gap-2 mt-1">
                     <CheckCircle className="w-5 h-5 text-green-400" />
@@ -603,7 +603,7 @@ export default function Leads() {
                     </span>
                   </div>
                 </div>
-                <div className="glass-panel p-4 rounded-xl border border-slate-800/80">
+                <div className="glass-card p-4 rounded-2xl border border-slate-800/80">
                   <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Conversion Rate</span>
                   <div className="flex items-center gap-2 mt-1">
                     <Clock className="w-5 h-5 text-purple-400" />
@@ -613,7 +613,7 @@ export default function Leads() {
               </div>
 
               {/* Filters Box */}
-              <div className="glass-panel p-4 rounded-2xl border border-slate-800 flex flex-col md:flex-row gap-4 items-center justify-between">
+              <div className="glass-card p-4 rounded-[2rem] border border-slate-800 flex flex-col md:flex-row gap-4 items-center justify-between">
                 <div className="relative w-full md:w-80 group">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within:text-cyan-400 transition-colors" />
                   <input
@@ -669,12 +669,12 @@ export default function Leads() {
                   <span>Loading Pipeline Database...</span>
                 </div>
               ) : filteredAllLeads.length === 0 ? (
-                <div className="glass-panel p-12 rounded-2xl text-center border border-slate-800 text-slate-550 text-sm">
+                <div className="glass-card p-12 rounded-[2rem] text-center border border-slate-800 text-slate-550 text-sm">
                   <Briefcase className="w-10 h-10 mx-auto text-slate-700 mb-3" />
                   No leads found matching current query or filters.
                 </div>
               ) : (
-                <div className="glass-panel rounded-2xl border border-slate-800/80 overflow-hidden shadow-lg">
+                <div className="glass-card rounded-[2rem] border border-slate-800/80 overflow-hidden shadow-lg">
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse text-left text-xs text-slate-300">
                       <thead className="bg-[#0b0f19] text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800">

@@ -1,18 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { 
-  Camera, 
-  MapPin, 
-  Clock, 
-  Shield, 
-  Download, 
-  Search, 
-  Loader2, 
-  AlertCircle, 
-  CheckCircle2, 
-  Map, 
-  Video, 
-  VideoOff, 
+import {
+  Camera,
+  MapPin,
+  Clock,
+  Shield,
+  Download,
+  Search,
+  Loader2,
+  AlertCircle,
+  CheckCircle2,
+  Map,
+  Video,
+  VideoOff,
   RefreshCw,
   Eye,
   Calendar,
@@ -88,8 +88,8 @@ export default function Attendance() {
   const { setFirestoreError, isDbActionLoading, setIsDbActionLoading, isAdmin, userProfile } = useOutletContext<any>();
 
   const activeEmail = userProfile?.email || auth?.currentUser?.email || 'admin@apecpowersolutions.com';
-  const isUserAdmin = isAdmin || 
-    activeEmail.toLowerCase() === 'admin@apecpowersolutions.com' || 
+  const isUserAdmin = isAdmin ||
+    activeEmail.toLowerCase() === 'admin@apecpowersolutions.com' ||
     activeEmail.toLowerCase() === 'managingdirector@apecpowersolutions.com';
 
   // Camera & Capture states
@@ -108,9 +108,15 @@ export default function Attendance() {
   const [isLocationLoading, setIsLocationLoading] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [isGeocoding, setIsGeocoding] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Punch actions
-  const [punchSuccess, setPunchSuccess] = useState<{ type: string; time: Date } | null>(null);
+  const [punchSuccess, setPunchSuccess] = useState<{ type: string; time: Date; duration?: string } | null>(null);
   const [teamList, setTeamList] = useState<any[]>([]);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [isSimulatedTechDropdownOpen, setIsSimulatedTechDropdownOpen] = useState(false);
@@ -131,6 +137,57 @@ export default function Attendance() {
   // Geofencing related states and memo hooks
   const [projectsList, setProjectsList] = useState<any[]>([]);
   const [schedules, setSchedules] = useState<any[]>([]);
+  const [leavesList, setLeavesList] = useState<any[]>([]);
+
+  const workSessionData = React.useMemo(() => {
+    const defaultData = {
+      isWorking: false,
+      durationStr: '00:00:00',
+      progressPercent: 0
+    };
+    
+    if (!selectedUser || !logs) return defaultData;
+    const todayStr = new Date().toDateString();
+    
+    const todayLogs = logs.filter(l => 
+      l.employeeId === (selectedUser.employeeId || 'APEC-MEMBER') && 
+      new Date(l.timestamp).toDateString() === todayStr
+    ).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+    if (todayLogs.length === 0) return defaultData;
+
+    const latestLog = todayLogs[0];
+    const isWorking = latestLog.type === 'punch_in';
+    
+    let totalMs = 0;
+    let currentSessionStartMs: number | null = null;
+    
+    const ascLogs = [...todayLogs].reverse();
+    for (let i = 0; i < ascLogs.length; i++) {
+      if (ascLogs[i].type === 'punch_in') {
+        currentSessionStartMs = new Date(ascLogs[i].timestamp).getTime();
+      } else if (ascLogs[i].type === 'punch_out' && currentSessionStartMs) {
+        totalMs += (new Date(ascLogs[i].timestamp).getTime() - currentSessionStartMs);
+        currentSessionStartMs = null;
+      }
+    }
+    
+    if (isWorking && currentSessionStartMs) {
+      totalMs += (currentTime.getTime() - currentSessionStartMs);
+    }
+    
+    const hrs = Math.floor(totalMs / 3600000).toString().padStart(2, '0');
+    const mins = Math.floor((totalMs % 3600000) / 60000).toString().padStart(2, '0');
+    const secs = Math.floor((totalMs % 60000) / 1000).toString().padStart(2, '0');
+    
+    const progressPercent = Math.min(Math.round((totalMs / 32400000) * 100), 100);
+
+    return {
+      isWorking,
+      durationStr: `${hrs}:${mins}:${secs}`,
+      progressPercent
+    };
+  }, [logs, selectedUser, currentTime]);
 
   const activeShift = React.useMemo(() => {
     if (!selectedUser) return null;
@@ -138,14 +195,33 @@ export default function Attendance() {
     return schedules.find(s => {
       const isDateMatch = s.date === todayStr;
       if (!isDateMatch) return false;
-      
+
       const isIdMatch = s.technicianId === selectedUser.id;
       const isEmailMatch = s.technicianEmail?.toLowerCase() === selectedUser.email?.toLowerCase();
       const isNameMatch = s.technicianName?.toLowerCase() === selectedUser.name?.toLowerCase();
-      
+
       return isIdMatch || isEmailMatch || isNameMatch;
     });
   }, [selectedUser, schedules]);
+
+  const activeLeave = React.useMemo(() => {
+    if (!selectedUser || leavesList.length === 0) return null;
+    const todayStr = getLocalDateString();
+    return leavesList.find(l => {
+      if (l.status !== 'Approved') return false;
+      const start = new Date(l.startDate);
+      const end = new Date(l.endDate);
+      const check = new Date(todayStr);
+      start.setHours(0,0,0,0);
+      end.setHours(23,59,59,999);
+      check.setHours(0,0,0,0);
+      
+      const isIdMatch = l.employeeId === (selectedUser.employeeId || 'APEC-MEMBER');
+      const isEmailMatch = l.employeeEmail?.toLowerCase() === selectedUser.email?.toLowerCase();
+      
+      return (isIdMatch || isEmailMatch) && check >= start && check <= end;
+    });
+  }, [selectedUser, leavesList]);
 
   const activeProject = React.useMemo(() => {
     if (!activeShift) return null;
@@ -181,7 +257,7 @@ export default function Attendance() {
     } catch (err: any) {
       console.error('Error accessing camera:', err);
       setCameraError(
-        err.name === 'NotAllowedError' 
+        err.name === 'NotAllowedError'
           ? 'Camera permission denied. Please allow camera access in your browser settings.'
           : 'Could not access camera. Please verify it is not in use by another program.'
       );
@@ -220,10 +296,10 @@ export default function Attendance() {
       if (context) {
         canvas.width = 400;
         canvas.height = 300;
-        
+
         // Draw the frame.
         context.drawImage(video, 0, 0, 400, 300);
-        
+
         // Compress & convert to JPEG base64 URL (~25-35KB)
         const photoData = canvas.toDataURL('image/jpeg', 0.85);
         setCapturedPhoto(photoData);
@@ -309,7 +385,7 @@ export default function Attendance() {
         const response = await fetch(base64Photo);
         const blob = await response.blob();
         const file = new File([blob], `attendance-${empId}-${Date.now()}.jpg`, { type: 'image/jpeg' });
-        
+
         const path = `attendance-photos/${empId}/${Date.now()}.jpg`;
         const { error } = await supabase.storage
           .from('APECERP')
@@ -410,9 +486,16 @@ export default function Attendance() {
       console.error('Schedules subscription error in Attendance:', err);
     });
 
+    const unsubLeaves = onSnapshot(collection(db, 'leaves'), (snapshot) => {
+      setLeavesList(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    }, (err) => {
+      console.error('Leaves subscription error in Attendance:', err);
+    });
+
     return () => {
       unsubProjects();
       unsubSchedules();
+      unsubLeaves();
     };
   }, []);
   useEffect(() => {
@@ -752,7 +835,25 @@ export default function Attendance() {
         setLogs(currentLogs);
       }
 
-      setPunchSuccess({ type: punchType, time: now });
+      // Find duration if punch out
+      let durationStr = '';
+      if (punchType === 'punch_out') {
+        const todayStr = new Date().toDateString();
+        const correspondingPunchIn = logs.find(l =>
+          l.employeeId === (selectedUser.employeeId || 'APEC-MEMBER') &&
+          l.type === 'punch_in' &&
+          new Date(l.timestamp).toDateString() === todayStr
+        );
+        if (correspondingPunchIn) {
+          const inTime = new Date(correspondingPunchIn.timestamp).getTime();
+          const diffMs = now.getTime() - inTime;
+          const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+          const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+          durationStr = `${diffHrs}h ${diffMins}m`;
+        }
+      }
+
+      setPunchSuccess({ type: punchType, time: now, duration: durationStr });
 
       // Handle mobile background location tracking hooks
       if (punchType === 'punch_in') {
@@ -861,7 +962,7 @@ export default function Attendance() {
   }, []);
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.15, ease: 'easeOut' }}
@@ -869,7 +970,6 @@ export default function Attendance() {
     >
       {/* Header Panel - Hidden on mobile to save viewport space */}
       <div className="hidden md:flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 lg:p-6 rounded-2xl glass-card border border-white/10 shadow-2xl relative overflow-hidden">
-        <div className="absolute inset-0 cyber-grid opacity-10 pointer-events-none" />
         <div className="relative z-10">
           <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
             <Clock className="w-5 h-5 text-cyan-400" />
@@ -888,13 +988,12 @@ export default function Attendance() {
       </div>
 
       {/* Main split grid or centered container */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
-        
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-stretch">
+
         {/* PUNCH CARD INTERFACE */}
-        <div className="xl:col-span-5 space-y-6">
-          <div className="glass-card rounded-2xl border border-white/10 p-5 space-y-5 shadow-xl relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/5 to-transparent pointer-events-none" />
-            
+        <div className="xl:col-span-6 h-full flex flex-col">
+          <div className="glass-card rounded-2xl border border-white/10 p-5 space-y-5 shadow-xl relative overflow-hidden h-full flex flex-col">
+
             <div className="flex justify-between items-center border-b border-slate-800/80 pb-3">
               <h3 className="text-sm font-extrabold uppercase tracking-widest text-slate-100 flex items-center gap-1.5">
                 <Camera className="w-4 h-4 text-cyan-400" />
@@ -918,8 +1017,8 @@ export default function Attendance() {
                     className="w-full bg-slate-900 border border-slate-800 text-slate-200 rounded-lg py-2 px-3 text-xs focus:outline-none focus:border-cyan-500 cursor-pointer flex justify-between items-center text-left"
                   >
                     <span>
-                      {selectedUser 
-                        ? `${selectedUser.name} (${selectedUser.employeeId || 'N/A'}) - ${selectedUser.role}` 
+                      {selectedUser
+                        ? `${selectedUser.name} (${selectedUser.employeeId || 'N/A'}) - ${selectedUser.role}`
                         : 'Select Team Member...'}
                     </span>
                     <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform ${isSimulatedTechDropdownOpen ? 'rotate-180' : ''}`} />
@@ -942,11 +1041,10 @@ export default function Attendance() {
                                 setSelectedUser(t);
                                 setIsSimulatedTechDropdownOpen(false);
                               }}
-                              className={`w-full text-left px-2.5 py-1.5 rounded text-xs font-semibold ${
-                                selectedUser?.id === t.id 
-                                  ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' 
-                                  : 'text-slate-300 hover:bg-slate-800 border border-transparent'
-                              }`}
+                              className={`w-full text-left px-2.5 py-1.5 rounded text-xs font-semibold ${selectedUser?.id === t.id
+                                ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
+                                : 'text-slate-300 hover:bg-slate-800 border border-transparent'
+                                }`}
                             >
                               {t.name} ({t.employeeId || 'N/A'}) - {t.role}
                             </button>
@@ -980,17 +1078,32 @@ export default function Attendance() {
 
             {/* Today's Assignment Sub-card */}
             {selectedUser && (
-              <div className="p-3 bg-slate-900/40 border border-slate-800/60 rounded-xl space-y-2">
+              <div className={`p-3 border rounded-xl space-y-2 ${activeLeave ? 'bg-rose-950/20 border-rose-900/30' : 'bg-slate-900/40 border-slate-800/60'}`}>
                 <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-500">
                   <span className="flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5 text-cyan-400" />
+                    <Calendar className={`w-3.5 h-3.5 ${activeLeave ? 'text-rose-400' : 'text-cyan-400'}`} />
                     Today's Assignment
                   </span>
-                  <span className="text-[9px] text-cyan-400 font-mono">
-                    {activeShift ? activeShift.time : 'No Shift Scheduled'}
-                  </span>
+                  {activeLeave ? (
+                    <span className="text-[9px] text-rose-400 font-mono font-bold bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20">
+                      ON LEAVE
+                    </span>
+                  ) : (
+                    <span className="text-[9px] text-cyan-400 font-mono">
+                      {activeShift ? activeShift.time : 'No Shift Scheduled'}
+                    </span>
+                  )}
                 </div>
-                {activeShift ? (
+                {activeLeave ? (
+                  <div className="space-y-1 mt-1">
+                    <p className="text-xs font-bold text-rose-300">
+                      {activeLeave.leaveType} Leave Approved
+                    </p>
+                    <p className="text-[10px] text-rose-400/70 italic leading-tight">
+                      You are officially on leave today. Attendance punch is not required.
+                    </p>
+                  </div>
+                ) : activeShift ? (
                   <div className="space-y-1">
                     <div className="flex justify-between items-start">
                       <div>
@@ -1018,17 +1131,10 @@ export default function Attendance() {
 
             {/* Capture Panel Viewport */}
             <div className="relative aspect-video rounded-xl bg-slate-950/80 border border-slate-800 overflow-hidden flex flex-col items-center justify-center shadow-inner group">
-              {/* Scanline overlay */}
-              {isCameraActive && (
-                <div className="absolute inset-0 pointer-events-none border border-cyan-500/20 z-10">
-                  <div className="w-full h-0.5 bg-cyan-400/30 shadow-[0_0_8px_rgba(6,182,212,0.5)] animate-[bounce_3s_infinite_linear]" />
-                </div>
-              )}
-
               {/* Success Badge */}
               <AnimatePresence>
                 {punchSuccess && (
-                  <motion.div 
+                  <motion.div
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0.8, opacity: 0 }}
@@ -1044,25 +1150,30 @@ export default function Attendance() {
                     <p className="text-[10px] text-slate-500 font-mono mt-1">
                       {punchSuccess.time.toLocaleTimeString()} · SECURE INTEGRITY
                     </p>
+                    {punchSuccess.duration && (
+                      <div className="mt-3 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+                        <p className="text-xs font-bold text-emerald-400">Session Duration: {punchSuccess.duration}</p>
+                      </div>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
 
               {/* Viewport content */}
               {!capturedPhoto && isCameraActive && (
-                <video 
-                  ref={videoRef} 
-                  autoPlay 
-                  playsInline 
-                  className="w-full h-full object-cover scale-x-[-1]" 
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  className="w-full h-full object-cover scale-x-[-1]"
                 />
               )}
 
               {capturedPhoto && (
-                <img 
-                  src={capturedPhoto} 
-                  alt="Captured frame" 
-                  className="w-full h-full object-cover" 
+                <img
+                  src={capturedPhoto}
+                  alt="Captured frame"
+                  className="w-full h-full object-cover"
                 />
               )}
 
@@ -1161,7 +1272,7 @@ export default function Attendance() {
                     )}
                     Capture Snapshot & GPS
                   </button>
-                  
+
                   {(capturedPhoto || coords) && (
                     <button
                       type="button"
@@ -1207,19 +1318,77 @@ export default function Attendance() {
               </button>
             </div>
 
-            {/* Security Notice */}
-            <div className="p-2.5 bg-slate-950/40 border border-slate-900 rounded-xl flex items-center gap-2 text-slate-500 font-mono text-[9px] uppercase tracking-widest justify-center">
-              <Shield className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-              <span>Verified Registry Secure Client</span>
+            {/* EMPLOYEE WORK SESSION */}
+            <div className="mt-4 p-4 rounded-xl border border-slate-800/60 bg-slate-950/20 shadow-inner relative overflow-hidden">
+               <div className="flex justify-between items-center mb-3 border-b border-slate-800/80 pb-3">
+                 <h3 className="text-sm font-bold text-slate-100 flex items-center gap-1.5">
+                   <Clock className="w-4 h-4 text-cyan-400" />
+                   Employee Work Session
+                 </h3>
+                 {workSessionData.isWorking ? (
+                   <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-bold text-emerald-400 flex items-center gap-1.5 shadow-[0_0_8px_rgba(16,185,129,0.15)]">
+                     <Clock className="w-3 h-3" />
+                     Working
+                   </span>
+                 ) : (
+                   <span className="px-2.5 py-1 rounded-full bg-slate-500/10 border border-slate-500/20 text-[10px] font-bold text-slate-400 flex items-center gap-1.5">
+                     Offline
+                   </span>
+                 )}
+               </div>
+               
+               <div className="text-center py-2 mb-2">
+                 <div className="text-3xl font-black text-slate-100 tracking-wide font-mono drop-shadow-md">
+                   {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                 </div>
+                 <div className="text-xs text-slate-400 mt-1.5 font-medium">
+                   {currentTime.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                 </div>
+               </div>
+
+               <div className="mb-5 px-1">
+                 <div className="flex justify-between text-[10px] text-slate-400 font-bold mb-1.5">
+                   <span>Work Progress</span>
+                   <span className="text-cyan-400">{workSessionData.progressPercent}%</span>
+                 </div>
+                 <div className="w-full h-2 bg-slate-900 rounded-full overflow-hidden border border-slate-800 shadow-inner">
+                   <div 
+                     className="h-full bg-gradient-to-r from-emerald-500 to-cyan-400 rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(16,185,129,0.3)] relative"
+                     style={{ width: `${workSessionData.progressPercent}%` }}
+                   >
+                     <div className="absolute inset-0 bg-white/20 w-full h-full animate-[pulse_2s_infinite]" />
+                   </div>
+                 </div>
+                 <div className="flex justify-between text-[9px] text-slate-500 mt-1.5 font-medium">
+                   <span>0 hrs</span>
+                   <span>9 hrs Goal</span>
+                 </div>
+               </div>
+
+               <div className="grid grid-cols-2 gap-3">
+                 <div className="bg-slate-900/80 border border-slate-800/80 rounded-xl p-3.5 text-center flex flex-col items-center justify-center shadow-sm">
+                   <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Work Duration</span>
+                   <span className="text-xl font-bold text-slate-100 mt-1 tracking-wider font-mono">
+                     {workSessionData.isWorking ? workSessionData.durationStr : "00:00:00"}
+                   </span>
+                 </div>
+                 <div className="bg-orange-950/10 border border-orange-900/20 rounded-xl p-3.5 text-center flex flex-col items-center justify-center shadow-sm">
+                   <span className="text-[10px] text-orange-400/80 font-bold uppercase tracking-wider">End Work Duration</span>
+                   <span className="text-xl font-bold text-orange-400/90 mt-1 tracking-wider font-mono opacity-80">
+                     {!workSessionData.isWorking && workSessionData.progressPercent > 0 ? workSessionData.durationStr : "00:00:00"}
+                   </span>
+                 </div>
+               </div>
             </div>
 
           </div>
         </div>
 
-        {/* ATTENDANCE HISTORY LIST (COL-7) */}
-        <div className="xl:col-span-7 space-y-6">
-          <div className="glass-card rounded-2xl border border-white/10 p-5 space-y-5 shadow-xl">
-            
+        {/* ATTENDANCE HISTORY LIST */}
+        <div className="xl:col-span-6 relative">
+          <div className="xl:absolute xl:inset-0 h-full w-full">
+            <div className="glass-card rounded-2xl border border-white/10 p-5 space-y-5 shadow-xl h-full flex flex-col">
+
             {/* Header controls & export */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800/80 pb-3">
               <div>
@@ -1244,7 +1413,7 @@ export default function Attendance() {
 
             {/* Filter Bar */}
             <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 bg-slate-950/20 p-3 rounded-xl border border-white/5">
-              
+
               {/* Search Bar */}
               <div className="sm:col-span-6 relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
@@ -1304,18 +1473,38 @@ export default function Attendance() {
                 </button>
               </div>
             ) : (
-              <div className="space-y-3.5 max-h-[500px] overflow-y-auto pr-1 scrollbar-thin">
+              <div className="space-y-3.5 flex-1 overflow-y-auto pr-1 no-scrollbar max-h-[600px] xl:max-h-none">
                 {filteredLogs.map((log) => {
                   const isPunchIn = log.type === 'punch_in';
                   const logDate = new Date(log.timestamp);
-                  
+
+                  let workDuration = '';
+                  let punchInTime = '';
+                  if (!isPunchIn) {
+                    const punchOutTime = logDate.getTime();
+                    const correspondingPunchIn = logs.find(l =>
+                      l.employeeId === log.employeeId &&
+                      l.type === 'punch_in' &&
+                      new Date(l.timestamp).getTime() < punchOutTime &&
+                      new Date(l.timestamp).toDateString() === logDate.toDateString()
+                    );
+                    if (correspondingPunchIn) {
+                      const inTime = new Date(correspondingPunchIn.timestamp).getTime();
+                      const diffMs = punchOutTime - inTime;
+                      const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+                      const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                      workDuration = `${diffHrs}h ${diffMins}m`;
+                      punchInTime = new Date(correspondingPunchIn.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    }
+                  }
+
                   return (
-                    <div 
-                      key={log.id} 
+                    <div
+                      key={log.id}
                       className="p-3.5 rounded-xl bg-slate-950/40 border border-slate-900/60 hover:border-slate-800 transition-all flex gap-3.5"
                     >
                       {/* Photo Thumbnail */}
-                      <div 
+                      <div
                         onClick={() => {
                           if (log.photoUrl) {
                             setViewerPhoto({
@@ -1329,10 +1518,10 @@ export default function Attendance() {
                       >
                         {log.photoUrl ? (
                           <>
-                            <img 
-                              src={log.photoUrl} 
-                              alt="Punch" 
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+                            <img
+                              src={log.photoUrl}
+                              alt="Punch"
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             />
                             <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
                               <Eye className="w-3.5 h-3.5 text-white" />
@@ -1357,23 +1546,21 @@ export default function Attendance() {
                             </h4>
                             <p className="text-[9.5px] text-slate-400 font-mono mt-0.5">{log.userEmail}</p>
                           </div>
-                                            {/* Punch Type Badge */}
+                          {/* Punch Type Badge */}
                           <div className="flex flex-col items-end gap-1.5 shrink-0">
-                            <span className={`px-2 py-0.5 rounded text-[8.5px] font-extrabold uppercase tracking-wider border leading-none ${
-                              isPunchIn 
-                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_8px_rgba(16,185,129,0.05)]' 
-                                : 'bg-rose-500/10 text-rose-455 border-rose-500/20 shadow-[0_0_8px_rgba(244,63,94,0.05)]'
-                            }`}>
+                            <span className={`px-2 py-0.5 rounded text-[8.5px] font-extrabold uppercase tracking-wider border leading-none ${isPunchIn
+                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_8px_rgba(16,185,129,0.05)]'
+                              : 'bg-rose-500/10 text-rose-455 border-rose-500/20 shadow-[0_0_8px_rgba(244,63,94,0.05)]'
+                              }`}>
                               {isPunchIn ? 'Punch In' : 'Punch Out'}
                             </span>
                             {isPunchIn && log.geofenceStatus && (
-                              <span className={`px-2 py-0.5 rounded text-[8.5px] font-extrabold uppercase tracking-wider border leading-none ${
-                                log.geofenceStatus.status === 'Verified' 
-                                  ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20 shadow-[0_0_8px_rgba(6,182,212,0.05)]'
-                                  : log.geofenceStatus.status === 'Off-Site'
+                              <span className={`px-2 py-0.5 rounded text-[8.5px] font-extrabold uppercase tracking-wider border leading-none ${log.geofenceStatus.status === 'Verified'
+                                ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20 shadow-[0_0_8px_rgba(6,182,212,0.05)]'
+                                : log.geofenceStatus.status === 'Off-Site'
                                   ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-[0_0_8px_rgba(245,158,11,0.05)]'
                                   : 'bg-slate-500/10 text-slate-400 border-slate-500/20'
-                              }`}>
+                                }`}>
                                 {log.geofenceStatus.status === 'Verified' && '📍 Verified On-Site'}
                                 {log.geofenceStatus.status === 'Off-Site' && `⚠️ Off-Site (${(log.geofenceStatus.distanceMeters / 1000).toFixed(2)} km)`}
                                 {log.geofenceStatus.status === 'Unscheduled' && 'Unscheduled'}
@@ -1395,6 +1582,19 @@ export default function Attendance() {
                               Assigned Target: <span className="text-slate-400 font-semibold">{log.geofenceStatus.assignedProjectName}</span>
                             </div>
                           )}
+                          {!isPunchIn && workDuration && (
+                            <div className="flex items-center gap-3 mt-2 p-2 bg-slate-900/60 rounded-lg border border-slate-800">
+                              <div className="flex items-center gap-1.5 text-emerald-400">
+                                <Clock className="w-3.5 h-3.5" />
+                                <span className="font-semibold text-[10px]">In: {punchInTime}</span>
+                              </div>
+                              <div className="w-px h-3 bg-slate-700"></div>
+                              <div className="flex items-center gap-1.5 text-cyan-400">
+                                <Loader2 className="w-3.5 h-3.5" />
+                                <span className="font-semibold text-[10px]">Work Duration: {workDuration}</span>
+                              </div>
+                            </div>
+                          )}
                         </div>
 
                         {/* Date and actions */}
@@ -1403,8 +1603,10 @@ export default function Attendance() {
                             <Calendar className="w-3 h-3" />
                             <span>{logDate.toLocaleDateString()}</span>
                             <span className="text-slate-700">|</span>
-                            <Clock className="w-3 h-3" />
-                            <span>{logDate.toLocaleTimeString()}</span>
+                            <Clock className={`w-3 h-3 ${isPunchIn ? 'text-emerald-400' : 'text-rose-400'}`} />
+                            <span className={`${isPunchIn ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}`}>
+                              {logDate.toLocaleTimeString()}
+                            </span>
                           </div>
 
                           {/* Map trigger link */}
@@ -1428,6 +1630,7 @@ export default function Attendance() {
               </div>
             )}
 
+            </div>
           </div>
         </div>
 

@@ -208,12 +208,13 @@ service cloud.firestore {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-stretch">
 
-        {/* ── LEFT COLUMN (ID Pass Card) ── */}
-        <div className="md:col-span-4 space-y-6">
-          <div className="glass-card p-6 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.3)] border border-white/5 flex flex-col items-center text-center">
-
+        {/* ── LEFT COLUMN (ID & Emergency) ── */}
+        <div className="md:col-span-4 h-full flex flex-col space-y-5">
+          <div className="glass-card flex-1 p-6 rounded-2xl flex flex-col items-center text-center relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-b from-cyan-500/5 to-transparent pointer-events-none" />
+            
             {/* Photo / Initials */}
             <div className="relative shrink-0 mt-4 inline-block">
               {profile.photoUrl ? (
@@ -244,7 +245,7 @@ service cloud.firestore {
             <div className="grid grid-cols-2 gap-4 w-full text-left font-mono">
               <div className="space-y-1">
                 <span className="text-[9px] text-slate-500 uppercase tracking-wider font-bold block">Employee ID</span>
-                <span className="text-xs font-bold text-slate-300 bg-slate-950/60 border border-slate-900 px-2 py-1 rounded block text-center select-all">{profile.employeeId || 'APEC-MEMBER'}</span>
+                <span className="text-xs font-bold text-slate-200 bg-slate-900 border border-slate-800 shadow-inner px-2 py-1.5 rounded-lg block text-center select-all">{profile.employeeId || 'APEC-MEMBER'}</span>
               </div>
               <div className="space-y-1">
                 <span className="text-[9px] text-slate-500 uppercase tracking-wider font-bold block">Access Priority</span>
@@ -258,7 +259,7 @@ service cloud.firestore {
 
             <div className="mt-3.5 space-y-1 w-full text-left font-mono">
               <span className="text-[9px] text-slate-500 uppercase tracking-wider font-bold block">Last Active</span>
-              <span className="text-xs font-bold text-slate-300 bg-slate-950/60 border border-slate-900 px-2 py-1 rounded block text-center truncate">
+              <span className="text-xs font-bold text-slate-200 bg-slate-900 border border-slate-800 shadow-inner px-2 py-1.5 rounded-lg block text-center truncate">
                 {profile.lastActive ? (
                   profile.lastActive.toDate ? profile.lastActive.toDate().toLocaleString() : new Date(profile.lastActive).toLocaleString()
                 ) : 'Just Now'}
@@ -269,7 +270,7 @@ service cloud.firestore {
 
             {/* Barcode Visual */}
             <div className="flex flex-col items-center gap-1.5 select-none opacity-60 hover:opacity-85 transition-opacity w-full">
-              <div className="flex items-center gap-[1.5px] h-7 bg-white/5 p-1 rounded w-full justify-center">
+              <div className="flex items-center gap-[1.5px] h-8 bg-slate-900 border border-slate-800 p-1.5 rounded-lg w-full justify-center shadow-inner">
                 {[1, 3, 1, 2, 4, 1, 2, 1, 3, 2, 1, 4, 1, 2, 3, 1, 2, 1, 4, 2, 1, 3, 1, 2, 1].map((width, idx) => (
                   <div key={idx} className="bg-slate-400 h-full rounded-[0.5px]" style={{ width: `${width}px` }} />
                 ))}
@@ -278,10 +279,37 @@ service cloud.firestore {
             </div>
 
           </div>
+
+          {/* Emergency & Medical */}
+          <div className="glass-card rounded-2xl overflow-hidden border border-rose-500/20 shrink-0">
+            <div className="flex items-center gap-2 px-5 py-3.5 bg-red-950/10 border-b border-red-950/30">
+              <HeartPulse className="w-4 h-4 text-[#DC2626]" />
+              <span className="text-xs font-bold text-slate-200 uppercase tracking-wider">Emergency Contact & Medical</span>
+            </div>
+            <div className="p-5 space-y-3 font-mono text-xs">
+              <div className="flex justify-between border-b border-slate-900/60 pb-1.5">
+                <span className="text-[10px] text-slate-500 uppercase tracking-wider">Contact Person</span>
+                <span className="text-slate-200 font-bold">{profile.emergencyName || 'N/A'}</span>
+              </div>
+              <div className="flex justify-between border-b border-slate-900/60 pb-1.5">
+                <span className="text-[10px] text-slate-500 uppercase tracking-wider">Phone Number</span>
+                <span className="text-slate-200 font-bold select-all">{profile.emergencyPhone || 'N/A'}</span>
+              </div>
+              <div className="flex justify-between border-b border-slate-900/60 pb-1.5">
+                <span className="text-[10px] text-slate-500 uppercase tracking-wider">Blood Group</span>
+                <span className="text-rose-500 font-bold">🩸 {profile.bloodGroup || 'N/A'}</span>
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">Medical Conditions</span>
+                <span className="text-slate-400 block text-[11px] leading-relaxed">{profile.medicalConditions || 'None'}</span>
+              </div>
+            </div>
+          </div>
+
         </div>
 
         {/* ── RIGHT COLUMN (Profile Details) ── */}
-        <div className="md:col-span-8 space-y-6">
+        <div className="md:col-span-8 space-y-5 h-full flex flex-col justify-between">
 
           {/* Quick contact and dates */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -290,12 +318,12 @@ service cloud.firestore {
               { icon: Mail, label: 'Official Email', value: profile.email || 'N/A', truncate: true },
               { icon: Calendar, label: 'Joined Date', value: profile.joinedDate ? new Date(profile.joinedDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A' },
             ].map(({ icon: Icon, label, value, truncate }: any) => (
-              <div key={label} className="glass-card p-4 flex flex-col justify-between border border-white/5 hover:border-slate-800 transition-all">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-slate-950 flex items-center justify-center shrink-0">
-                    <Icon className="w-3.5 h-3.5 text-slate-400" />
+              <div key={label} className="glass-card p-4 rounded-2xl flex flex-col justify-between hover:scale-[1.02] transition-transform duration-300 cursor-default group">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 shadow-inner flex items-center justify-center shrink-0 group-hover:border-cyan-500/30 transition-colors">
+                    <Icon className="w-4 h-4 text-slate-400 group-hover:text-cyan-400 transition-colors" />
                   </div>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{label}</span>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{label}</span>
                 </div>
                 <p className={`text-xs font-semibold text-slate-200 mt-2.5 ${truncate ? 'truncate' : ''}`} title={value}>{value}</p>
               </div>
@@ -303,7 +331,7 @@ service cloud.firestore {
           </div>
 
           {/* Personal & Address Details */}
-          <div className="glass-card p-6 space-y-4 border border-white/5">
+          <div className="glass-card p-6 rounded-2xl space-y-4">
             <div className="flex items-center gap-2 border-b border-slate-800/80 pb-2.5">
               <User className="w-4 h-4 text-cyan-400" />
               <span className="text-xs font-bold text-slate-100 uppercase tracking-wider">Personal & Address Details</span>
@@ -329,19 +357,21 @@ service cloud.firestore {
                 <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Qualification</span>
                 <span className="text-slate-200 font-bold block mt-0.5">{profile.qualification || 'N/A'}</span>
               </div>
-              <div className="sm:col-span-2 border-t border-slate-900/60 pt-2 mt-1">
-                <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Present Address</span>
-                <span className="text-slate-300 block text-xs leading-normal select-all mt-0.5">{profile.presentAddress || 'N/A'}</span>
-              </div>
-              <div className="sm:col-span-2 border-t border-slate-900/60 pt-2 mt-1">
-                <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Permanent Address</span>
-                <span className="text-slate-300 block text-xs leading-normal select-all mt-0.5">{profile.permanentAddress || 'N/A'}</span>
+              <div className="sm:col-span-2 border-t border-slate-800/80 pt-3 mt-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Present Address</span>
+                  <span className="text-slate-300 block text-xs leading-normal select-all mt-0.5">{profile.presentAddress || 'N/A'}</span>
+                </div>
+                <div>
+                  <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Permanent Address</span>
+                  <span className="text-slate-300 block text-xs leading-normal select-all mt-0.5">{profile.permanentAddress || 'N/A'}</span>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Secure Registry Details */}
-          <div className="glass-card p-6 space-y-4 border border-white/5">
+          <div className="glass-card p-6 rounded-2xl space-y-4">
             <div className="flex items-center gap-2 border-b border-slate-800/80 pb-2.5">
               <Shield className="w-4 h-4 text-cyan-400" />
               <span className="text-xs font-bold text-slate-100 uppercase tracking-wider">Secure Registration & Identity Records</span>
@@ -353,8 +383,8 @@ service cloud.firestore {
                 { label: 'ESI Number', value: profile.esiNumber },
                 { label: 'PF Number', value: profile.pfNumber },
               ].map(({ label, value }) => (
-                <div key={label} className="p-3 bg-slate-950/20 rounded-xl border border-white/5">
-                  <span className="text-slate-500 block uppercase tracking-wider text-[9px]">{label}</span>
+                <div key={label} className="p-4 bg-slate-900 border border-slate-800 rounded-2xl shadow-sm hover:border-cyan-500/20 transition-colors">
+                  <span className="text-slate-500 block uppercase tracking-wider text-[10px] font-bold">{label}</span>
                   <span className="text-slate-200 font-bold block mt-0.5 select-all">{value || 'N/A'}</span>
                 </div>
               ))}
@@ -362,75 +392,44 @@ service cloud.firestore {
           </div>
 
           {/* Bank Account Details */}
-          <div className="glass-card p-6 space-y-4 border border-white/5">
+          <div className="glass-card p-6 rounded-2xl space-y-4">
             <div className="flex items-center gap-2 border-b border-slate-800/80 pb-2.5">
               <Award className="w-4 h-4 text-cyan-400" />
               <span className="text-xs font-bold text-slate-100 uppercase tracking-wider">Bank Account Details</span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-mono">
-              <div className="p-3 bg-slate-950/10 rounded-xl border border-slate-900/60">
-                <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Account Holder Name</span>
-                <span className="text-slate-200 font-bold block mt-0.5">{profile.bankAccountName || 'N/A'}</span>
+              <div className="p-4 bg-slate-900 border border-slate-800 rounded-2xl shadow-sm hover:border-cyan-500/20 transition-colors">
+                <span className="text-slate-500 block uppercase tracking-wider text-[10px] font-bold">Account Holder Name</span>
+                <span className="text-slate-200 font-bold block mt-1">{profile.bankAccountName || 'N/A'}</span>
               </div>
-              <div className="p-3 bg-slate-950/10 rounded-xl border border-slate-900/60">
-                <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Account Number</span>
-                <span className="text-slate-200 font-bold block mt-0.5 select-all">{profile.bankAccountNumber || 'N/A'}</span>
+              <div className="p-4 bg-slate-900 border border-slate-800 rounded-2xl shadow-sm hover:border-cyan-500/20 transition-colors">
+                <span className="text-slate-500 block uppercase tracking-wider text-[10px] font-bold">Account Number</span>
+                <span className="text-slate-200 font-bold block mt-1 select-all">{profile.bankAccountNumber || 'N/A'}</span>
               </div>
-              <div className="p-3 bg-slate-950/10 rounded-xl border border-slate-900/60">
-                <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Bank IFSC Code</span>
-                <span className="text-cyan-400 font-bold block mt-0.5 select-all">{profile.bankIfsc || 'N/A'}</span>
+              <div className="p-4 bg-slate-900 border border-slate-800 rounded-2xl shadow-sm hover:border-cyan-500/20 transition-colors">
+                <span className="text-slate-500 block uppercase tracking-wider text-[10px] font-bold">Bank IFSC Code</span>
+                <span className="text-cyan-400 font-bold block mt-1 select-all">{profile.bankIfsc || 'N/A'}</span>
               </div>
             </div>
           </div>
 
-          {/* Skills & Emergency Info */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-
-            {/* Skills */}
-            {profile.skills && profile.skills.length > 0 && (
-              <div className="glass-card p-6 space-y-4 border border-white/5 flex-1">
-                <div className="flex items-center gap-2 border-b border-slate-800/80 pb-2.5">
-                  <Award className="w-4 h-4 text-cyan-400" />
-                  <span className="text-xs font-bold text-slate-100 uppercase tracking-wider">Professional Skills</span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {profile.skills.map((skill: string, idx: number) => (
-                    <span key={idx} className="px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-900 text-[11px] text-slate-300 font-medium flex items-center gap-1.5 hover:border-slate-800 transition-colors">
-                      <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0" />
-                      {skill}
-                    </span>
-                  ))}
-                </div>
+          {/* Skills (Takes full width if present) */}
+          {profile.skills && profile.skills.length > 0 && (
+            <div className="glass-card p-6 rounded-2xl space-y-4">
+              <div className="flex items-center gap-2 border-b border-slate-800/80 pb-2.5">
+                <Award className="w-4 h-4 text-cyan-400" />
+                <span className="text-xs font-bold text-slate-100 uppercase tracking-wider">Professional Skills</span>
               </div>
-            )}
-
-            {/* Emergency & Medical */}
-            <div className="glass-card overflow-hidden border border-red-950/30 flex-1">
-              <div className="flex items-center gap-2 px-5 py-3.5 bg-red-950/10 border-b border-red-950/30">
-                <HeartPulse className="w-4 h-4 text-[#DC2626]" />
-                <span className="text-xs font-bold text-slate-200 uppercase tracking-wider">Emergency Contact & Medical</span>
-              </div>
-              <div className="p-5 space-y-3 font-mono text-xs">
-                <div className="flex justify-between border-b border-slate-900/60 pb-1.5">
-                  <span className="text-[10px] text-slate-500 uppercase tracking-wider">Contact Person</span>
-                  <span className="text-slate-200 font-bold">{profile.emergencyName || 'N/A'}</span>
-                </div>
-                <div className="flex justify-between border-b border-slate-900/60 pb-1.5">
-                  <span className="text-[10px] text-slate-500 uppercase tracking-wider">Phone Number</span>
-                  <span className="text-slate-200 font-bold select-all">{profile.emergencyPhone || 'N/A'}</span>
-                </div>
-                <div className="flex justify-between border-b border-slate-900/60 pb-1.5">
-                  <span className="text-[10px] text-slate-500 uppercase tracking-wider">Blood Group</span>
-                  <span className="text-rose-500 font-bold">🩸 {profile.bloodGroup || 'N/A'}</span>
-                </div>
-                <div>
-                  <span className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">Medical Conditions</span>
-                  <span className="text-slate-400 block text-[11px] leading-relaxed">{profile.medicalConditions || 'None'}</span>
-                </div>
+              <div className="flex flex-wrap gap-2">
+                {profile.skills.map((skill: string, idx: number) => (
+                  <span key={idx} className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 shadow-sm text-xs text-slate-200 font-medium flex items-center gap-2 hover:border-cyan-500/40 transition-colors">
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 shrink-0" />
+                    {skill}
+                  </span>
+                ))}
               </div>
             </div>
-
-          </div>
+          )}
 
         </div>
       </div>

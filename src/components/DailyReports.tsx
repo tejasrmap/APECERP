@@ -650,7 +650,7 @@ export default function DailyReports() {
       <div className="print:hidden space-y-6">
         
         {/* Header Panel */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 lg:p-6 rounded-2xl glass-card border border-white/10 shadow-2xl relative overflow-hidden">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-6 rounded-[2rem] glass-card relative overflow-hidden">
           <div className="absolute inset-0 cyber-grid opacity-10 pointer-events-none" />
           <div className="relative z-10">
             <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
@@ -686,7 +686,7 @@ export default function DailyReports() {
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="max-w-3xl glass-card p-6 rounded-2xl border border-white/10 shadow-xl space-y-6"
+              className="max-w-3xl mx-auto glass-card p-8 rounded-3xl space-y-6"
             >
               <div className="border-b border-slate-800 pb-3 flex justify-between items-center">
                 <h3 className="text-sm font-bold text-slate-100 uppercase tracking-wider">
@@ -710,7 +710,7 @@ export default function DailyReports() {
                         value={reportDate}
                         onChange={(e) => setReportDate(e.target.value)}
                         required
-                        className="w-full bg-slate-950/40 border border-slate-800 text-slate-200 rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:border-cyan-500 text-xs font-mono"
+                        className="w-full bg-slate-900 border border-slate-800 text-slate-200 rounded-2xl py-3.5 shadow-sm pl-10 pr-4 focus:outline-none focus:border-cyan-500 text-xs font-mono"
                       />
                     </div>
                   </div>
@@ -721,7 +721,7 @@ export default function DailyReports() {
                       <button
                         type="button"
                         onClick={() => setIsProjectDropdownOpen(!isProjectDropdownOpen)}
-                        className="w-full bg-slate-950/40 border border-slate-800 text-slate-200 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 text-xs flex justify-between items-center text-left"
+                        className="w-full bg-slate-900 border border-slate-800 text-slate-200 rounded-2xl py-3.5 shadow-sm px-4 focus:outline-none focus:border-cyan-500 text-xs flex justify-between items-center text-left"
                       >
                         <span>{selectedProject ? selectedProject.name : 'Select Project Site...'}</span>
                         <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${isProjectDropdownOpen ? 'rotate-180' : ''}`} />
@@ -770,7 +770,7 @@ export default function DailyReports() {
                         <button
                           type="button"
                           onClick={() => setIsTechDropdownOpen(!isTechDropdownOpen)}
-                          className="w-full bg-slate-950/40 border border-slate-800 text-slate-200 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 text-xs flex justify-between items-center text-left"
+                          className="w-full bg-slate-900 border border-slate-800 text-slate-200 rounded-2xl py-3.5 shadow-sm px-4 focus:outline-none focus:border-cyan-500 text-xs flex justify-between items-center text-left"
                         >
                           <span>{selectedTechnician ? `${selectedTechnician.name} (${selectedTechnician.employeeId || 'Staff'})` : 'Select Team Member...'}</span>
                           <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${isTechDropdownOpen ? 'rotate-180' : ''}`} />
@@ -815,7 +815,7 @@ export default function DailyReports() {
                     // Read only card for standard employees
                     <div className="space-y-1.5">
                       <label className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-1">Technician Submitting</label>
-                      <div className="w-full bg-slate-950/20 border border-slate-900 text-slate-400 rounded-xl py-3 px-4 text-xs font-semibold">
+                      <div className="w-full bg-slate-900 border border-slate-800 text-slate-400 rounded-2xl py-3 px-4 shadow-sm text-xs font-semibold">
                         {selectedTechnician ? `${selectedTechnician.name} (${selectedTechnician.employeeId || 'Staff'})` : activeName}
                       </div>
                     </div>
@@ -833,7 +833,7 @@ export default function DailyReports() {
                         value={hoursWorked}
                         onChange={(e) => setHoursWorked(e.target.value)}
                         required
-                        className="w-full bg-slate-950/40 border border-slate-800 text-slate-200 rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:border-cyan-500 text-xs font-mono"
+                        className="w-full bg-slate-900 border border-slate-800 text-slate-200 rounded-2xl py-3.5 shadow-sm pl-10 pr-4 focus:outline-none focus:border-cyan-500 text-xs font-mono"
                       />
                     </div>
                   </div>
@@ -849,7 +849,7 @@ export default function DailyReports() {
                       onChange={(e) => setTasksCompleted(e.target.value)}
                       required
                       placeholder="- Wire installation of grid substation transformer A&#10;- Safety clearance and checklist completed&#10;- LOTO procedures executed"
-                      className="w-full bg-slate-950/40 border border-slate-800 text-slate-100 rounded-xl p-4 focus:outline-none focus:border-cyan-500 text-xs leading-relaxed placeholder:text-slate-650"
+                      className="w-full bg-slate-900 border border-slate-800 text-slate-200 rounded-2xl p-4 shadow-sm focus:outline-none focus:border-cyan-500 text-xs leading-relaxed placeholder:text-slate-650"
                     />
                   </div>
 
@@ -861,7 +861,7 @@ export default function DailyReports() {
                       onChange={(e) => setTasksInProgress(e.target.value)}
                       required
                       placeholder="- Commissioning transformer A and synchronization with power grids&#10;- Site cleanup"
-                      className="w-full bg-slate-950/40 border border-slate-800 text-slate-100 rounded-xl p-4 focus:outline-none focus:border-cyan-500 text-xs leading-relaxed placeholder:text-slate-650"
+                      className="w-full bg-slate-900 border border-slate-800 text-slate-200 rounded-2xl p-4 shadow-sm focus:outline-none focus:border-cyan-500 text-xs leading-relaxed placeholder:text-slate-650"
                     />
                   </div>
 
@@ -873,7 +873,7 @@ export default function DailyReports() {
                         value={challenges}
                         onChange={(e) => setChallenges(e.target.value)}
                         placeholder="Material dispatch delayed by 2 hours due to rainfall..."
-                        className="w-full bg-slate-950/40 border border-slate-800 text-slate-100 rounded-xl p-4 focus:outline-none focus:border-cyan-500 text-xs leading-relaxed placeholder:text-slate-650"
+                        className="w-full bg-slate-900 border border-slate-800 text-slate-200 rounded-2xl p-4 shadow-sm focus:outline-none focus:border-cyan-500 text-xs leading-relaxed placeholder:text-slate-650"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -883,7 +883,7 @@ export default function DailyReports() {
                         value={materialsUsed}
                         onChange={(e) => setMaterialsUsed(e.target.value)}
                         placeholder="100m copper cabling, 4 standard terminal connectors..."
-                        className="w-full bg-slate-950/40 border border-slate-800 text-slate-100 rounded-xl p-4 focus:outline-none focus:border-cyan-500 text-xs leading-relaxed placeholder:text-slate-650"
+                        className="w-full bg-slate-900 border border-slate-800 text-slate-200 rounded-2xl p-4 shadow-sm focus:outline-none focus:border-cyan-500 text-xs leading-relaxed placeholder:text-slate-650"
                       />
                     </div>
                   </div>
@@ -901,7 +901,7 @@ export default function DailyReports() {
                   />
                   
                   {attachedFile ? (
-                    <div className="p-4 bg-slate-950/50 border border-slate-800 rounded-2xl flex items-center justify-between gap-3 shadow-inner">
+                    <div className="p-5 bg-slate-900 border border-slate-800 rounded-[2rem] flex items-center justify-between gap-3 shadow-sm">
                       <div className="flex items-center gap-3 min-w-0">
                         {attachedFile.type.startsWith('image/') && filePreviewUrl ? (
                           <img src={filePreviewUrl} alt="Preview" className="w-12 h-12 object-cover rounded-lg border border-slate-700" />
@@ -927,7 +927,7 @@ export default function DailyReports() {
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="w-full py-6 bg-slate-950/20 hover:bg-slate-950/30 border border-dashed border-slate-800 hover:border-slate-700 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all group cursor-pointer"
+                      className="w-full py-8 bg-slate-900 hover:bg-slate-800/80 border-2 border-dashed border-slate-800 hover:border-cyan-500/50 rounded-[2rem] flex flex-col items-center justify-center gap-2 transition-all group cursor-pointer"
                     >
                       <Paperclip className="w-6 h-6 text-slate-500 group-hover:text-cyan-400 transition-colors" />
                       <p className="text-xs font-bold text-slate-400 group-hover:text-slate-200">Click to upload file</p>
@@ -940,7 +940,7 @@ export default function DailyReports() {
                 <button
                   type="submit"
                   disabled={isDbActionLoading}
-                  className="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-950 rounded-xl text-xs font-bold uppercase tracking-wider shadow-[0_4px_14px_rgba(6,182,212,0.2)] hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="w-full py-4 bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-950 rounded-2xl text-sm font-bold uppercase tracking-wider shadow-[0_4px_14px_rgba(6,182,212,0.2)] hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {isDbActionLoading ? (
                     <>
@@ -967,7 +967,7 @@ export default function DailyReports() {
             >
               
               {/* Filters Panel */}
-              <div className="p-5 rounded-2xl glass-card border border-white/10 shadow-lg space-y-4">
+              <div className="p-6 rounded-[2rem] glass-card space-y-5">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <h3 className="text-xs font-extrabold uppercase tracking-widest text-slate-400">
                     Search & Query Filters
@@ -981,7 +981,7 @@ export default function DailyReports() {
                         type="date"
                         value={startDateStr}
                         onChange={(e) => setStartDateStr(e.target.value)}
-                        className="bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none font-mono"
+                        className="bg-slate-900 border border-slate-800 focus:border-cyan-500 rounded-xl px-4 py-2 text-xs shadow-sm text-slate-200 focus:outline-none font-mono"
                       />
                     </div>
                     <div className="flex items-center gap-2">
@@ -990,7 +990,7 @@ export default function DailyReports() {
                         type="date"
                         value={endDateStr}
                         onChange={(e) => setEndDateStr(e.target.value)}
-                        className="bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none font-mono"
+                        className="bg-slate-900 border border-slate-800 focus:border-cyan-500 rounded-xl px-4 py-2 text-xs shadow-sm text-slate-200 focus:outline-none font-mono"
                       />
                     </div>
                   </div>
@@ -1007,7 +1007,7 @@ export default function DailyReports() {
                       placeholder="Search tasks, tools, names..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-200 focus:outline-none placeholder-slate-500"
+                      className="w-full bg-slate-900 border border-slate-800 focus:border-cyan-500 rounded-xl shadow-sm pl-10 pr-4 py-2.5 text-xs text-slate-200 focus:outline-none placeholder-slate-500"
                     />
                   </div>
 
@@ -1017,7 +1017,7 @@ export default function DailyReports() {
                       <button
                         type="button"
                         onClick={() => setIsSiteFilterOpen(!isSiteFilterOpen)}
-                        className="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl px-3 py-2.5 text-xs flex justify-between items-center text-left focus:outline-none focus:border-cyan-500 cursor-pointer transition-all"
+                        className="w-full bg-slate-900 border border-slate-800 text-slate-200 rounded-xl px-4 py-3 shadow-sm text-xs flex justify-between items-center text-left focus:outline-none focus:border-cyan-500 cursor-pointer transition-all"
                       >
                         <span className="truncate">
                           {projectFilter === 'All' 
@@ -1081,7 +1081,7 @@ export default function DailyReports() {
                         <button
                           type="button"
                           onClick={() => setIsTechFilterOpen(!isTechFilterOpen)}
-                          className="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl px-3 py-2.5 text-xs flex justify-between items-center text-left focus:outline-none focus:border-cyan-500 cursor-pointer transition-all"
+                          className="w-full bg-slate-900 border border-slate-800 text-slate-200 rounded-xl px-4 py-3 shadow-sm text-xs flex justify-between items-center text-left focus:outline-none focus:border-cyan-500 cursor-pointer transition-all"
                         >
                           <span className="truncate">
                             {techFilter === 'All' 
@@ -1153,7 +1153,7 @@ export default function DailyReports() {
               </div>
 
               {/* Main Directory Table / Cards */}
-              <div className="glass-card rounded-2xl overflow-hidden shadow-xl border border-white/10 p-5">
+              <div className="glass-card rounded-[2rem] p-6 space-y-6">
                 <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider mb-4 border-b border-slate-900 pb-3 font-mono">
                   Registered Progress Logs ({filteredReports.length})
                 </h4>
@@ -1169,7 +1169,7 @@ export default function DailyReports() {
                       return (
                         <div 
                           key={report.id}
-                          className="border border-slate-900/60 rounded-xl bg-slate-950/15 overflow-hidden transition-all duration-300 hover:border-slate-800"
+                          className="border border-slate-800 rounded-2xl bg-slate-900 overflow-hidden transition-all duration-300 shadow-sm hover:border-cyan-500/30 hover:shadow-md"
                         >
                           {/* Header Summary Row */}
                           <div 
@@ -1217,20 +1217,20 @@ export default function DailyReports() {
                                 initial={{ height: 0 }}
                                 animate={{ height: 'auto' }}
                                 exit={{ height: 0 }}
-                                className="overflow-hidden border-t border-slate-900 bg-slate-950/5"
+                                className="overflow-hidden border-t border-slate-800 bg-black/5 dark:bg-white/5"
                               >
                                 <div className="p-5 space-y-5 text-xs leading-relaxed text-slate-350">
                                   
                                   {/* Grid Tasks Layout */}
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                    <div className="space-y-1.5 p-3.5 rounded-xl bg-slate-950/20 border border-slate-900 shadow-inner">
+                                    <div className="space-y-2 p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm">
                                       <h5 className="font-bold text-slate-200 uppercase tracking-wider text-[9.5px] border-b border-slate-900 pb-1.5">
                                         Tasks Completed Today
                                       </h5>
                                       <p className="whitespace-pre-wrap mt-2 font-medium font-mono text-[11px] text-slate-300">{report.tasksCompleted}</p>
                                     </div>
 
-                                    <div className="space-y-1.5 p-3.5 rounded-xl bg-slate-950/20 border border-slate-900 shadow-inner">
+                                    <div className="space-y-2 p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm">
                                       <h5 className="font-bold text-slate-200 uppercase tracking-wider text-[9.5px] border-b border-slate-900 pb-1.5">
                                         Next Tasks / Future Plan
                                       </h5>
@@ -1242,7 +1242,7 @@ export default function DailyReports() {
                                   {(report.challenges || report.materialsUsed) && (
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                       {report.challenges ? (
-                                        <div className="space-y-1.5 p-3.5 rounded-xl bg-rose-955/5 border border-rose-900/20 shadow-inner">
+                                        <div className="space-y-2 p-5 rounded-2xl bg-rose-500/10 border border-rose-500/20 shadow-sm">
                                           <h5 className="font-bold text-rose-400 uppercase tracking-wider text-[9.5px] border-b border-rose-900/20 pb-1.5">
                                             Challenges faced
                                           </h5>
@@ -1251,7 +1251,7 @@ export default function DailyReports() {
                                       ) : <div />}
 
                                       {report.materialsUsed ? (
-                                        <div className="space-y-1.5 p-3.5 rounded-xl bg-slate-950/20 border border-slate-900 shadow-inner">
+                                        <div className="space-y-2 p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-sm">
                                           <h5 className="font-bold text-slate-205 uppercase tracking-wider text-[9.5px] border-b border-slate-900 pb-1.5">
                                             Materials & Tools Used
                                           </h5>

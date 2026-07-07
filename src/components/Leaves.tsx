@@ -266,7 +266,7 @@ export default function Leaves() {
       className="space-y-6 lg:space-y-8"
     >
       {/* Header section */}
-      <div className="flex justify-between items-center p-4 lg:p-6 rounded-2xl glass-card border border-white/10 shadow-2xl relative overflow-hidden">
+      <div className="flex justify-between items-center p-6 rounded-[2rem] glass-card shadow-sm relative overflow-hidden">
         <div className="absolute inset-0 cyber-grid opacity-10 pointer-events-none" />
         <div className="relative z-10">
           <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
@@ -294,7 +294,7 @@ export default function Leaves() {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Pending Card */}
-        <div className="p-5 rounded-2xl glass-card border border-white/10 hover:border-amber-500/30 flex items-center gap-4 relative overflow-hidden transition-all duration-300 hover:-translate-y-1 group hover:shadow-[0_8px_30px_rgba(245,158,11,0.08)]">
+        <div className="p-5 rounded-[2rem] glass-card border border-slate-800/80 hover:border-amber-500/30 flex items-center gap-4 relative overflow-hidden transition-all duration-300 hover:-translate-y-1 group hover:shadow-[0_8px_30px_rgba(245,158,11,0.08)]">
           <div className="absolute inset-0 bg-gradient-to-br from-amber-500/0 via-amber-500/0 to-amber-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 group-hover:scale-110 transition-transform duration-300">
             <Clock className="w-5.5 h-5.5" />
@@ -306,7 +306,7 @@ export default function Leaves() {
         </div>
 
         {/* Active Leaves Card */}
-        <div className="p-5 rounded-2xl glass-card border border-white/10 hover:border-cyan-500/30 flex items-center gap-4 relative overflow-hidden transition-all duration-300 hover:-translate-y-1 group hover:shadow-[0_8px_30px_rgba(6,182,212,0.08)]">
+        <div className="p-5 rounded-[2rem] glass-card border border-slate-800/80 hover:border-cyan-500/30 flex items-center gap-4 relative overflow-hidden transition-all duration-300 hover:-translate-y-1 group hover:shadow-[0_8px_30px_rgba(6,182,212,0.08)]">
           <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/0 via-cyan-500/0 to-cyan-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 group-hover:scale-110 transition-transform duration-300">
             <Calendar className="w-5.5 h-5.5" />
@@ -318,7 +318,7 @@ export default function Leaves() {
         </div>
 
         {/* Approved Card */}
-        <div className="p-5 rounded-2xl glass-card border border-white/10 hover:border-emerald-500/30 flex items-center gap-4 relative overflow-hidden transition-all duration-300 hover:-translate-y-1 group hover:shadow-[0_8px_30px_rgba(16,185,129,0.08)]">
+        <div className="p-5 rounded-[2rem] glass-card border border-slate-800/80 hover:border-emerald-500/30 flex items-center gap-4 relative overflow-hidden transition-all duration-300 hover:-translate-y-1 group hover:shadow-[0_8px_30px_rgba(16,185,129,0.08)]">
           <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/0 via-emerald-500/0 to-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-110 transition-transform duration-300">
             <CheckCircle2 className="w-5.5 h-5.5" />
@@ -338,7 +338,7 @@ export default function Leaves() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="max-w-xl glass-card p-6 rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.3)] mx-auto w-full border border-white/10"
+            className="max-w-xl glass-card p-6 rounded-2xl shadow-sm mx-auto w-full border border-slate-800/80"
           >
             <h4 className="text-sm font-bold text-slate-105 mb-4">New Leave Application</h4>
             <form onSubmit={handleApplyLeave} className="space-y-4">
@@ -349,7 +349,7 @@ export default function Leaves() {
                   <select
                     value={leaveType}
                     onChange={(e) => setLeaveType(e.target.value)}
-                    className="w-full bg-slate-950/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all text-sm cursor-pointer shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
+                    className="w-full bg-slate-900 border border-slate-800 text-slate-200 rounded-2xl py-3.5 px-4 focus:outline-none focus:border-cyan-500 transition-all text-sm shadow-sm"
                   >
                     <option value="Casual" className="bg-slate-900 text-slate-100">Casual Leave</option>
                     <option value="Sick" className="bg-slate-900 text-slate-100">Sick Leave</option>
@@ -366,7 +366,7 @@ export default function Leaves() {
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
                     required
-                    className="w-full bg-slate-950/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all text-sm shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
+                    className="w-full bg-slate-900 border border-slate-800 text-slate-200 rounded-2xl py-3.5 px-4 focus:outline-none focus:border-cyan-500 transition-all text-sm shadow-sm"
                   />
                 </div>
                 <div className="space-y-1.5">
@@ -376,7 +376,7 @@ export default function Leaves() {
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
                     required
-                    className="w-full bg-slate-950/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all text-sm shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
+                    className="w-full bg-slate-900 border border-slate-800 text-slate-200 rounded-2xl py-3.5 px-4 focus:outline-none focus:border-cyan-500 transition-all text-sm shadow-sm"
                   />
                 </div>
               </div>
@@ -389,7 +389,7 @@ export default function Leaves() {
                   placeholder="Provide details about leave justification..."
                   required
                   rows={4}
-                  className="w-full bg-slate-950/40 border border-slate-800 text-slate-100 rounded-xl py-3 px-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 transition-all text-sm resize-none shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
+                  className="w-full bg-slate-900 border border-slate-800 text-slate-200 rounded-2xl py-3.5 px-4 focus:outline-none focus:border-cyan-500 transition-all text-sm shadow-sm"
                 />
               </div>
 
@@ -403,7 +403,7 @@ export default function Leaves() {
               <button
                 type="submit"
                 disabled={isDbActionLoading}
-                className="w-full py-3.5 bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-950 rounded-xl text-xs font-bold uppercase tracking-wider shadow-[0_4px_14px_rgba(6,182,212,0.2)] hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full py-4 bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-950 rounded-2xl text-sm font-bold uppercase tracking-wider shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
                 {isDbActionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Submit Application'}
               </button>
@@ -412,7 +412,7 @@ export default function Leaves() {
         ) : (
           <div className="space-y-6">
             {/* Filter Panel */}
-            <div className="flex flex-col sm:flex-row gap-4 bg-slate-950/40 p-4 rounded-2xl border border-white/5 shadow-md">
+            <div className="flex flex-col sm:flex-row gap-4 bg-slate-900/40 p-6 rounded-[2rem] border border-slate-800 shadow-sm">
               <div className="flex-1 relative">
                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-450" />
                 <input
@@ -420,7 +420,7 @@ export default function Leaves() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder={isUserAdmin ? "Search employee name, reason, or type..." : "Search reason, type..."}
-                  className="w-full bg-slate-900/60 border border-slate-800 rounded-xl py-3 pl-10 pr-4 text-xs focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/20 text-slate-100 placeholder:text-slate-500 transition-all shadow-[0_2px_8px_rgba(0,0,0,0.15)]"
+                  className="w-full bg-slate-900 border border-slate-800 text-slate-200 rounded-xl py-3.5 pl-10 pr-4 text-xs focus:outline-none focus:border-cyan-500 transition-all shadow-sm placeholder:text-slate-500"
                 />
               </div>
 
@@ -428,7 +428,7 @@ export default function Leaves() {
                 <button
                   type="button"
                   onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
-                  className="w-full bg-slate-900/60 border border-slate-800 text-slate-300 rounded-xl py-3 px-4 text-xs focus:outline-none focus:border-cyan-500 cursor-pointer flex justify-between items-center shadow-[0_2px_8px_rgba(0,0,0,0.15)] select-none text-left"
+                  className="w-full bg-slate-900 border border-slate-800 text-slate-200 rounded-xl py-3.5 px-4 text-xs focus:outline-none focus:border-cyan-500 cursor-pointer flex justify-between items-center shadow-sm select-none text-left"
                 >
                   <span>
                     {statusFilter === 'all' && 'All Leaves'}
@@ -439,7 +439,7 @@ export default function Leaves() {
                   <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${isFilterDropdownOpen ? 'rotate-180' : ''}`} />
                 </button>
                 {isFilterDropdownOpen && (
-                  <div className="absolute top-[calc(100%+6px)] right-0 left-0 bg-[#0d1423]/95 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl py-1.5 z-25 overflow-hidden">
+                  <div className="absolute top-[calc(100%+6px)] right-0 left-0 bg-[#0d1423]/95 backdrop-blur-md border border-slate-800/80 rounded-xl shadow-2xl py-1.5 z-25 overflow-hidden">
                     <button
                       type="button"
                       onClick={() => {
@@ -494,7 +494,7 @@ export default function Leaves() {
             </div>
 
             {/* Leaves List */}
-            <div className="glass-card rounded-2xl overflow-hidden shadow-[0_8px_30px_rgba(0,0,0,0.4)] border border-white/10">
+            <div className="glass-card rounded-2xl overflow-hidden shadow-sm border border-slate-800 border border-slate-800/80">
               {filteredLeaves.length === 0 ? (
                 <div className="py-20 text-center flex flex-col items-center">
                   <FileText className="w-14 h-14 text-slate-700 mb-3" />
@@ -505,7 +505,7 @@ export default function Leaves() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
                     <thead>
-                      <tr className="border-b border-slate-800 bg-slate-950/60 text-[10px] uppercase tracking-wider text-slate-400 font-black">
+                      <tr className="border-b border-slate-800/80 bg-slate-900/40 text-[10px] uppercase tracking-wider text-slate-400 font-black">
                         {isUserAdmin && <th className="p-4 px-6">Employee</th>}
                         <th className="p-4 px-6">Leave Type</th>
                         <th className="p-4 px-6">Duration</th>
@@ -514,7 +514,7 @@ export default function Leaves() {
                         {isUserAdmin && <th className="p-4 px-6 text-center">Action Review</th>}
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800/40 text-xs text-slate-300">
+                    <tbody className="divide-y divide-slate-800 text-xs text-slate-300">
                       {filteredLeaves.map((leave) => {
                         const isPending = leave.status === 'Pending';
                         

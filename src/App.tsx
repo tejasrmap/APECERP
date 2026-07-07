@@ -20,6 +20,7 @@ const Attendance   = lazy(() => import('./components/Attendance'));
 const Reports      = lazy(() => import('./components/Reports'));
 const Leaves       = lazy(() => import('./components/Leaves'));
 const LiveTracking = lazy(() => import('./components/LiveTracking'));
+const LocationHistory = lazy(() => import('./components/LocationHistory'));
 const MyProfile    = lazy(() => import('./components/MyProfile'));
 const DailyReports = lazy(() => import('./components/DailyReports'));
 const Leads        = lazy(() => import('./components/Leads'));
@@ -77,6 +78,9 @@ export default function App() {
           } />
           <Route path="live-tracking" element={
             <Suspense fallback={<PageLoader />}><LiveTracking /></Suspense>
+          } />
+          <Route path="location-history" element={
+            <Suspense fallback={<PageLoader />}><LocationHistory /></Suspense>
           } />
           <Route path="leads" element={
             <Suspense fallback={<PageLoader />}><Leads /></Suspense>

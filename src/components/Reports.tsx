@@ -45,11 +45,9 @@ export default function Reports() {
     return new Date().toISOString().slice(0, 10);
   });
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'All' | 'Scheduled' | 'On Time' | 'Delayed' | 'Absent'>('All');
-  const [activeTab, setActiveTab] = useState<'shifts' | 'attendance'>('shifts');
+  const [employeeFilter, setEmployeeFilter] = useState<string>('All');
 
   // Firebase Collections States
-  const [schedules, setSchedules] = useState<Shift[]>([]);
   const [attendanceLogs, setAttendanceLogs] = useState<any[]>([]);
   const [teamList, setTeamList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,9 +59,6 @@ export default function Reports() {
       setTeamList([
         { id: '1', name: 'Rahul Sharma', email: 'rahul@apecpowersolutions.com', employeeId: 'APEC-1002', role: 'Lead Electrician' },
         { id: '2', name: 'Sanjay Kumar', email: 'sanjay@apecpowersolutions.com', employeeId: 'APEC-1003', role: 'Safety Engineer' }
-      ]);
-      setSchedules([
-        { id: '1', technicianId: '1', technicianName: 'Rahul Sharma', projectId: '1', projectName: 'Grid Substation Hubli', date: new Date().toISOString().slice(0, 10), time: '08:00 - 17:00', status: 'On Time' }
       ]);
       setAttendanceLogs([
         {
@@ -82,10 +77,6 @@ export default function Reports() {
 
     const unsubTeam = onSnapshot(collection(db, 'team'), (snap) => {
       setTeamList(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-    });
-
-    const unsubSchedules = onSnapshot(collection(db, 'schedules'), (snap) => {
-      setSchedules(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Shift));
     });
 
     const unsubAttendance = onSnapshot(collection(db, 'attendance'), (snap) => {
@@ -108,26 +99,9 @@ export default function Reports() {
 
     return () => {
       unsubTeam();
-      unsubSchedules();
       unsubAttendance();
     };
   }, []);
-
-  // Helper to calculate duration in hours
-  const calculateShiftHours = (timeStr: string): number => {
-    try {
-      const parts = timeStr.split('-');
-      if (parts.length !== 2) return 8;
-      const [start, end] = parts.map(p => p.trim());
-      const [startH, startM] = start.split(':').map(Number);
-      const [endH, endM] = end.split(':').map(Number);
-      let diffMins = (endH * 60 + (endM || 0)) - (startH * 60 + (startM || 0));
-      if (diffMins < 0) diffMins += 24 * 60; // overnight support
-      return Math.round((diffMins / 60) * 10) / 10;
-    } catch {
-      return 8;
-    }
-  };
 
   const calculateGap = (checkInTime: string | null | undefined, checkOutTime: string | null | undefined): string => {
     if (!checkInTime || !checkOutTime) return '-';
@@ -166,21 +140,6 @@ export default function Reports() {
     setEndDateStr(end.toISOString().slice(0, 10));
   };
 
-  // Process filters
-  const filteredSchedules = useMemo(() => {
-    return schedules.filter(s => {
-      const isWithinDates = s.date >= startDateStr && s.date <= endDateStr;
-      if (!isWithinDates) return false;
-
-      const matchesSearch = 
-        s.technicianName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.projectName.toLowerCase().includes(searchTerm.toLowerCase());
-      if (!matchesSearch) return false;
-
-      const matchesStatus = statusFilter === 'All' || s.status === statusFilter;
-      return matchesStatus;
-    }).sort((a, b) => b.date.localeCompare(a.date));
-  }, [schedules, startDateStr, endDateStr, searchTerm, statusFilter]);
 
   const filteredAttendance = useMemo(() => {
     return attendanceLogs.filter(log => {
@@ -193,7 +152,24 @@ export default function Reports() {
         (log.userName && log.userName.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (log.userEmail && log.userEmail.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (log.employeeId && log.employeeId.toLowerCase().includes(searchTerm.toLowerCase()));
-      return matchesSearch;
+      if (!matchesSearch) return false;
+
+      if (employeeFilter !== 'All') {
+        const emp = teamList.find(t => t.id === employeeFilter);
+        if (emp) {
+          const isMatch = log.employeeId === emp.employeeId || log.userEmail?.toLowerCase() === emp.email?.toLowerCase();
+          if (!isMatch) return false;
+        } else {
+          return false;
+        }
+      }
+      
+      // Attendance logs don't easily map to projectId without complex cross-referencing.
+      // If a project is selected, we could return false, or we can just ignore project filter for attendance.
+      // We will ignore projectFilter for attendance since attendance is user-centric, not project-centric in raw logs.
+
+      return true;
+
     }).sort((a, b) => b.timestamp.localeCompare(a.timestamp));
   }, [attendanceLogs, startDateStr, endDateStr, searchTerm]);
 
@@ -269,60 +245,22 @@ export default function Reports() {
     });
   }, [filteredAttendance]);
 
-  // Statistics Summary
-  const stats = useMemo(() => {
-    let totalShifts = filteredSchedules.length;
-    let totalHours = 0;
-    let onTime = 0;
-    let delayed = 0;
-    let absent = 0;
-    let scheduled = 0;
-
-    filteredSchedules.forEach(s => {
-      totalHours += calculateShiftHours(s.time);
-      if (s.status === 'On Time') onTime++;
-      else if (s.status === 'Delayed') delayed++;
-      else if (s.status === 'Absent') absent++;
-      else if (s.status === 'Scheduled') scheduled++;
-    });
-
-    const checkedShifts = onTime + delayed + absent;
-    const complianceRate = checkedShifts > 0 ? Math.round((onTime / checkedShifts) * 100) : 100;
-
-    return {
-      totalShifts,
-      totalHours: Math.round(totalHours * 10) / 10,
-      onTime,
-      delayed,
-      absent,
-      scheduled,
-      complianceRate
-    };
-  }, [filteredSchedules]);
-
   // Export to CSV
   const handleExportCSV = () => {
     let csvContent = "";
     let fileName = "";
 
-    if (activeTab === 'shifts') {
-      csvContent = "data:text/csv;charset=utf-8," 
-        + "Date,Technician,Project Site,Shift Hours,Duration (hrs),Sync Status\n"
-        + filteredSchedules.map(s => `"${s.date}","${s.technicianName}","${s.projectName}","${s.time}",${calculateShiftHours(s.time)},"${s.status}"`).join("\n");
-      fileName = `APEC_Shifts_Report_${startDateStr}_to_${endDateStr}.csv`;
-    } else {
-      csvContent = "data:text/csv;charset=utf-8," 
-        + "Technician,Email,Access Code,Check-In Time,Check-In Location,Check-Out Time,Check-Out Location,Duration\n"
-        + pairedAttendance.map(p => {
-            const inTime = p.checkIn ? new Date(p.checkIn.timestamp).toLocaleString() : '-';
-            const inLoc = p.checkIn?.location?.address ? `"${p.checkIn.location.address.replace(/"/g, '""')}"` : '-';
-            const outTime = p.checkOut ? new Date(p.checkOut.timestamp).toLocaleString() : (p.checkIn ? 'Still Checked In' : '-');
-            const outLoc = p.checkOut?.location?.address ? `"${p.checkOut.location.address.replace(/"/g, '""')}"` : '-';
-            const gap = calculateGap(p.checkIn?.timestamp, p.checkOut?.timestamp);
-            return `"${p.userName || ''}","${p.userEmail || ''}","${p.employeeId || 'N/A'}","${inTime}",${inLoc},"${outTime}",${outLoc},"${gap}"`;
-          }).join("\n");
-      fileName = `APEC_Attendance_Report_${startDateStr}_to_${endDateStr}.csv`;
-    }
+    csvContent = "data:text/csv;charset=utf-8," 
+      + "Technician,Email,Access Code,Check-In Time,Check-In Location,Check-Out Time,Check-Out Location,Duration\n"
+      + pairedAttendance.map(p => {
+          const inTime = p.checkIn ? new Date(p.checkIn.timestamp).toLocaleString() : '-';
+          const inLoc = p.checkIn?.location?.address ? `"${p.checkIn.location.address.replace(/"/g, '""')}"` : '-';
+          const outTime = p.checkOut ? new Date(p.checkOut.timestamp).toLocaleString() : (p.checkIn ? 'Still Checked In' : '-');
+          const outLoc = p.checkOut?.location?.address ? `"${p.checkOut.location.address.replace(/"/g, '""')}"` : '-';
+          const gap = calculateGap(p.checkIn?.timestamp, p.checkOut?.timestamp);
+          return `"${p.userName || ''}","${p.userEmail || ''}","${p.employeeId || 'N/A'}","${inTime}",${inLoc},"${outTime}",${outLoc},"${gap}"`;
+        }).join("\n");
+    fileName = `APEC_Attendance_Report_${startDateStr}_to_${endDateStr}.csv`;
 
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
@@ -462,7 +400,7 @@ export default function Reports() {
           </div>
         </div>
         <div className="text-right">
-          <h2 className="text-base font-bold text-slate-900">{activeTab === 'shifts' ? 'Shift Dispatch Log' : 'Attendance Log'}</h2>
+          <h2 className="text-base font-bold text-slate-900">Attendance Log</h2>
           <p className="text-[10px] text-slate-500 mt-0.5 font-mono font-medium">Period: {startDateStr} to {endDateStr}</p>
         </div>
       </div>
@@ -540,155 +478,43 @@ export default function Reports() {
         </div>
 
         {/* Search & Status Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-3 border-t border-slate-900/60">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3 pt-3 border-t border-slate-900/60">
           
+          {/* Employee Dropdown */}
+          <div className="flex flex-col gap-1">
+            <select
+              value={employeeFilter}
+              onChange={(e) => setEmployeeFilter(e.target.value)}
+              className="w-full bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none"
+            >
+              <option value="All">All Employees</option>
+              {teamList.map(emp => (
+                <option key={emp.id} value={emp.id}>{emp.name}</option>
+              ))}
+            </select>
+          </div>
+
           {/* Text Search input */}
-          <div className="relative">
+          <div className="relative col-span-1 md:col-span-1 lg:col-span-5">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
             <input 
               type="text"
-              placeholder="Search technician or project..."
+              placeholder="Search..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-200 focus:outline-none placeholder-slate-500"
             />
           </div>
-
-          {/* Status filter (only applicable when view shifts) */}
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Status:</span>
-            <select
-              value={statusFilter}
-              disabled={activeTab !== 'shifts'}
-              onChange={(e) => setStatusFilter(e.target.value as any)}
-              className="w-full bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-xl px-3 py-2.5 text-xs text-slate-200 focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <option value="All">All Dispatch Statuses</option>
-              <option value="Scheduled">Scheduled</option>
-              <option value="On Time">On Time</option>
-              <option value="Delayed">Delayed</option>
-              <option value="Absent">Absent</option>
-            </select>
-          </div>
-
-          {/* Tab Selector */}
-          <div className="flex bg-slate-950 border border-slate-800 p-1 rounded-xl">
-            <button
-              onClick={() => setActiveTab('shifts')}
-              className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
-                activeTab === 'shifts' 
-                  ? 'bg-gradient-to-r from-cyan-500/15 to-cyan-400/5 text-cyan-400 border border-cyan-500/20 shadow-md' 
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              Shift Dispatches
-            </button>
-            <button
-              onClick={() => setActiveTab('attendance')}
-              className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
-                activeTab === 'attendance' 
-                  ? 'bg-gradient-to-r from-cyan-500/15 to-cyan-400/5 text-cyan-400 border border-cyan-500/20 shadow-md' 
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              Attendance History
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Summary KPI Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 print-stats-grid">
-        
-        {/* Total Persons Allotted */}
-        <div className="p-4 rounded-2xl glass-card border border-white/10 flex flex-col justify-between space-y-2">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Allotted Personnel</span>
-          <span className="text-2xl font-bold text-slate-100 font-mono">
-            {filteredSchedules.map(s => s.technicianId).filter((v, i, a) => a.indexOf(v) === i).length}
-          </span>
-          <span className="text-[9px] text-slate-500">Across {stats.totalShifts} scheduled dispatches</span>
-        </div>
-
-        {/* Total Present */}
-        <div className="p-4 rounded-2xl glass-card border border-white/10 flex flex-col justify-between space-y-2">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Present</span>
-          <span className="text-2xl font-bold text-slate-100 font-mono">
-            {stats.onTime + stats.delayed}
-          </span>
-          <span className="text-[9px] text-slate-500">On-time: {stats.onTime} | Late: {stats.delayed}</span>
-        </div>
-
-        {/* Absence / Late rate */}
-        <div className="p-4 rounded-2xl glass-card border border-white/10 flex flex-col justify-between space-y-2">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Incidents Summary</span>
-          <div className="flex gap-4 text-xs font-mono font-bold">
-            <span className="text-amber-400">{stats.delayed} LATE</span>
-            <span className="text-rose-400">{stats.absent} ABSENT</span>
-          </div>
-          <span className="text-[9px] text-slate-500">Unresolved anomalies</span>
         </div>
       </div>
 
       {/* Main Tab Content Tables */}
       <div className="rounded-2xl glass-card border border-white/10 shadow-xl overflow-hidden p-5">
         <h4 className="text-xs font-bold text-slate-100 uppercase tracking-wider mb-4 border-b border-slate-900 pb-3 font-mono">
-          {activeTab === 'shifts' ? 'Dispatched Shift Log' : 'Verified Check-in Attendance Log'}
+          Verified Check-in Attendance Log
         </h4>
 
-        {activeTab === 'shifts' ? (
-          /* Tab 1: Shifts Table */
-          <div className="overflow-x-auto">
-            {filteredSchedules.length === 0 ? (
-              <div className="p-12 text-center text-slate-500 italic text-sm">
-                No matching shifts found in the specified range.
-              </div>
-            ) : (
-              <table className="w-full text-left text-xs border-collapse">
-                <thead>
-                  <tr className="border-b border-slate-900 text-slate-400 uppercase text-[9.5px] font-mono tracking-wider">
-                    <th className="py-3.5 px-3">Date</th>
-                    <th className="py-3.5 px-3">Technician</th>
-                    <th className="py-3.5 px-3">Project Site</th>
-                    <th className="py-3.5 px-3">Time Slot</th>
-                    <th className="py-3.5 px-3">Hours</th>
-                    <th className="py-3.5 px-3">Verification</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-900/60">
-                  {filteredSchedules.map((s) => (
-                    <tr key={s.id} className="hover:bg-slate-950/20 text-slate-200">
-                      <td className="py-3.5 px-3 font-mono">{s.date}</td>
-                      <td className="py-3.5 px-3 font-bold">{s.technicianName}</td>
-                      <td className="py-3.5 px-3">
-                        <span className="flex items-center gap-1">
-                          <MapPin className="w-3.5 h-3.5 text-cyan-400" />
-                          {s.projectName}
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-3 font-mono">{s.time}</td>
-                      <td className="py-3.5 px-3 font-mono">{calculateShiftHours(s.time)} hrs</td>
-                      <td className="py-3.5 px-3">
-                        <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[9px] font-bold uppercase tracking-wider ${
-                          s.status === 'On Time' ? 'bg-green-500/10 border-green-500/20 text-green-400' :
-                          s.status === 'Delayed' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' :
-                          s.status === 'Absent' ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' :
-                          'bg-slate-900 border-slate-800 text-slate-400'
-                        }`}>
-                          {s.status === 'On Time' && <CheckCircle2 className="w-3 h-3" />}
-                          {s.status === 'Delayed' && <AlertTriangle className="w-3 h-3" />}
-                          {s.status === 'Absent' && <XCircle className="w-3 h-3" />}
-                          {s.status}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-        ) : (
-          /* Tab 2: Attendance Logs Table (Paired check-in and check-out logs) */
-          <div className="overflow-x-auto">
+        <div className="overflow-x-auto">
             {pairedAttendance.length === 0 ? (
               <div className="p-12 text-center text-slate-500 italic text-sm">
                 No matching attendance log entries found in the specified range.
@@ -784,7 +610,6 @@ export default function Reports() {
               </table>
             )}
           </div>
-        )}
       </div>
 
     </div>

@@ -9,7 +9,11 @@ import {
   Settings,
   Loader2,
   Download,
-  FileText
+  FileText,
+  Briefcase,
+  Users,
+  CalendarRange,
+  Coins
 } from 'lucide-react';
 import { collection, onSnapshot, query, Timestamp, orderBy, limit } from 'firebase/firestore';
 import { useOutletContext } from 'react-router-dom';
@@ -23,11 +27,13 @@ export default function Overview() {
   const [tasksList, setTasksList] = useState<any[]>([]);
   const [activitiesList, setActivitiesList] = useState<any[]>([]);
   const [schedulesList, setSchedulesList] = useState<any[]>([]);
+  const [leadsList, setLeadsList] = useState<any[]>([]);
+  const [attendanceList, setAttendanceList] = useState<any[]>([]);
+  const [leavesList, setLeavesList] = useState<any[]>([]);
 
   const [activeProjectsCount, setActiveProjectsCount] = useState(0);
   const [pendingAlertsCount, setPendingAlertsCount] = useState(0);
-
-
+  const [completedTasksCount, setCompletedTasksCount] = useState(0);
 
   // Reports Exporter logic
   const handleExport = (format: 'pdf' | 'csv') => {
@@ -63,14 +69,16 @@ export default function Overview() {
       window.print();
     }
   };
-  const [completedTasksCount, setCompletedTasksCount] = useState(0);
 
   const [loadedCollections, setLoadedCollections] = useState<{ [key: string]: boolean }>({
     projects: false,
     alerts: false,
     tasks: false,
     activities: false,
-    schedules: false
+    schedules: false,
+    leads: false,
+    attendance: false,
+    leaves: false
   });
 
   const isOverviewLoading = 
@@ -78,7 +86,10 @@ export default function Overview() {
     !loadedCollections.alerts || 
     !loadedCollections.tasks || 
     !loadedCollections.activities ||
-    !loadedCollections.schedules;
+    !loadedCollections.schedules ||
+    !loadedCollections.leads ||
+    !loadedCollections.attendance ||
+    !loadedCollections.leaves;
 
   // Safety fallback timeout to prevent infinite loading state
   useEffect(() => {
@@ -101,61 +112,49 @@ export default function Overview() {
   // Real-time Listeners
   useEffect(() => {
     if (!db) {
-      setLoadedCollections({
-        projects: true,
-        alerts: true,
-        tasks: true,
-        activities: true,
-        schedules: true
+      setLoadedCollections(prev => {
+        const next = { ...prev };
+        Object.keys(next).forEach(k => { next[k] = true; });
+        return next;
       });
-      // Mock data for schedules if no DB
-      setSchedulesList([
-        { id: '1', date: new Date().toISOString().slice(0, 10), status: 'On Time' },
-        { id: '2', date: new Date().toISOString().slice(0, 10), status: 'Delayed' },
-        { id: '3', date: new Date().toISOString().slice(0, 10), status: 'Absent' }
-      ]);
       return;
     }
 
+    const unsubscribes: (() => void)[] = [];
+
+    const handleSnapshotError = (err: any, collectionName: string) => {
+      console.error(`${collectionName} listener error:`, err);
+      setFirestoreError(err.code);
+      setLoadedCollections(prev => ({ ...prev, [collectionName]: true }));
+    };
+
     // 1. Projects listener
-    const unsubProjects = onSnapshot(collection(db, 'projects'), (snapshot) => {
+    unsubscribes.push(onSnapshot(collection(db, 'projects'), (snapshot) => {
       const projs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       setProjectsList(projs);
       setActiveProjectsCount(projs.filter((p: any) => p.status === 'Active').length);
       setLoadedCollections(prev => ({ ...prev, projects: true }));
-    }, (err) => {
-      console.error('Projects listener error:', err);
-      setFirestoreError(err.code);
-      setLoadedCollections(prev => ({ ...prev, projects: true }));
-    });
+    }, (err) => handleSnapshotError(err, 'projects')));
 
     // 2. Alerts listener
-    const unsubAlerts = onSnapshot(collection(db, 'alerts'), (snapshot) => {
+    unsubscribes.push(onSnapshot(collection(db, 'alerts'), (snapshot) => {
       const alts = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       setAlertsList(alts);
       setPendingAlertsCount(alts.filter((a: any) => a.status === 'pending').length);
       setLoadedCollections(prev => ({ ...prev, alerts: true }));
-    }, (err) => {
-      console.error('Alerts listener error:', err);
-      setFirestoreError(err.code);
-      setLoadedCollections(prev => ({ ...prev, alerts: true }));
-    });
+    }, (err) => handleSnapshotError(err, 'alerts')));
 
     // 3. Tasks listener
-    const unsubTasks = onSnapshot(collection(db, 'tasks'), (snapshot) => {
+    unsubscribes.push(onSnapshot(collection(db, 'tasks'), (snapshot) => {
       const tks = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       setTasksList(tks);
       setCompletedTasksCount(tks.filter((t: any) => t.status === 'completed').length);
       setLoadedCollections(prev => ({ ...prev, tasks: true }));
-    }, (err) => {
-      console.error('Tasks listener error:', err);
-      setFirestoreError(err.code);
-      setLoadedCollections(prev => ({ ...prev, tasks: true }));
-    });
+    }, (err) => handleSnapshotError(err, 'tasks')));
 
     // 4. Activities listener
     const qActivities = query(collection(db, 'activities'), orderBy('timestamp', 'desc'), limit(15));
-    const unsubActivities = onSnapshot(qActivities, (snapshot) => {
+    unsubscribes.push(onSnapshot(qActivities, (snapshot) => {
       const sortedActs = snapshot.docs
         .map(d => ({ id: d.id, ...d.data() }))
         .sort((a: any, b: any) => (b.timestamp?.seconds || 0) - (a.timestamp?.seconds || 0))
@@ -184,32 +183,42 @@ export default function Overview() {
         });
       setActivitiesList(sortedActs);
       setLoadedCollections(prev => ({ ...prev, activities: true }));
-    }, (err) => {
-      console.error('Activities listener error:', err);
-      setFirestoreError(err.code);
-      setLoadedCollections(prev => ({ ...prev, activities: true }));
-    });
+    }, (err) => handleSnapshotError(err, 'activities')));
 
     // 5. Schedules listener
-    const unsubSchedules = onSnapshot(collection(db, 'schedules'), (snapshot) => {
+    unsubscribes.push(onSnapshot(collection(db, 'schedules'), (snapshot) => {
       const schs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       setSchedulesList(schs);
       setLoadedCollections(prev => ({ ...prev, schedules: true }));
-    }, (err) => {
-      console.error('Schedules listener error:', err);
-      setFirestoreError(err.code);
-      setLoadedCollections(prev => ({ ...prev, schedules: true }));
-    });
+    }, (err) => handleSnapshotError(err, 'schedules')));
+
+    // 6. Leads listener
+    unsubscribes.push(onSnapshot(collection(db, 'leads'), (snapshot) => {
+      const leads = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      setLeadsList(leads);
+      setLoadedCollections(prev => ({ ...prev, leads: true }));
+    }, (err) => handleSnapshotError(err, 'leads')));
+
+    // 7. Attendance listener
+    unsubscribes.push(onSnapshot(collection(db, 'attendance'), (snapshot) => {
+      const logs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      setAttendanceList(logs);
+      setLoadedCollections(prev => ({ ...prev, attendance: true }));
+    }, (err) => handleSnapshotError(err, 'attendance')));
+
+    // 8. Leaves listener
+    unsubscribes.push(onSnapshot(collection(db, 'leaves'), (snapshot) => {
+      const leaves = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      setLeavesList(leaves);
+      setLoadedCollections(prev => ({ ...prev, leaves: true }));
+    }, (err) => handleSnapshotError(err, 'leaves')));
 
     return () => {
-      unsubProjects();
-      unsubAlerts();
-      unsubTasks();
-      unsubActivities();
-      unsubSchedules();
+      unsubscribes.forEach(unsub => unsub());
     };
   }, [setFirestoreError]);
 
+  // Compute Stats
   const computedStats = useMemo(() => {
     let onTime = 0;
     let delayed = 0;
@@ -223,8 +232,58 @@ export default function Overview() {
     
     const checkedShifts = onTime + delayed + absent;
     const compliance = checkedShifts > 0 ? Math.round((onTime / checkedShifts) * 100) : 100;
-    return { compliance };
-  }, [schedulesList]);
+
+    // Leads & Pipeline
+    let pipelineValue = 0;
+    leadsList.forEach(l => {
+      if (l.status !== 'Lost' && l.value) {
+        pipelineValue += Number(l.value);
+      }
+    });
+
+    // Format pipeline value in Indian Lakhs/Crores format cleanly
+    let formattedPipeline = `₹${pipelineValue.toLocaleString('en-IN')}`;
+    if (pipelineValue >= 10000000) {
+      formattedPipeline = `₹${(pipelineValue / 10000000).toFixed(2)} Cr`;
+    } else if (pipelineValue >= 100000) {
+      formattedPipeline = `₹${(pipelineValue / 100000).toFixed(2)} L`;
+    }
+
+    // Attendance (Today's Active Users)
+    const todayStr = new Date().toDateString();
+    const activeTechIds = new Set();
+    attendanceList.forEach(log => {
+      const logDate = new Date(log.timestamp).toDateString();
+      if (logDate === todayStr && log.type === 'punch_in') {
+        // We assume they are active if they punched in today (to be exact we should check for punch out, but this is a good estimate)
+        activeTechIds.add(log.employeeId || log.userEmail);
+      }
+    });
+    // Remove those who punched out later today
+    attendanceList.forEach(log => {
+      const logDate = new Date(log.timestamp).toDateString();
+      if (logDate === todayStr && log.type === 'punch_out') {
+        activeTechIds.delete(log.employeeId || log.userEmail);
+      }
+    });
+
+    // Leaves Today
+    let leavesToday = 0;
+    const todayISODate = new Date().toISOString().slice(0, 10);
+    leavesList.forEach(l => {
+      if (l.status === 'Approved' && l.startDate <= todayISODate && l.endDate >= todayISODate) {
+        leavesToday++;
+      }
+    });
+
+    return { 
+      compliance, 
+      pipelineValue: formattedPipeline, 
+      activeTeam: activeTechIds.size,
+      leavesToday,
+      totalLeads: leadsList.length
+    };
+  }, [schedulesList, leadsList, attendanceList, leavesList]);
 
   const dailyData = useMemo(() => {
     const dates: string[] = [];
@@ -256,9 +315,13 @@ export default function Overview() {
 
   const stats = [
     { title: 'Active Projects', value: !loadedCollections.projects ? '...' : activeProjectsCount.toString(), icon: Activity, color: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/20' },
-    { title: 'Pending Alerts', value: !loadedCollections.alerts ? '...' : pendingAlertsCount.toString(), icon: AlertTriangle, color: 'text-rose-500', bg: 'bg-rose-500/10', border: 'border-rose-500/20' },
-    { title: 'Completed Tasks', value: !loadedCollections.tasks ? '...' : completedTasksCount.toString(), icon: CheckCircle2, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
-    { title: 'Attendance Compliance', value: !loadedCollections.schedules ? '...' : `${computedStats.compliance}%`, icon: TrendingUp, color: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/20' },
+    { title: 'Pipeline Value', value: !loadedCollections.leads ? '...' : computedStats.pipelineValue, icon: Coins, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
+    { title: 'Active Team', value: !loadedCollections.attendance ? '...' : computedStats.activeTeam.toString(), icon: Users, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
+    { title: 'Total Leads', value: !loadedCollections.leads ? '...' : computedStats.totalLeads.toString(), icon: TrendingUp, color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20' },
+    { title: 'On Leave Today', value: !loadedCollections.leaves ? '...' : computedStats.leavesToday.toString(), icon: CalendarRange, color: 'text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/20' },
+    { title: 'Pending Alerts', value: !loadedCollections.alerts ? '...' : pendingAlertsCount.toString(), icon: AlertTriangle, color: 'text-amber-500', bg: 'bg-amber-500/10', border: 'border-amber-500/20' },
+    { title: 'Completed Tasks', value: !loadedCollections.tasks ? '...' : completedTasksCount.toString(), icon: CheckCircle2, color: 'text-green-400', bg: 'bg-green-500/10', border: 'border-green-500/20' },
+    { title: 'Sched. Compliance', value: !loadedCollections.schedules ? '...' : `${computedStats.compliance}%`, icon: TrendingUp, color: 'text-teal-400', bg: 'bg-teal-500/10', border: 'border-teal-500/20' },
   ];
 
   const getActivityIcon = (type: string) => {
@@ -285,29 +348,33 @@ export default function Overview() {
 
   return (
     <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.15, ease: 'easeOut' }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, ease: 'easeOut' }}
       className="space-y-6 lg:space-y-8 pb-10 print:p-0"
     >
       {/* Overview Top Header & Report Exporter controls */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-4 lg:p-6 rounded-2xl glass-card border border-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.3)] print:border-none print:shadow-none print:bg-transparent">
-        <div>
-          <h2 className="text-xl font-bold text-slate-100 print:text-slate-900">APEC Operations Terminal</h2>
-          <p className="text-xs text-slate-400 mt-0.5 print:text-slate-600">Operational overview and analytics control dashboard</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-5 lg:p-7 rounded-[2rem] glass-card border border-white/5 shadow-[0_8px_30px_rgba(0,0,0,0.4)] print:border-none print:shadow-none print:bg-transparent overflow-hidden relative">
+        {/* Subtle background glow */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+        
+        <div className="relative z-10">
+          <h2 className="text-2xl font-bold text-white print:text-slate-900 tracking-tight">APEC Operations Center</h2>
+          <p className="text-sm text-slate-400 mt-1 print:text-slate-600">Real-time operational overview and enterprise analytics</p>
         </div>
+        
         {isAdmin && (
-          <div className="flex items-center gap-2 self-stretch sm:self-auto print:hidden">
+          <div className="flex items-center gap-3 self-stretch sm:self-auto print:hidden relative z-10">
             <button 
               onClick={() => handleExport('csv')}
-              className="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-slate-100 hover:border-slate-700 text-xs font-semibold transition-all flex items-center justify-center gap-1.5"
+              className="flex-1 sm:flex-initial px-4 py-2.5 rounded-2xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700 text-slate-300 hover:text-white text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-2 shadow-sm hover:shadow-md"
             >
               <Download className="w-4 h-4" />
               Export CSV
             </button>
             <button 
               onClick={() => handleExport('pdf')}
-              className="flex-1 sm:flex-initial px-3.5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-950 text-xs font-bold transition-all shadow-[0_4px_12px_rgba(6,182,212,0.15)] hover:shadow-lg flex items-center justify-center gap-1.5"
+              className="flex-1 sm:flex-initial px-4 py-2.5 rounded-2xl bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-950 text-xs font-bold transition-all duration-300 shadow-[0_4px_15px_rgba(6,182,212,0.25)] hover:shadow-[0_6px_20px_rgba(6,182,212,0.4)] flex items-center justify-center gap-2"
             >
               <FileText className="w-4 h-4" />
               Generate PDF Report
@@ -316,59 +383,93 @@ export default function Overview() {
         )}
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 print:grid-cols-4">
+      {/* Stats Grid - Upgraded to 8 cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 print:grid-cols-4">
         {stats.map((stat, idx) => (
-          <div key={idx} className="p-5 lg:p-6 rounded-2xl glass-card flex items-center justify-between group hover:border-white/15 hover:-translate-y-0.5 transition-all duration-300 print:border-slate-200 print:bg-slate-50 print:text-slate-900">
-            <div>
-              <p className="text-xs lg:text-sm font-medium text-slate-400 mb-1 print:text-slate-500">{stat.title}</p>
-              <h3 className="text-2xl lg:text-3xl font-bold text-slate-100 tracking-tight print:text-slate-900">{stat.value}</h3>
+          <motion.div 
+            key={idx} 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.05, duration: 0.3 }}
+            className="p-5 lg:p-6 rounded-[2rem] glass-card flex flex-col justify-between group hover:bg-slate-900/40 hover:border-white/10 transition-all duration-300 relative overflow-hidden print:border-slate-200 print:bg-slate-50 print:text-slate-900 h-36"
+          >
+            {/* Ambient card glow based on stat color */}
+            <div className={`absolute -right-4 -top-4 w-24 h-24 ${stat.bg} rounded-full blur-[30px] opacity-20 group-hover:opacity-40 transition-opacity duration-300 pointer-events-none`} />
+            
+            <div className="flex justify-between items-start z-10 relative">
+              <div className={`w-11 h-11 rounded-2xl ${stat.bg} ${stat.border} border flex items-center justify-center shadow-sm print:bg-slate-100 print:border-slate-200`}>
+                <stat.icon className={`w-5 h-5 ${stat.color} print:text-slate-700`} />
+              </div>
             </div>
-            <div className={`w-12 h-12 rounded-xl ${stat.bg} ${stat.border} border flex items-center justify-center transition-transform group-hover:scale-110 shadow-sm print:bg-slate-100 print:border-slate-200`}>
-              <stat.icon className={`w-6 h-6 ${stat.color} print:text-slate-700`} />
+            
+            <div className="z-10 relative mt-3">
+              <h3 className="text-2xl font-bold text-white tracking-tight print:text-slate-900">{stat.value}</h3>
+              <p className="text-[11px] lg:text-xs font-medium text-slate-400 mt-1 print:text-slate-500 truncate">{stat.title}</p>
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
 
       {/* Split layouts */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 print:grid-cols-3">
         {/* Chart */}
-        <div className="xl:col-span-2 p-5 lg:p-6 rounded-2xl glass-card flex flex-col min-h-[350px] lg:min-h-[400px] print:border-slate-200 print:bg-slate-50">
-          <div className="flex items-center justify-between mb-8">
+        <div className="xl:col-span-2 p-5 lg:p-7 rounded-[2rem] glass-card flex flex-col min-h-[350px] lg:min-h-[420px] relative overflow-hidden print:border-slate-200 print:bg-slate-50">
+          {/* Subtle grid background */}
+          <div 
+            className="absolute inset-0 opacity-[0.03] pointer-events-none" 
+            style={{ 
+              backgroundImage: 'radial-gradient(var(--tw-colors-slate-100) 1px, transparent 1px)', 
+              backgroundSize: '20px 20px' 
+            }} 
+          />
+          
+          <div className="flex items-center justify-between mb-8 relative z-10">
             <div>
-              <h3 className="text-lg font-semibold text-slate-100 print:text-slate-900">Project Analytics</h3>
-              <p className="text-xs text-slate-400 mt-0.5 print:text-slate-500">Daily workflow distribution (Last 7 Days)</p>
+              <h3 className="text-lg font-bold text-white print:text-slate-900">Project Analytics</h3>
+              <p className="text-xs text-slate-400 mt-1 print:text-slate-500">Daily workflow dispatch distribution (Last 7 Days)</p>
             </div>
           </div>
+          
           {projectsList.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-center">
-              <TrendingUp className="w-12 h-12 text-slate-700 mb-2" />
-              <p className="text-sm font-medium text-slate-400">No project data to analyze</p>
-              <p className="text-xs text-slate-500 mt-1">Please populate database in Settings or Projects tab.</p>
+            <div className="flex-1 flex flex-col items-center justify-center text-center relative z-10">
+              <div className="w-16 h-16 rounded-full bg-slate-900/50 border border-slate-800 flex items-center justify-center mb-3">
+                <TrendingUp className="w-8 h-8 text-slate-600" />
+              </div>
+              <p className="text-sm font-semibold text-slate-300">No project data to analyze</p>
+              <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">Please populate the database in Settings or the Projects tab to generate analytics.</p>
             </div>
           ) : (
-            <div className="flex-1 overflow-x-auto pb-2 print:overflow-visible">
-              <div className="flex items-end gap-1.5 sm:gap-2 pb-6 pt-4 px-1 lg:px-4 h-full min-w-[480px] sm:min-w-0 border-b border-slate-800 relative print:border-slate-200 print:min-w-0">
-                <div className="absolute inset-0 flex flex-col justify-between pointer-events-none pb-6">
+            <div className="flex-1 overflow-x-auto pb-2 print:overflow-visible relative z-10">
+              <div className="flex items-end gap-2 lg:gap-4 pb-8 pt-6 px-2 lg:px-4 h-full min-w-[480px] sm:min-w-0 border-b border-slate-800 relative print:border-slate-200 print:min-w-0">
+                {/* Horizontal reference lines */}
+                <div className="absolute inset-0 flex flex-col justify-between pointer-events-none pb-8">
                   {[100, 75, 50, 25, 0].map(val => (
-                     <div key={val} className="w-full border-t border-slate-800/40 print:border-slate-200/50 flex items-center" />
+                     <div key={val} className="w-full border-t border-slate-800/30 print:border-slate-200/50 flex items-center" />
                   ))}
                 </div>
+                
+                {/* Bars */}
                 {dailyData.heights.map((h, i) => {
                   const count = dailyData.counts[i];
                   return (
                     <div key={i} className="flex-1 flex flex-col justify-end group h-full relative z-10">
-                      {/* Tooltip */}
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 border border-slate-800 text-slate-200 text-[10px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-20 font-mono shadow-md">
-                        {count} {count === 1 ? 'Dispatch' : 'Dispatches'}
+                      {/* Premium Tooltip */}
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-3 py-2 bg-slate-900/95 backdrop-blur-md border border-cyan-500/30 text-white text-[11px] rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap z-20 shadow-[0_4px_20px_rgba(0,0,0,0.5)] flex items-center gap-2 transform group-hover:-translate-y-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+                        <span className="font-bold">{count}</span> Dispatches
                       </div>
+                      
+                      {/* Bar body */}
                       <div 
-                        className="w-full bg-gradient-to-t from-cyan-500/20 to-cyan-500 group-hover:from-cyan-500/40 group-hover:to-cyan-400 rounded-t-lg transition-all duration-300 shadow-[0_0_15px_rgba(6,182,212,0.15)] relative border border-white/10 print:bg-slate-300 print:border-slate-400 print:shadow-none cursor-pointer"
-                        style={{ height: `${Math.max(h, 2)}%` }}
+                        className="w-full bg-gradient-to-t from-cyan-500/10 via-cyan-500/40 to-cyan-400 group-hover:from-cyan-500/20 group-hover:via-cyan-400/60 group-hover:to-cyan-300 rounded-t-xl transition-all duration-300 relative print:bg-slate-300 print:border-slate-400 print:shadow-none cursor-pointer"
+                        style={{ height: `${Math.max(h, 4)}%` }}
                       >
+                        {/* Top highlight */}
+                        <div className="absolute top-0 left-0 right-0 h-1 bg-white/20 rounded-t-xl"></div>
+                        {/* Glow effect on hover */}
+                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-[0_0_20px_rgba(6,182,212,0.3)] pointer-events-none"></div>
                       </div>
-                      <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-[9px] text-slate-500 uppercase font-mono print:text-slate-700 whitespace-nowrap">{dailyData.labels[i]}</span>
+                      <span className="absolute -bottom-7 left-1/2 -translate-x-1/2 text-[10px] text-slate-400 font-medium print:text-slate-700 whitespace-nowrap">{dailyData.labels[i]}</span>
                     </div>
                   );
                 })}
@@ -378,28 +479,35 @@ export default function Overview() {
         </div>
 
         {/* Recent Activity */}
-        <div className="p-5 lg:p-6 rounded-2xl glass-card flex flex-col min-h-[350px] print:border-slate-200 print:bg-slate-50">
-          <h3 className="text-lg font-semibold text-slate-100 print:text-slate-900 mb-6">Recent Activity</h3>
+        <div className="p-5 lg:p-7 rounded-[2rem] glass-card flex flex-col min-h-[350px] print:border-slate-200 print:bg-slate-50 relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-slate-800 to-transparent"></div>
+          
+          <h3 className="text-lg font-bold text-white print:text-slate-900 mb-6">Activity Feed</h3>
+          
           {activitiesList.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center">
-              <Package className="w-12 h-12 text-slate-700 mb-2" />
-              <p className="text-sm font-medium text-slate-400">No logs found</p>
+              <div className="w-12 h-12 rounded-2xl bg-slate-900/40 border border-slate-800 flex items-center justify-center mb-3">
+                <Package className="w-5 h-5 text-slate-600" />
+              </div>
+              <p className="text-sm font-semibold text-slate-300">No logs found</p>
               <p className="text-xs text-slate-500 mt-1">Actions on database will be logged here.</p>
             </div>
           ) : (
-            <div className="space-y-6 flex-1 overflow-y-auto max-h-[300px] pr-1 scrollbar-thin print:max-h-none print:overflow-visible">
-              {activitiesList.slice(0, 5).map((item, i) => {
+            <div className="space-y-4 flex-1 overflow-y-auto max-h-[320px] pr-2 scrollbar-thin print:max-h-none print:overflow-visible">
+              {activitiesList.slice(0, 6).map((item, i) => {
                 const iconData = getActivityIcon(item.type);
                 const Icon = iconData.icon;
                 return (
-                  <div key={item.id || i} className="flex items-start gap-4 group print:text-slate-900">
-                    <div className={`w-10 h-10 rounded-full ${iconData.bg} border ${iconData.border} flex items-center justify-center shrink-0 shadow-sm print:bg-slate-100 print:border-slate-200`}>
+                  <div key={item.id || i} className="flex items-start gap-4 group print:text-slate-900 p-2 rounded-2xl hover:bg-slate-900/40 transition-colors">
+                    <div className={`w-10 h-10 rounded-2xl ${iconData.bg} border ${iconData.border} flex items-center justify-center shrink-0 shadow-sm print:bg-slate-100 print:border-slate-200 transition-transform group-hover:scale-110`}>
                       <Icon className={`w-4 h-4 ${iconData.color} print:text-slate-700`} />
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-slate-200 group-hover:text-slate-50 truncate transition-colors print:text-slate-900">{item.title}</p>
-                      <p className="text-xs text-slate-400 truncate mt-0.5 print:text-slate-600">{item.desc}</p>
-                      <p className="text-[10px] text-slate-500 mt-1 font-medium print:text-slate-500">{item.time}</p>
+                    <div className="min-w-0 flex-1 pt-0.5">
+                      <div className="flex justify-between items-start gap-2">
+                        <p className="text-sm font-semibold text-slate-200 group-hover:text-white truncate transition-colors print:text-slate-900">{item.title}</p>
+                        <p className="text-[10px] text-slate-500 font-medium print:text-slate-500 shrink-0 mt-0.5">{item.time}</p>
+                      </div>
+                      <p className="text-xs text-slate-400 line-clamp-1 mt-0.5 print:text-slate-600">{item.desc}</p>
                     </div>
                   </div>
                 );
