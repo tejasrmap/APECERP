@@ -38,9 +38,8 @@ export default function LocationHistory() {
   }[]>([]);
   const [selectedEmployee, setSelectedEmployee] = useState('');
   
-  // Default to today
-  const [startDateStr, setStartDateStr] = useState(new Date().toISOString().split('T')[0]);
-  const [endDateStr, setEndDateStr] = useState(new Date().toISOString().split('T')[0]);
+  // Default to today (single date)
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<TelemetryPoint[]>([]);
@@ -243,8 +242,8 @@ export default function LocationHistory() {
       setError("Please select an employee first.");
       return;
     }
-    if (!startDateStr || !endDateStr) {
-      setError("Please select a valid date range.");
+    if (!selectedDate) {
+      setError("Please select a date.");
       return;
     }
     
@@ -253,10 +252,10 @@ export default function LocationHistory() {
     setData([]);
 
     try {
-      const start = new Date(startDateStr);
+      const start = new Date(selectedDate);
       start.setHours(0, 0, 0, 0);
       
-      const end = new Date(endDateStr);
+      const end = new Date(selectedDate);
       end.setHours(23, 59, 59, 999);
 
       const empInfo = employees.find(e => e.id === selectedEmployee);
@@ -416,7 +415,7 @@ export default function LocationHistory() {
 
       {/* Filters */}
       <div className="p-5 rounded-2xl glass-card border border-white/10 shadow-lg space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
           <div className="flex flex-col gap-1">
             <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1 flex items-center gap-1.5">
               <User className="w-3 h-3" /> Employee
@@ -435,29 +434,20 @@ export default function LocationHistory() {
 
           <div className="flex flex-col gap-1">
             <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1 flex items-center gap-1.5">
-              <Calendar className="w-3 h-3" /> Start Date
+              <Calendar className="w-3 h-3" /> Date
             </label>
-            <input 
+            <input
               type="date"
-              value={startDateStr}
-              onChange={(e) => setStartDateStr(e.target.value)}
+              value={selectedDate}
+              max={new Date().toISOString().split('T')[0]}
+              onChange={(e) => {
+                setSelectedDate(e.target.value);
+              }}
               className="bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-xl px-3.5 py-2 text-xs text-slate-200 focus:outline-none font-mono"
             />
           </div>
 
-          <div className="flex flex-col gap-1">
-            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1 flex items-center gap-1.5">
-              <Calendar className="w-3 h-3" /> End Date
-            </label>
-            <input 
-              type="date"
-              value={endDateStr}
-              onChange={(e) => setEndDateStr(e.target.value)}
-              className="bg-slate-950 border border-slate-800 focus:border-cyan-500 rounded-xl px-3.5 py-2 text-xs text-slate-200 focus:outline-none font-mono"
-            />
-          </div>
-
-          <button 
+          <button
             onClick={handleSearch}
             disabled={loading}
             className="w-full h-[38px] px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
