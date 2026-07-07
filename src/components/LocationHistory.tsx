@@ -80,29 +80,31 @@ export default function LocationHistory() {
 
       const q = query(
         collection(db, 'telemetry'),
-        where('userId', '==', selectedEmployee),
-        where('timestamp', '>=', Timestamp.fromDate(start)),
-        where('timestamp', '<=', Timestamp.fromDate(end))
+        where('userId', '==', selectedEmployee)
       );
 
       const snap = await getDocs(q);
-      const points = snap.docs.map(doc => {
-        const d = doc.data();
-        let ts = new Date();
-        if (d.timestamp?.toDate) {
-          ts = d.timestamp.toDate();
-        } else if (typeof d.timestamp === 'string') {
-          ts = new Date(d.timestamp);
-        } else if (typeof d.timestamp === 'number') {
-          ts = new Date(d.timestamp);
-        }
+      const points = snap.docs
+        .map(doc => {
+          const d = doc.data();
+          let ts = new Date();
+          if (d.timestamp?.toDate) {
+            ts = d.timestamp.toDate();
+          } else if (typeof d.timestamp === 'string') {
+            ts = new Date(d.timestamp);
+          } else if (typeof d.timestamp === 'number') {
+            ts = new Date(d.timestamp);
+          }
 
-        return {
-          id: doc.id,
-          ...d,
-          timestamp: ts,
-        } as TelemetryPoint;
-      });
+          return {
+            id: doc.id,
+            ...d,
+            timestamp: ts,
+          } as TelemetryPoint;
+        })
+        .filter(point => {
+          return point.timestamp >= start && point.timestamp <= end;
+        });
 
       // Sort descending (latest first)
       points.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
