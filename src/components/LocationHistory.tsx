@@ -78,12 +78,23 @@ export default function LocationHistory() {
       const end = new Date(endDateStr);
       end.setHours(23, 59, 59, 999);
 
+      // Query by employeeId (matching the Firestore database writes)
       const q = query(
         collection(db, 'telemetry'),
-        where('userId', '==', selectedEmployee)
+        where('employeeId', '==', selectedEmployee)
       );
 
-      const snap = await getDocs(q);
+      let snap = await getDocs(q);
+
+      // Fallback query in case any older telemetry records used 'userId' instead of 'employeeId'
+      if (snap.empty) {
+        const fallbackQ = query(
+          collection(db, 'telemetry'),
+          where('userId', '==', selectedEmployee)
+        );
+        snap = await getDocs(fallbackQ);
+      }
+
       const points = snap.docs
         .map(doc => {
           const d = doc.data();
