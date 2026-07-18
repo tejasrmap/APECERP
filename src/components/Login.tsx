@@ -684,8 +684,10 @@ export default function Login() {
           )}
         </div>
       </motion.div>
-      <div className="text-[10px] text-slate-500 font-medium tracking-wider uppercase mt-6 relative z-10">
-        &copy; {new Date().getFullYear()} APEC Power Solutions. All rights reserved.
+      <div className="text-[10px] text-slate-500 font-medium tracking-wider uppercase mt-6 relative z-10 flex flex-col sm:flex-row items-center gap-1.5 sm:gap-3 text-center">
+        <span>&copy; {new Date().getFullYear()} APEC Power Solutions. All rights reserved.</span>
+        <span className="hidden sm:inline text-slate-700">•</span>
+        <span className="text-slate-400 font-semibold">Made by <span className="text-cyan-400 font-bold">GT INNOX LLP</span></span>
       </div>
     </div>
   );

@@ -541,12 +541,16 @@ export default function ProfileView() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.35, delay: 0.25 }}
-            className="flex items-center justify-center pt-8"
+            className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-8 text-center"
           >
             <div className="flex items-center gap-1.5 text-slate-500">
               <User className="w-3.5 h-3.5" />
               <span className="text-[10px] font-medium uppercase tracking-wider">APEC Power Solutions Pvt. Ltd. · Employee Registry</span>
             </div>
+            <span className="hidden sm:inline text-slate-700">•</span>
+            <span className="text-[10px] text-slate-400 font-semibold tracking-wider uppercase">
+              Made by <span className="text-cyan-400 font-bold">GT INNOX LLP</span>
+            </span>
           </motion.div>
 
           {/* Image Zoom Modal */}

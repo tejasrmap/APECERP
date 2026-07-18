@@ -6,6 +6,7 @@ import { Loader2 } from 'lucide-react';
 import Login from './components/Login';
 import ProtectedRoute from './components/ProtectedRoute';
 import Dashboard from './components/Dashboard';
+import Watermark from './components/Watermark';
 
 // Lazy loaded (only parsed when the route is visited)
 const Overview     = lazy(() => import('./components/Overview'));
@@ -33,7 +34,9 @@ const PageLoader = () => (
 
 export default function App() {
   return (
-    <Routes>
+    <>
+      <Watermark />
+      <Routes>
       <Route path="/" element={<Login />} />
       <Route path="/profile/:id" element={
         <Suspense fallback={<PageLoader />}><ProfileView /></Suspense>
@@ -89,5 +92,6 @@ export default function App() {
         </Route>
       </Route>
     </Routes>
+    </>
   );
 }

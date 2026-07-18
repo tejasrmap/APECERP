@@ -525,6 +525,12 @@ export default function Dashboard() {
             <LogOut className="w-4 h-4" />
             Sign Out
           </button>
+          
+          <div className="mt-3 pt-3 border-t border-slate-800/60 text-center">
+            <p className="text-[10px] font-medium text-slate-500 tracking-wider uppercase">
+              Made by <span className="text-cyan-400 font-bold">GT INNOX LLP</span>
+            </p>
+          </div>
         </div>
       </aside>
 

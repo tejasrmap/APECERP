@@ -396,11 +396,11 @@ export default function Reports() {
           </div>
           <div>
             <h1 className="text-xl font-bold text-slate-900 leading-tight">APEC Power Solutions</h1>
-            <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest font-mono">Enterprise Resource Planning</p>
+            <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest font-mono">Enterprise Resource Planning • Made by GT INNOX LLP</p>
           </div>
         </div>
         <div className="text-right">
-          <h2 className="text-base font-bold text-slate-900">Attendance Log</h2>
+          <h2 className="text-base font-bold text-slate-900">Attendance Report</h2>
           <p className="text-[10px] text-slate-500 mt-0.5 font-mono font-medium">Period: {startDateStr} to {endDateStr}</p>
         </div>
       </div>

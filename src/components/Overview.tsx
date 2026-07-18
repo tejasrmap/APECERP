@@ -360,7 +360,7 @@ export default function Overview() {
         
         <div className="relative z-10">
           <h2 className="text-2xl font-bold text-white print:text-slate-900 tracking-tight">APEC Operations Center</h2>
-          <p className="text-sm text-slate-400 mt-1 print:text-slate-600">Real-time operational overview and enterprise analytics</p>
+          <p className="text-sm text-slate-400 mt-1 print:text-slate-600">Real-time operational overview and enterprise analytics • Made by <span className="font-bold text-cyan-400 print:text-slate-900">GT INNOX LLP</span></p>
         </div>
         
         {isAdmin && (

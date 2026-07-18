@@ -55,7 +55,7 @@ export default function ImageViewerModal({ isOpen, onClose, imageUrl, imageName 
                 </div>
                 <div className="min-w-0">
                   <h3 className="text-sm font-semibold text-white truncate pr-2">{imageName || 'Photo'}</h3>
-                  <p className="text-[10px] text-slate-400 mt-0.5">APEC ERP Image Viewer</p>
+                  <p className="text-[10px] text-slate-400 mt-0.5">APEC ERP Image Viewer • Made by <span className="text-cyan-400 font-bold">GT INNOX LLP</span></p>
                 </div>
               </div>
 
@@ -128,8 +128,10 @@ export default function ImageViewerModal({ isOpen, onClose, imageUrl, imageName 
             </div>
 
             {/* Helper status bar */}
-            <div className="text-[10px] text-slate-500 font-mono pointer-events-none">
-              Zoom: {Math.round(scale * 100)}% | Rotation: {rotation}°
+            <div className="text-[10px] text-slate-500 font-mono pointer-events-none flex items-center gap-3">
+              <span>Zoom: {Math.round(scale * 100)}% | Rotation: {rotation}°</span>
+              <span className="text-slate-700">•</span>
+              <span className="text-slate-400 font-sans uppercase font-medium tracking-wider">Made by <span className="text-cyan-400 font-bold">GT INNOX LLP</span></span>
             </div>
           </div>
         </>

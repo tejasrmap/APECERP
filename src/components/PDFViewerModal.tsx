@@ -43,7 +43,7 @@ export default function PDFViewerModal({ isOpen, onClose, fileUrl, fileName }: P
                   </div>
                   <div className="min-w-0">
                     <h3 className="text-sm font-semibold text-white truncate pr-2">{fileName || 'Document.pdf'}</h3>
-                    <p className="text-[10px] text-slate-400 mt-0.5">APEC ERP Document Viewer</p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">APEC ERP Document Viewer • Made by <span className="text-cyan-400 font-bold">GT INNOX LLP</span></p>
                   </div>
                 </div>
 
@@ -89,6 +89,14 @@ export default function PDFViewerModal({ isOpen, onClose, fileUrl, fileName }: P
                     <p className="text-sm font-medium text-slate-400">Failed to load PDF path</p>
                   </div>
                 )}
+              </div>
+
+              {/* Footer Bar */}
+              <div className="p-2.5 border-t border-slate-800/80 bg-slate-950/50 flex items-center justify-between px-4">
+                <span className="text-[10px] text-slate-500 font-mono">APEC Enterprise Document Protocol</span>
+                <span className="text-[10px] text-slate-400 font-medium tracking-wider uppercase">
+                  Made by <span className="text-cyan-400 font-bold">GT INNOX LLP</span>
+                </span>
               </div>
 
               {/* Footer Fallback (Useful for mobile view compatibility) */}
