@@ -3,22 +3,7 @@ import React from 'react';
 export default function Watermark() {
   return (
     <>
-      {/* 1. Ambient Background Canvas Watermark */}
-      <div 
-        aria-hidden="true"
-        className="fixed inset-0 pointer-events-none select-none z-[1] overflow-hidden opacity-[0.035] dark:opacity-[0.04] flex flex-wrap content-start justify-around gap-x-16 gap-y-20 p-8 transform -rotate-12 scale-125"
-      >
-        {Array.from({ length: 48 }).map((_, index) => (
-          <div 
-            key={index} 
-            className="text-xs font-black tracking-[0.25em] text-slate-400 dark:text-cyan-300 uppercase whitespace-nowrap"
-          >
-            MADE BY GT INNOX LLP
-          </div>
-        ))}
-      </div>
-
-      {/* 2. Floating On-Screen Glass Badge */}
+      {/* Floating On-Screen Glass Pill Badge */}
       <div className="fixed bottom-3 right-3 sm:bottom-4 sm:right-5 z-[60] pointer-events-none select-none">
         <div className="glass-card px-3 py-1.5 rounded-full border border-cyan-500/20 bg-slate-950/70 dark:bg-slate-950/80 backdrop-blur-md shadow-[0_4px_20px_rgba(0,0,0,0.4)] flex items-center gap-2 transition-all duration-300 hover:border-cyan-500/40">
           <span className="relative flex h-2 w-2">
