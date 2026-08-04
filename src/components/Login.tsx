@@ -589,7 +589,7 @@ export default function Login() {
                           setPassword(e.target.value);
                           setErrorMsg('');
                         }}
-                        placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                        placeholder="Password"
                         required
                         disabled={isLoading}
                         className="w-full bg-slate-950/40 border border-slate-800 text-slate-100 rounded-xl py-3.5 pl-11 pr-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/25 transition-all placeholder:text-slate-650 disabled:opacity-50 text-sm shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
