@@ -97,7 +97,9 @@ export default function Login() {
                 isAllowed = false;
               } else {
                 isAllowed = true;
-                if (docData.accessRole === 'Admin' || docData.roleType === 'Admin') {
+                const docEmail = docData.email ? docData.email.toLowerCase() : '';
+                const isDocAdmin = docEmail === 'admin@apecpowersolutions.com' || docEmail === 'managingdirector@apecpowersolutions.com';
+                if (docData.accessRole === 'Admin' || docData.roleType === 'Admin' || isDocAdmin) {
                   isAdminUser = true;
                 }
               }
@@ -373,7 +375,9 @@ export default function Login() {
       setStep('success');
       setTimeout(() => {
         localStorage.setItem('isAuthenticated', 'true');
-        const isAdminUser = employeeData.accessRole === 'Admin' || employeeData.roleType === 'Admin';
+        const empEmail = employeeData.email ? employeeData.email.toLowerCase() : '';
+        const isEmpAdmin = empEmail === 'admin@apecpowersolutions.com' || empEmail === 'managingdirector@apecpowersolutions.com';
+        const isAdminUser = employeeData.accessRole === 'Admin' || employeeData.roleType === 'Admin' || isEmpAdmin;
         localStorage.setItem('apec_isAdmin', isAdminUser ? 'true' : 'false');
         navigate(isAdminUser ? '/dashboard' : '/dashboard/my-profile');
       }, 2000);

@@ -273,7 +273,9 @@ export default function Dashboard() {
                 if (!snap.empty) {
                   const docData = snap.docs[0].data();
                   setUserProfile({ id: snap.docs[0].id, ...docData });
-                  if (docData.accessRole === 'Admin' || docData.roleType === 'Admin') {
+                  const profileEmail = docData.email ? docData.email.toLowerCase() : '';
+                  const isProfileAdminEmail = profileEmail === 'admin@apecpowersolutions.com' || profileEmail === 'managingdirector@apecpowersolutions.com';
+                  if (docData.accessRole === 'Admin' || docData.roleType === 'Admin' || isProfileAdminEmail) {
                     setIsAdmin(true);
                     localStorage.setItem('apec_isAdmin', 'true');
                   } else if (!isAdminEmail && !isAdminPhone) {
@@ -315,7 +317,9 @@ export default function Dashboard() {
                     if (matchedDoc) {
                       const docData = matchedDoc.data();
                       setUserProfile({ id: matchedDoc.id, ...docData });
-                      if (docData.accessRole === 'Admin' || docData.roleType === 'Admin') {
+                      const profileEmail = docData.email ? docData.email.toLowerCase() : '';
+                      const isProfileAdminEmail = profileEmail === 'admin@apecpowersolutions.com' || profileEmail === 'managingdirector@apecpowersolutions.com';
+                      if (docData.accessRole === 'Admin' || docData.roleType === 'Admin' || isProfileAdminEmail) {
                         setIsAdmin(true);
                         localStorage.setItem('apec_isAdmin', 'true');
                       } else if (!isAdminEmail && !isAdminPhone) {
