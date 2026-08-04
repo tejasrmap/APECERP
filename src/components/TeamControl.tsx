@@ -26,6 +26,7 @@ import { collection, onSnapshot, doc, deleteDoc, addDoc, updateDoc, Timestamp } 
 import { useOutletContext } from 'react-router-dom';
 import { db } from '../firebase';
 import { supabase } from '../supabase';
+import { AVATAR_THEMES, getAvatarTheme } from './colorUtils';
 
 export default function TeamControl() {
   const { setFirestoreError, isDbActionLoading, setIsDbActionLoading, isAdmin } = useOutletContext<any>();
@@ -804,51 +805,47 @@ export default function TeamControl() {
                       )}
                     </AnimatePresence>
                   </div>
-                  <div className="space-y-1 relative">
-                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Avatar Theme</label>
-                    <button
-                      type="button"
-                      onClick={() => setOpenDropdown(openDropdown === 'avatar' ? null : 'avatar')}
-                      className="w-full bg-slate-950/60 border border-slate-800 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:border-cyan-500 text-xs flex justify-between items-center transition-all shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] focus:ring-1 focus:ring-cyan-500/10 cursor-pointer text-left"
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">
+                      Route / Avatar Color
+                    </label>
+                    {/* Preview button */}
+                    <div
+                      className="w-full bg-slate-950/60 border border-slate-800 text-slate-100 rounded-xl py-2.5 px-3.5 text-xs flex items-center gap-2 cursor-default"
                     >
-                      <span className="capitalize">{newAvatar} Theme</span>
-                      <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${openDropdown === 'avatar' ? 'rotate-180' : ''}`} />
-                    </button>
-                    <AnimatePresence>
-                      {openDropdown === 'avatar' && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 5 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: 5 }}
-                          className="absolute z-30 w-full mt-1 bg-[#090d16]/95 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl overflow-hidden p-1 space-y-0.5"
+                      <span
+                        className="w-3.5 h-3.5 rounded-full shrink-0 border border-white/10"
+                        style={{ backgroundColor: getAvatarTheme(newAvatar).hex }}
+                      />
+                      <span className="capitalize">{getAvatarTheme(newAvatar).label}</span>
+                    </div>
+                    {/* Swatch grid */}
+                    <div className="grid grid-cols-5 gap-2 pt-2">
+                      {AVATAR_THEMES.map((theme) => (
+                        <button
+                          key={theme.value}
+                          type="button"
+                          title={theme.label}
+                          onClick={() => setNewAvatar(theme.value)}
+                          className={`group flex flex-col items-center gap-1 p-1 rounded-lg transition-all ${
+                            newAvatar === theme.value
+                              ? 'bg-white/10 ring-2 ring-white/30'
+                              : 'hover:bg-white/5'
+                          }`}
                         >
-                          {[
-                            { value: 'cyan', label: 'Cyan Theme' },
-                            { value: 'blue', label: 'Blue Theme' },
-                            { value: 'red', label: 'Red Theme' },
-                            { value: 'gold', label: 'Gold Theme' }
-                          ].map((theme) => (
-                            <button
-                              key={theme.value}
-                              type="button"
-                              onClick={() => {
-                                setNewAvatar(theme.value);
-                                setOpenDropdown(null);
-                              }}
-                              className={`w-full text-left px-3 py-2 text-xs rounded-lg transition-colors flex items-center justify-between ${
-                                newAvatar === theme.value 
-                                  ? 'bg-cyan-500/10 text-cyan-400 font-semibold' 
-                                  : 'text-slate-300 hover:bg-slate-800/40 hover:text-slate-100'
-                              }`}
-                            >
-                              <span>{theme.label}</span>
-                              {newAvatar === theme.value && <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />}
-                            </button>
-                          ))}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                          <span
+                            className="w-6 h-6 rounded-full border-2 transition-transform group-hover:scale-110"
+                            style={{
+                              backgroundColor: theme.hex + '33',
+                              borderColor: theme.hex,
+                            }}
+                          />
+                          <span className="text-[8px] text-slate-400 leading-none truncate w-full text-center">{theme.label}</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
+
               </div>
 
               {/* Section 4: Health & Emergency Credentials */}
@@ -1318,51 +1315,45 @@ export default function TeamControl() {
                       )}
                     </AnimatePresence>
                   </div>
-                  <div className="space-y-1 relative">
-                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Avatar Theme</label>
-                    <button
-                      type="button"
-                      onClick={() => setOpenEditDropdown(openEditDropdown === 'avatar' ? null : 'avatar')}
-                      className="w-full bg-slate-950/60 border border-slate-800 text-slate-100 rounded-xl py-2.5 px-3.5 focus:outline-none focus:border-cyan-500 text-xs flex justify-between items-center transition-all shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] focus:ring-1 focus:ring-cyan-500/10 cursor-pointer text-left"
-                    >
-                      <span className="capitalize">{editAvatar} Theme</span>
-                      <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${openEditDropdown === 'avatar' ? 'rotate-180' : ''}`} />
-                    </button>
-                    <AnimatePresence>
-                      {openEditDropdown === 'avatar' && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 5 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: 5 }}
-                          className="absolute z-30 w-full mt-1 bg-[#090d16]/95 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl overflow-hidden p-1 space-y-0.5"
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">
+                      Route / Avatar Color
+                    </label>
+                    {/* Preview */}
+                    <div className="w-full bg-slate-950/60 border border-slate-800 text-slate-100 rounded-xl py-2.5 px-3.5 text-xs flex items-center gap-2">
+                      <span
+                        className="w-3.5 h-3.5 rounded-full shrink-0 border border-white/10"
+                        style={{ backgroundColor: getAvatarTheme(editAvatar).hex }}
+                      />
+                      <span className="capitalize">{getAvatarTheme(editAvatar).label}</span>
+                    </div>
+                    {/* Swatch grid */}
+                    <div className="grid grid-cols-5 gap-2 pt-2">
+                      {AVATAR_THEMES.map((theme) => (
+                        <button
+                          key={theme.value}
+                          type="button"
+                          title={theme.label}
+                          onClick={() => setEditAvatar(theme.value)}
+                          className={`group flex flex-col items-center gap-1 p-1 rounded-lg transition-all ${
+                            editAvatar === theme.value
+                              ? 'bg-white/10 ring-2 ring-white/30'
+                              : 'hover:bg-white/5'
+                          }`}
                         >
-                          {[
-                            { value: 'cyan', label: 'Cyan Theme' },
-                            { value: 'blue', label: 'Blue Theme' },
-                            { value: 'red', label: 'Red Theme' },
-                            { value: 'gold', label: 'Gold Theme' }
-                          ].map((theme) => (
-                            <button
-                              key={theme.value}
-                              type="button"
-                              onClick={() => {
-                                setEditAvatar(theme.value);
-                                setOpenEditDropdown(null);
-                              }}
-                              className={`w-full text-left px-3 py-2 text-xs rounded-lg transition-colors flex items-center justify-between ${
-                                editAvatar === theme.value 
-                                  ? 'bg-cyan-500/10 text-cyan-400 font-semibold' 
-                                  : 'text-slate-300 hover:bg-slate-800/40 hover:text-slate-100'
-                              }`}
-                            >
-                              <span>{theme.label}</span>
-                              {editAvatar === theme.value && <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />}
-                            </button>
-                          ))}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                          <span
+                            className="w-6 h-6 rounded-full border-2 transition-transform group-hover:scale-110"
+                            style={{
+                              backgroundColor: theme.hex + '33',
+                              borderColor: theme.hex,
+                            }}
+                          />
+                          <span className="text-[8px] text-slate-400 leading-none truncate w-full text-center">{theme.label}</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
+
                 </div>
               </div>
 
@@ -1672,28 +1663,32 @@ export default function TeamControl() {
                         'managingdirector@apecpowersolutions.com'
                       ].includes(m.email?.toLowerCase());
 
-                      const avatarColors: Record<string, string> = {
-                        cyan: 'from-cyan-500/20 to-cyan-500/5 text-cyan-405 border-cyan-500/25',
-                        blue: 'from-blue-500/20 to-blue-500/5 text-blue-400 border-blue-500/25',
-                        red: 'from-rose-500/20 to-rose-500/5 text-rose-400 border-rose-500/25',
-                        gold: 'from-amber-500/20 to-amber-500/5 text-amber-400 border-amber-500/25'
-                      };
-                      const avatarClass = avatarColors[m.avatar || 'cyan'] || avatarColors.cyan;
+                      const avatarTheme = getAvatarTheme(m.avatar);
+                      const avatarClass = avatarTheme.tailwind;
 
                       return (
                         <tr key={m.id} className="hover:bg-slate-900/40 hover:shadow-[0_0_15px_rgba(6,182,212,0.05)] transition-all duration-300 group">
                           <td className="p-4 text-center font-mono text-xs text-slate-400">{index + 1}</td>
                           <td className="p-4 font-mono text-xs text-slate-455">{m.employeeId || 'APEC-MEMBER'}</td>
                           <td className="p-4 font-bold text-slate-100 flex items-center gap-2.5">
-                            {m.photoUrl ? (
-                              <img src={m.photoUrl} alt={m.name} className="w-8 h-8 rounded-full object-cover border border-slate-700 shrink-0" />
-                            ) : (
-                              <span className={`w-8 h-8 rounded-full bg-gradient-to-br ${avatarClass} border flex items-center justify-center text-[10px] font-extrabold shrink-0`}>
-                                {m.name.slice(0, 2).toUpperCase()}
-                              </span>
-                            )}
+                            <div className="relative shrink-0">
+                              {m.photoUrl ? (
+                                <img src={m.photoUrl} alt={m.name} className="w-8 h-8 rounded-full object-cover border border-slate-700" />
+                              ) : (
+                                <span className={`w-8 h-8 rounded-full bg-gradient-to-br ${avatarClass} border flex items-center justify-center text-[10px] font-extrabold`}>
+                                  {m.name.slice(0, 2).toUpperCase()}
+                                </span>
+                              )}
+                              {/* Route color dot */}
+                              <span
+                                className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-slate-950"
+                                style={{ backgroundColor: avatarTheme.hex }}
+                                title={`Route color: ${avatarTheme.label}`}
+                              />
+                            </div>
                             <span className="truncate max-w-[120px]" title={m.name}>{m.name}</span>
                           </td>
+
                           <td className="p-4">
                             <div className="font-medium text-slate-205 truncate max-w-[150px]">{m.role}</div>
                             <div className="text-[10px] text-slate-500 font-mono mt-0.5">{m.branch || m.department || 'Vijayawada'}</div>
@@ -1866,12 +1861,7 @@ export default function TeamControl() {
                     className="w-12 h-12 rounded-full object-cover border-2 border-slate-700 shadow-sm shrink-0"
                   />
                 ) : (
-                  <span className={`w-12 h-12 rounded-full bg-gradient-to-br ${
-                    (isEditingProfile ? editAvatar : selectedProfile.avatar) === 'cyan' ? 'from-cyan-500/20 to-cyan-500/5 text-cyan-400 border-cyan-500/25' :
-                    (isEditingProfile ? editAvatar : selectedProfile.avatar) === 'blue' ? 'from-blue-500/20 to-blue-500/5 text-blue-400 border-blue-500/25' :
-                    (isEditingProfile ? editAvatar : selectedProfile.avatar) === 'red' ? 'from-rose-500/20 to-rose-500/5 text-rose-400 border-rose-500/25' :
-                    'from-amber-500/20 to-amber-500/5 text-amber-400 border-amber-500/25'
-                  } border flex items-center justify-center text-sm font-extrabold shadow-sm shrink-0`}>
+                  <span className={`w-12 h-12 rounded-full bg-gradient-to-br ${getAvatarTheme(isEditingProfile ? editAvatar : selectedProfile.avatar).tailwind} border flex items-center justify-center text-sm font-extrabold shadow-sm shrink-0`}>
                     {((isEditingProfile ? editName : selectedProfile.name) || 'AP').slice(0, 2).toUpperCase()}
                   </span>
                 )}
@@ -1928,10 +1918,7 @@ export default function TeamControl() {
                     />
                   ) : (
                     <span className={`w-12 h-12 rounded-xl bg-gradient-to-br ${
-                      (isEditingProfile ? editAvatar : selectedProfile.avatar) === 'cyan' ? 'from-cyan-500/20 to-cyan-500/5 text-cyan-400 border-cyan-500/20' :
-                      (isEditingProfile ? editAvatar : selectedProfile.avatar) === 'blue' ? 'from-blue-500/20 to-blue-500/5 text-blue-400 border-blue-500/20' :
-                      (isEditingProfile ? editAvatar : selectedProfile.avatar) === 'red' ? 'from-rose-500/20 to-rose-500/5 text-rose-400 border-rose-500/20' :
-                      'from-amber-500/20 to-amber-500/5 text-amber-400 border-amber-500/20'
+                      getAvatarTheme(isEditingProfile ? editAvatar : selectedProfile.avatar).tailwind
                     } border flex items-center justify-center text-sm font-extrabold shadow-sm shrink-0`}>
                       {((isEditingProfile ? editName : selectedProfile.name) || 'AP').slice(0, 2).toUpperCase()}
                     </span>
@@ -2194,52 +2181,46 @@ export default function TeamControl() {
                         />
                       </div>
 
-                      {/* Avatar Theme Select */}
-                      <div className="space-y-1 relative">
-                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">Avatar Theme</label>
-                        <button
-                          type="button"
-                          onClick={() => setOpenEditDropdown(openEditDropdown === 'avatar' ? null : 'avatar')}
-                          className="w-full bg-slate-950/60 border border-slate-800 text-slate-100 rounded-xl py-2 px-3 focus:outline-none focus:border-cyan-500 text-xs flex justify-between items-center transition-all cursor-pointer text-left font-mono"
-                        >
-                          <span className="capitalize">{editAvatar} Theme</span>
-                          <ChevronDown className={`w-3.5 h-3.5 text-slate-500 transition-transform duration-200 ${openEditDropdown === 'avatar' ? 'rotate-180' : ''}`} />
-                        </button>
-                        <AnimatePresence>
-                          {openEditDropdown === 'avatar' && (
-                            <motion.div
-                              initial={{ opacity: 0, y: 5 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: 5 }}
-                              className="absolute z-30 w-full mt-1 bg-[#090d16]/95 backdrop-blur-md border border-white/10 rounded-xl shadow-2xl overflow-hidden p-1 space-y-0.5"
+                      {/* Route / Avatar Color */}
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block ml-1">
+                          Route / Avatar Color
+                        </label>
+                        {/* Preview */}
+                        <div className="w-full bg-slate-950/60 border border-slate-800 text-slate-100 rounded-xl py-2 px-3 text-xs flex items-center gap-2">
+                          <span
+                            className="w-3.5 h-3.5 rounded-full shrink-0 border border-white/10"
+                            style={{ backgroundColor: getAvatarTheme(editAvatar).hex }}
+                          />
+                          <span className="capitalize">{getAvatarTheme(editAvatar).label}</span>
+                        </div>
+                        {/* Swatch grid */}
+                        <div className="grid grid-cols-5 gap-2 pt-2">
+                          {AVATAR_THEMES.map((theme) => (
+                            <button
+                              key={theme.value}
+                              type="button"
+                              title={theme.label}
+                              onClick={() => setEditAvatar(theme.value)}
+                              className={`group flex flex-col items-center gap-1 p-1 rounded-lg transition-all ${
+                                editAvatar === theme.value
+                                  ? 'bg-white/10 ring-2 ring-white/30'
+                                  : 'hover:bg-white/5'
+                              }`}
                             >
-                              {[
-                                { value: 'cyan', label: 'Cyan Theme' },
-                                { value: 'blue', label: 'Blue Theme' },
-                                { value: 'red', label: 'Red Theme' },
-                                { value: 'gold', label: 'Gold Theme' }
-                              ].map((theme) => (
-                                <button
-                                  key={theme.value}
-                                  type="button"
-                                  onClick={() => {
-                                    setEditAvatar(theme.value);
-                                    setOpenEditDropdown(null);
-                                  }}
-                                  className={`w-full text-left px-3 py-2 text-xs rounded-lg transition-colors flex items-center justify-between ${
-                                    editAvatar === theme.value 
-                                      ? 'bg-cyan-500/10 text-cyan-400 font-semibold' 
-                                      : 'text-slate-300 hover:bg-slate-800/40 hover:text-slate-100'
-                                  }`}
-                                >
-                                  <span>{theme.label}</span>
-                                  {editAvatar === theme.value && <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />}
-                                </button>
-                              ))}
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
+                              <span
+                                className="w-6 h-6 rounded-full border-2 transition-transform group-hover:scale-110"
+                                style={{
+                                  backgroundColor: theme.hex + '33',
+                                  borderColor: theme.hex,
+                                }}
+                              />
+                              <span className="text-[8px] text-slate-400 leading-none truncate w-full text-center">{theme.label}</span>
+                            </button>
+                          ))}
+                        </div>
                       </div>
+
 
                       {/* Skills & Certifications */}
                       <div className="space-y-1 col-span-2">

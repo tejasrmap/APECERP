@@ -13,7 +13,7 @@ import {
 import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 import L from 'leaflet';
-import { getEmployeeColor } from './colorUtils';
+import { resolveEmployeeHex } from './colorUtils';
 
 interface TelemetryPoint {
   id: string;
@@ -36,6 +36,7 @@ export default function LocationHistory() {
     name: string;
     employeeId: string;
     email: string;
+    avatar?: string;
   }[]>([]);
   const [selectedEmployee, setSelectedEmployee] = useState('');
   
@@ -130,10 +131,11 @@ export default function LocationHistory() {
 
     // Draw route lines connecting coordinates chronologically
     if (pathPoints.length >= 2) {
-      const empColor = selectedEmployee ? getEmployeeColor(selectedEmployee) : { hex: '#06b6d4' };
+      const selectedEmpData = employees.find(e => e.id === selectedEmployee);
+      const empColorHex = selectedEmployee ? resolveEmployeeHex(selectedEmployee, selectedEmpData?.avatar) : '#06b6d4';
       // Outer glow line (darker blue shadow)
       const glowLine = L.polyline(pathPoints, {
-        color: empColor.hex,
+        color: empColorHex,
         weight: 6,
         opacity: 0.15,
         lineJoin: 'round',
@@ -143,7 +145,7 @@ export default function LocationHistory() {
 
       // Core route line (cyan dash/dotted line)
       const coreLine = L.polyline(pathPoints, {
-        color: empColor.hex,
+        color: empColorHex,
         weight: 3.5,
         opacity: 0.85,
         lineJoin: 'round',
@@ -423,7 +425,7 @@ export default function LocationHistory() {
               <span className="flex items-center gap-1.5"><User className="w-3 h-3" /> Employee</span>
               {selectedEmployee && (
                 <span className="flex items-center gap-1">
-                  <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: getEmployeeColor(selectedEmployee).hex }} />
+                  <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: resolveEmployeeHex(selectedEmployee, employees.find(e => e.id === selectedEmployee)?.avatar) }} />
                   <span className="text-[8px] font-mono text-slate-400">Color Signature</span>
                 </span>
               )}

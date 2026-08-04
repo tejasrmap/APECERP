@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+﻿import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   MapPin, 
@@ -16,7 +16,7 @@ import { collection, onSnapshot, query, where, Timestamp } from 'firebase/firest
 import { useOutletContext } from 'react-router-dom';
 import { db } from '../firebase';
 import L from 'leaflet';
-import { getEmployeeColor } from './colorUtils';
+import { resolveEmployeeHex } from './colorUtils';
 
 const getDefaultCoordinates = (siteName: string) => {
   const name = siteName.toLowerCase();
@@ -82,6 +82,7 @@ interface ActiveEmployee {
   assignedProjectName?: string | null;
   isVerifiedOnSite?: boolean;
   routePoints?: { latitude: number; longitude: number; timestamp: Date }[];
+  avatar?: string;
 }
 
 export default function LiveTracking() {
@@ -280,7 +281,8 @@ export default function LiveTracking() {
           accuracy: latestItem.location?.accuracy,
           assignedProjectName: activeProjectName,
           isVerifiedOnSite: currentlyOnSite,
-          routePoints: routePoints
+          routePoints: routePoints,
+          avatar: teamMember?.avatar
         });
       }
     });
@@ -486,7 +488,7 @@ export default function LiveTracking() {
       const pos: L.LatLngExpression = [emp.latitude, emp.longitude];
       bounds.push(pos);
 
-      const empColor = getEmployeeColor(emp.id);
+      const empColorHex = resolveEmployeeHex(emp.id, emp.avatar);
       const isSelected = selectedEmpId === emp.id;
       const isAnySelected = selectedEmpId !== null;
 
@@ -518,7 +520,7 @@ export default function LiveTracking() {
 
         // 1. Outer glow path
         L.polyline(latlngs, {
-          color: empColor.hex,
+          color: empColorHex,
           weight: weightGlow,
           opacity: opacityGlow,
           lineJoin: 'round',
@@ -527,7 +529,7 @@ export default function LiveTracking() {
 
         // 2. Main solid path
         L.polyline(latlngs, {
-          color: empColor.hex,
+          color: empColorHex,
           weight: weightMain,
           opacity: opacityMain,
           lineJoin: 'round',
@@ -541,7 +543,7 @@ export default function LiveTracking() {
               radius: isSelected ? 3.5 : 2.5,
               fillColor: '#ffffff',
               fillOpacity: 1,
-              color: empColor.hex,
+              color: empColorHex,
               weight: isSelected ? 2.5 : 1.5,
               opacity: opacityMain
             }).addTo(pathGroup);
@@ -564,19 +566,19 @@ export default function LiveTracking() {
         <div class="p-3.5 min-w-[220px] text-slate-200 bg-[#0e1422]/95 backdrop-blur border border-slate-800 rounded-xl font-sans shadow-2xl">
           <div class="flex items-center gap-2 mb-2">
             ${emp.photoUrl 
-              ? `<img src="${emp.photoUrl}" class="w-9 h-9 rounded-full object-cover border-2" style="border-color: ${empColor.hex};" />`
-              : `<div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold border-2" style="background-color: ${empColor.hex}15; border-color: ${empColor.hex}; color: ${empColor.hex};">${emp.name.slice(0, 2).toUpperCase()}</div>`
+              ? `<img src="${emp.photoUrl}" class="w-9 h-9 rounded-full object-cover border-2" style="border-color: ${empColorHex};" />`
+              : `<div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold border-2" style="background-color: ${empColorHex}15; border-color: ${empColorHex}; color: ${empColorHex};">${emp.name.slice(0, 2).toUpperCase()}</div>`
             }
             <div>
               <h4 class="text-xs font-bold text-white leading-none">${emp.name}</h4>
-              <span class="text-[9px] font-mono font-bold" style="color: ${empColor.hex};">${emp.employeeId}</span>
+              <span class="text-[9px] font-mono font-bold" style="color: ${empColorHex};">${emp.employeeId}</span>
             </div>
           </div>
           <div class="space-y-1 text-[10px] text-slate-450 border-t border-slate-800/80 pt-1.5 font-sans">
             <p><strong class="text-slate-300 font-semibold">Project:</strong> ${emp.assignedProjectName || 'Unassigned'}</p>
             <p><strong class="text-slate-300 font-semibold">Status:</strong> ${emp.isVerifiedOnSite ? '<span class="text-emerald-400 font-bold">On-Site</span>' : '<span class="text-rose-400 font-bold">Off-Site</span>'}</p>
             <p><strong class="text-slate-300 font-semibold">Last Punch:</strong> ${emp.lastPunchTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-            <p><strong class="text-slate-300 font-semibold font-mono" style="color: ${empColor.hex};">Last Tracked:</strong> ${emp.lastTrackedTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+            <p><strong class="text-slate-300 font-semibold font-mono" style="color: ${empColorHex};">Last Tracked:</strong> ${emp.lastTrackedTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
             <p class="text-[9px] text-slate-500 mt-1.5 leading-normal italic border-t border-slate-800/60 pt-1">${displayAddress.slice(0, 80)}...</p>
           </div>
         </div>
@@ -586,7 +588,7 @@ export default function LiveTracking() {
       const avatarHtml = `
         <div class="relative flex items-center justify-center w-10 h-10 rounded-full border-2 shadow-lg transition-all duration-300 transform ${
           isSelected ? 'scale-125 z-[1000]' : isAnySelected ? 'opacity-40 scale-95' : 'hover:scale-110'
-        }" style="border-color: ${empColor.hex}; background-color: ${empColor.hex}22; color: ${empColor.hex};">
+        }" style="border-color: ${empColorHex}; background-color: ${empColorHex}22; color: ${empColorHex};">
           ${emp.photoUrl 
             ? `<img src="${emp.photoUrl}" class="w-full h-full rounded-full object-cover" />`
             : `<span class="text-xs font-black uppercase tracking-wider">${emp.name.slice(0, 2).toUpperCase()}</span>`
@@ -756,7 +758,7 @@ export default function LiveTracking() {
           ) : (
             filteredEmployees.map((emp) => {
               const isSelected = selectedEmpId === emp.id;
-              const empColor = getEmployeeColor(emp.id);
+              const empColorHex = resolveEmployeeHex(emp.id, emp.avatar);
               return (
                 <div
                   key={emp.id}
@@ -770,12 +772,12 @@ export default function LiveTracking() {
                   {/* Photo / Avatar */}
                   <div 
                     className="w-10 h-10 rounded-full bg-slate-950 overflow-hidden shrink-0 flex items-center justify-center relative border-2"
-                    style={{ borderColor: empColor.hex }}
+                    style={{ borderColor: empColorHex }}
                   >
                     {emp.photoUrl ? (
                       <img src={emp.photoUrl} alt={emp.name} className="w-full h-full object-cover" />
                     ) : (
-                      <span className="text-xs font-bold" style={{ color: empColor.hex }}>{emp.name.slice(0, 2).toUpperCase()}</span>
+                      <span className="text-xs font-bold" style={{ color: empColorHex }}>{emp.name.slice(0, 2).toUpperCase()}</span>
                     )}
                     <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-[#090d16] bg-emerald-500" />
                   </div>
@@ -784,7 +786,7 @@ export default function LiveTracking() {
                   <div className="min-w-0 flex-1 space-y-0.5">
                     <div className="flex items-center justify-between gap-1">
                       <div className="flex items-center gap-1.5 min-w-0">
-                        <span className="w-2 h-2 rounded-full shrink-0 animate-pulse" style={{ backgroundColor: empColor.hex }} />
+                        <span className="w-2 h-2 rounded-full shrink-0 animate-pulse" style={{ backgroundColor: empColorHex }} />
                         <h4 className="text-xs font-bold text-slate-200 truncate leading-none">{emp.name}</h4>
                       </div>
                       <span className={`text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded leading-none shrink-0 border ${
@@ -796,7 +798,7 @@ export default function LiveTracking() {
                       </span>
                     </div>
                     
-                    <p className="text-[9.5px] font-bold font-mono tracking-wide leading-none" style={{ color: empColor.hex }}>{emp.employeeId}</p>
+                    <p className="text-[9.5px] font-bold font-mono tracking-wide leading-none" style={{ color: empColorHex }}>{emp.employeeId}</p>
                     
                     {emp.assignedProjectName && (
                       <p className="text-[9.5px] text-slate-400 font-medium truncate pt-1">
@@ -903,3 +905,4 @@ export default function LiveTracking() {
     </div>
   );
 }
+
