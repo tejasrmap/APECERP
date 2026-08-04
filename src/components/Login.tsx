@@ -564,7 +564,7 @@ export default function Login() {
                           setPhone(e.target.value);
                           setErrorMsg('');
                         }}
-                        placeholder="76750 52828"
+                        placeholder="98765 43210"
                         required
                         disabled={isLoading}
                         style={{ paddingLeft: '88px' }}
