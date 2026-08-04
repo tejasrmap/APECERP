@@ -13,6 +13,7 @@ import {
 import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 import L from 'leaflet';
+import { getEmployeeColor } from './colorUtils';
 
 interface TelemetryPoint {
   id: string;
@@ -129,9 +130,10 @@ export default function LocationHistory() {
 
     // Draw route lines connecting coordinates chronologically
     if (pathPoints.length >= 2) {
+      const empColor = selectedEmployee ? getEmployeeColor(selectedEmployee) : { hex: '#06b6d4' };
       // Outer glow line (darker blue shadow)
       const glowLine = L.polyline(pathPoints, {
-        color: '#2563eb',
+        color: empColor.hex,
         weight: 6,
         opacity: 0.15,
         lineJoin: 'round',
@@ -141,7 +143,7 @@ export default function LocationHistory() {
 
       // Core route line (cyan dash/dotted line)
       const coreLine = L.polyline(pathPoints, {
-        color: '#06b6d4',
+        color: empColor.hex,
         weight: 3.5,
         opacity: 0.85,
         lineJoin: 'round',
@@ -381,7 +383,7 @@ export default function LocationHistory() {
     const safeName = empName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
     
     link.setAttribute('href', url);
-    link.setAttribute('download', `location_history_${safeName}_${startDateStr}_to_${endDateStr}.csv`);
+    link.setAttribute('download', `location_history_${safeName}_${selectedDate}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -417,8 +419,14 @@ export default function LocationHistory() {
       <div className="p-5 rounded-2xl glass-card border border-white/10 shadow-lg space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
           <div className="flex flex-col gap-1">
-            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1 flex items-center gap-1.5">
-              <User className="w-3 h-3" /> Employee
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1 flex items-center justify-between">
+              <span className="flex items-center gap-1.5"><User className="w-3 h-3" /> Employee</span>
+              {selectedEmployee && (
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: getEmployeeColor(selectedEmployee).hex }} />
+                  <span className="text-[8px] font-mono text-slate-400">Color Signature</span>
+                </span>
+              )}
             </label>
             <select
               value={selectedEmployee}
