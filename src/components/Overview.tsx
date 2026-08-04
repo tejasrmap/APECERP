@@ -285,33 +285,45 @@ export default function Overview() {
     };
   }, [schedulesList, leadsList, attendanceList, leavesList]);
 
-  const dailyData = useMemo(() => {
+  const onlineDailyData = useMemo(() => {
     const dates: string[] = [];
-    const counts = Array(7).fill(0);
     const labels: string[] = [];
     
     for (let i = 6; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
-      const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const dateStr = d.toLocaleDateString('en-CA'); // 'YYYY-MM-DD'
       dates.push(dateStr);
       labels.push(d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
     }
     
-    schedulesList.forEach(s => {
-      if (s.date) {
-        const idx = dates.indexOf(s.date);
-        if (idx !== -1) {
-          counts[idx]++;
+    const uniqueEmployeesPerDay = dates.map(() => new Set<string>());
+
+    attendanceList.forEach(log => {
+      if (!log.timestamp) return;
+      let logDateStr = '';
+      try {
+        const logDate = new Date(log.timestamp);
+        logDateStr = logDate.toLocaleDateString('en-CA');
+      } catch (e) {
+        return;
+      }
+      
+      const idx = dates.indexOf(logDateStr);
+      if (idx !== -1 && log.type === 'punch_in') {
+        const empId = log.employeeId || log.userEmail || log.email || log.userId;
+        if (empId) {
+          uniqueEmployeesPerDay[idx].add(empId);
         }
       }
     });
 
+    const counts = uniqueEmployeesPerDay.map(set => set.size);
     const maxCount = Math.max(...counts, 1);
     const heights = counts.map(count => Math.round((count / maxCount) * 100));
     
     return { counts, heights, labels };
-  }, [schedulesList]);
+  }, [attendanceList]);
 
   const stats = [
     { title: 'Active Projects', value: !loadedCollections.projects ? '...' : activeProjectsCount.toString(), icon: Activity, color: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/20' },
@@ -425,18 +437,18 @@ export default function Overview() {
           
           <div className="flex items-center justify-between mb-8 relative z-10">
             <div>
-              <h3 className="text-lg font-bold text-white print:text-slate-900">Project Analytics</h3>
-              <p className="text-xs text-slate-400 mt-1 print:text-slate-500">Daily workflow dispatch distribution (Last 7 Days)</p>
+              <h3 className="text-lg font-bold text-white print:text-slate-900">Total Employees Online Everyday</h3>
+              <p className="text-xs text-slate-400 mt-1 print:text-slate-500">Daily unique online staff count (Last 7 Days)</p>
             </div>
           </div>
           
-          {projectsList.length === 0 ? (
+          {attendanceList.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center relative z-10">
               <div className="w-16 h-16 rounded-full bg-slate-900/50 border border-slate-800 flex items-center justify-center mb-3">
-                <TrendingUp className="w-8 h-8 text-slate-600" />
+                <Users className="w-8 h-8 text-slate-600" />
               </div>
-              <p className="text-sm font-semibold text-slate-300">No project data to analyze</p>
-              <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">Please populate the database in Settings or the Projects tab to generate analytics.</p>
+              <p className="text-sm font-semibold text-slate-300">No attendance data to analyze</p>
+              <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">Active employee punch-in events will populate this chart in real-time.</p>
             </div>
           ) : (
             <div className="flex-1 overflow-x-auto pb-2 print:overflow-visible relative z-10">
@@ -449,14 +461,14 @@ export default function Overview() {
                 </div>
                 
                 {/* Bars */}
-                {dailyData.heights.map((h, i) => {
-                  const count = dailyData.counts[i];
+                {onlineDailyData.heights.map((h, i) => {
+                  const count = onlineDailyData.counts[i];
                   return (
                     <div key={i} className="flex-1 flex flex-col justify-end group h-full relative z-10">
                       {/* Premium Tooltip */}
                       <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-3 py-2 bg-slate-900/95 backdrop-blur-md border border-cyan-500/30 text-white text-[11px] rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap z-20 shadow-[0_4px_20px_rgba(0,0,0,0.5)] flex items-center gap-2 transform group-hover:-translate-y-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
-                        <span className="font-bold">{count}</span> Dispatches
+                        <span className="font-bold">{count}</span> Online Staff
                       </div>
                       
                       {/* Bar body */}
@@ -469,7 +481,7 @@ export default function Overview() {
                         {/* Glow effect on hover */}
                         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-[0_0_20px_rgba(6,182,212,0.3)] pointer-events-none"></div>
                       </div>
-                      <span className="absolute -bottom-7 left-1/2 -translate-x-1/2 text-[10px] text-slate-400 font-medium print:text-slate-700 whitespace-nowrap">{dailyData.labels[i]}</span>
+                      <span className="absolute -bottom-7 left-1/2 -translate-x-1/2 text-[10px] text-slate-400 font-medium print:text-slate-700 whitespace-nowrap">{onlineDailyData.labels[i]}</span>
                     </div>
                   );
                 })}
