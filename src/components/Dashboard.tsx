@@ -39,7 +39,16 @@ export default function Dashboard() {
   const [isDbActionLoading, setIsDbActionLoading] = useState(false);
   const [firestoreError, setFirestoreError] = useState<string | null>(null);
 
-  const [isAdmin, setIsAdmin] = useState(false);
+  // Synchronously resolve admin status from localStorage to avoid flicker on page load
+  const ADMIN_EMAILS = ['admin@apecpowersolutions.com', 'managingdirector@apecpowersolutions.com'];
+  const getInitialAdminState = () => {
+    if (localStorage.getItem('apec_isAdmin') === 'true') return true;
+    // Also check auth.currentUser if Firebase is already initialized
+    if (auth?.currentUser?.email && ADMIN_EMAILS.includes(auth.currentUser.email.toLowerCase())) return true;
+    return false;
+  };
+
+  const [isAdmin, setIsAdmin] = useState(getInitialAdminState);
   const [userProfile, setUserProfile] = useState<any>(null);
 
   // Notifications State
@@ -246,6 +255,7 @@ export default function Dashboard() {
 
         if (isAdminEmail || isAdminPhone) {
           setIsAdmin(true);
+          localStorage.setItem('apec_isAdmin', 'true');
         }
 
         if (db) {
@@ -265,8 +275,10 @@ export default function Dashboard() {
                   setUserProfile({ id: snap.docs[0].id, ...docData });
                   if (docData.accessRole === 'Admin' || docData.roleType === 'Admin') {
                     setIsAdmin(true);
+                    localStorage.setItem('apec_isAdmin', 'true');
                   } else if (!isAdminEmail && !isAdminPhone) {
                     setIsAdmin(false);
+                    localStorage.removeItem('apec_isAdmin');
                   }
                 } else if (user.phoneNumber || isVirtual) {
                   // 3-phase fallback for sanitized/formatted phone numbers
@@ -305,15 +317,19 @@ export default function Dashboard() {
                       setUserProfile({ id: matchedDoc.id, ...docData });
                       if (docData.accessRole === 'Admin' || docData.roleType === 'Admin') {
                         setIsAdmin(true);
+                        localStorage.setItem('apec_isAdmin', 'true');
                       } else if (!isAdminEmail && !isAdminPhone) {
                         setIsAdmin(false);
+                        localStorage.removeItem('apec_isAdmin');
                       }
                     } else if (!isAdminEmail && !isAdminPhone) {
                       setIsAdmin(false);
+                      localStorage.removeItem('apec_isAdmin');
                     }
                   }).catch(e => console.error("3-phase phone lookup fallback failed:", e));
                 } else if (!isAdminEmail && !isAdminPhone) {
                   setIsAdmin(false);
+                    localStorage.removeItem('apec_isAdmin');
                 }
               }, (err) => {
                 console.error('Profile listener error:', err);
@@ -328,6 +344,7 @@ export default function Dashboard() {
         const isLocalAuth = localStorage.getItem('isAuthenticated') === 'true';
         if (isLocalAuth) {
           setIsAdmin(true);
+          localStorage.setItem('apec_isAdmin', 'true');
         }
       }
     });
@@ -511,6 +528,7 @@ export default function Dashboard() {
           <button
             onClick={async () => {
               localStorage.removeItem('isAuthenticated');
+              localStorage.removeItem('apec_isAdmin');
               if (auth) {
                 try {
                   await auth.signOut();

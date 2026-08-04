@@ -128,6 +128,7 @@ export default function Login() {
 
         if (isAllowed) {
           localStorage.setItem('isAuthenticated', 'true');
+          localStorage.setItem('apec_isAdmin', isAdminUser ? 'true' : 'false');
           // Update lastActive timestamp on auto-login
           if (matchedDoc) {
             await updateDoc(doc(db, 'team', matchedDoc.id), {
@@ -150,6 +151,7 @@ export default function Login() {
         } else {
           await auth.signOut();
           localStorage.removeItem('isAuthenticated');
+          localStorage.removeItem('apec_isAdmin');
         }
       }
       setCheckingAuth(false);
@@ -218,6 +220,7 @@ export default function Login() {
             }
             setTimeout(() => {
               localStorage.setItem('isAuthenticated', 'true');
+              localStorage.setItem('apec_isAdmin', isAdminUser ? 'true' : 'false');
               navigate(isAdminUser ? '/dashboard' : '/dashboard/my-profile');
             }, 2000);
           } else {
@@ -274,6 +277,7 @@ export default function Login() {
           setStep('success');
           setTimeout(() => {
             localStorage.setItem('isAuthenticated', 'true');
+            localStorage.setItem('apec_isAdmin', 'true');
             navigate('/dashboard');
           }, 2000);
           return;
@@ -370,6 +374,7 @@ export default function Login() {
       setTimeout(() => {
         localStorage.setItem('isAuthenticated', 'true');
         const isAdminUser = employeeData.accessRole === 'Admin' || employeeData.roleType === 'Admin';
+        localStorage.setItem('apec_isAdmin', isAdminUser ? 'true' : 'false');
         navigate(isAdminUser ? '/dashboard' : '/dashboard/my-profile');
       }, 2000);
     } catch (err: any) {
@@ -452,6 +457,7 @@ export default function Login() {
           }
           setTimeout(() => {
             localStorage.setItem('isAuthenticated', 'true');
+            localStorage.setItem('apec_isAdmin', isAdminUser ? 'true' : 'false');
             navigate(isAdminUser ? '/dashboard' : '/dashboard/my-profile');
           }, 2000);
         } else {
@@ -579,7 +585,7 @@ export default function Login() {
                           setPassword(e.target.value);
                           setErrorMsg('');
                         }}
-                        placeholder="••••••••"
+                        placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                         required
                         disabled={isLoading}
                         className="w-full bg-slate-950/40 border border-slate-800 text-slate-100 rounded-xl py-3.5 pl-11 pr-4 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/25 transition-all placeholder:text-slate-650 disabled:opacity-50 text-sm shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
@@ -686,9 +692,10 @@ export default function Login() {
       </motion.div>
       <div className="text-[10px] text-slate-500 font-medium tracking-wider uppercase mt-6 relative z-10 flex flex-col sm:flex-row items-center gap-1.5 sm:gap-3 text-center">
         <span>&copy; {new Date().getFullYear()} APEC Power Solutions. All rights reserved.</span>
-        <span className="hidden sm:inline text-slate-700">•</span>
+        <span className="hidden sm:inline text-slate-700">â€¢</span>
         <span className="text-slate-400 font-semibold">Made by <span className="text-cyan-400 font-bold">GT INNOX LLP</span></span>
       </div>
     </div>
   );
 }
+
