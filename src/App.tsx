@@ -15,6 +15,7 @@ const Team         = lazy(() => import('./components/Team'));
 const Chat         = lazy(() => import('./components/Chat'));
 const Settings     = lazy(() => import('./components/Settings'));
 const TeamControl  = lazy(() => import('./components/TeamControl'));
+const RolesPermissions = lazy(() => import('./components/RolesPermissions'));
 const Scheduling   = lazy(() => import('./components/Scheduling'));
 const ProfileView  = lazy(() => import('./components/ProfileView'));
 const Attendance   = lazy(() => import('./components/Attendance'));
@@ -66,6 +67,9 @@ export default function App() {
           } />
           <Route path="team-control" element={
             <Suspense fallback={<PageLoader />}><TeamControl /></Suspense>
+          } />
+          <Route path="roles" element={
+            <Suspense fallback={<PageLoader />}><RolesPermissions /></Suspense>
           } />
           <Route path="scheduling" element={
             <Suspense fallback={<PageLoader />}><Scheduling /></Suspense>

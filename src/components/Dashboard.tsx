@@ -23,7 +23,8 @@ import {
   User,
   ClipboardList,
   Briefcase,
-  History
+  History,
+  Fingerprint
 } from 'lucide-react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { auth, db } from '../firebase';
@@ -436,7 +437,10 @@ export default function Dashboard() {
     { name: 'Workforce', icon: Users },
     ...(hasPermission('viewLiveTracking') ? [{ name: 'Live Tracking', icon: Map }] : []),
     ...(hasPermission('viewLocationHistory') ? [{ name: 'Location History', icon: History }] : []),
-    ...(hasPermission('viewTeamControl') ? [{ name: 'Team Control', icon: Shield }] : []),
+    ...(hasPermission('viewTeamControl') ? [
+      { name: 'Team Control', icon: Shield },
+      { name: 'Roles Control', icon: Fingerprint }
+    ] : []),
     ...(hasPermission('viewReports') ? [{ name: 'Reports', icon: FileText }] : []),
     ...(hasPermission('viewSettings') ? [{ name: 'Settings', icon: Settings }] : [])
   ];
@@ -450,6 +454,7 @@ export default function Dashboard() {
     if (path === '/dashboard/workforce') return 'Workforce';
     if (path === '/dashboard/settings') return 'Settings';
     if (path === '/dashboard/team-control') return 'Team Control';
+    if (path === '/dashboard/roles') return 'Roles Control';
     if (path === '/dashboard/live-tracking') return 'Live Tracking';
     if (path === '/dashboard/location-history') return 'Location History';
     if (path === '/dashboard/attendance') return 'Attendance';
@@ -465,6 +470,7 @@ export default function Dashboard() {
   const getPathForTab = (tabName: string) => {
     if (tabName === 'Dashboard') return '/dashboard';
     if (tabName === 'Team Control') return '/dashboard/team-control';
+    if (tabName === 'Roles Control') return '/dashboard/roles';
     if (tabName === 'Live Tracking') return '/dashboard/live-tracking';
     if (tabName === 'Location History') return '/dashboard/location-history';
     if (tabName === 'My Profile') return '/dashboard/my-profile';
