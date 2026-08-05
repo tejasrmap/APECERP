@@ -201,7 +201,24 @@ export default function Overview() {
 
     // 7. Attendance listener
     unsubscribes.push(onSnapshot(collection(db, 'attendance'), (snapshot) => {
-      const logs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      const logs = snapshot.docs.map(d => {
+        const data = d.data();
+        let tsString = new Date().toISOString();
+        if (data.timestamp) {
+          if (typeof data.timestamp.toDate === 'function') {
+            tsString = data.timestamp.toDate().toISOString();
+          } else if (data.timestamp.seconds) {
+            tsString = new Date(data.timestamp.seconds * 1000).toISOString();
+          } else {
+            tsString = new Date(data.timestamp).toISOString();
+          }
+        }
+        return {
+          id: d.id,
+          ...data,
+          timestamp: tsString
+        };
+      });
       setAttendanceList(logs);
       setLoadedCollections(prev => ({ ...prev, attendance: true }));
     }, (err) => handleSnapshotError(err, 'attendance')));
