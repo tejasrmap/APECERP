@@ -18,7 +18,7 @@ import {
   Calendar,
   ChevronDown
 } from 'lucide-react';
-import { collection, onSnapshot, addDoc, Timestamp } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, Timestamp, query, where } from 'firebase/firestore';
 import { useOutletContext } from 'react-router-dom';
 import app, { db, auth } from '../firebase';
 import { supabase } from '../supabase';
@@ -316,42 +316,66 @@ export default function Attendance() {
       return;
     }
 
-    setIsLocationLoading(true);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const lat = position.coords.latitude;
-        const lon = position.coords.longitude;
-        const acc = position.coords.accuracy;
+    const geoOptions = {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    };
 
-        setCoords({ latitude: lat, longitude: lon, accuracy: acc });
-        setIsLocationLoading(false);
+    const handleGeoSuccess = async (position: GeolocationPosition) => {
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
+      const acc = position.coords.accuracy;
 
-        // Reverse geocode via Nominatim API (OpenStreetMap)
-        setIsGeocoding(true);
-        try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`, {
-            headers: {
-              'User-Agent': 'APECERP-Attendance/1.0'
-            }
-          });
-          if (res.ok) {
-            const data = await res.json();
-            if (data && data.display_name) {
-              setAddress(data.display_name);
-            } else {
-              setAddress(`Coordinates: ${lat.toFixed(6)}, ${lon.toFixed(6)}`);
-            }
+      setCoords({ latitude: lat, longitude: lon, accuracy: acc });
+      setIsLocationLoading(false);
+
+      // Reverse geocode via Nominatim API (OpenStreetMap)
+      setIsGeocoding(true);
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`, {
+          headers: {
+            'User-Agent': 'APECERP-Attendance/1.0'
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.display_name) {
+            setAddress(data.display_name);
           } else {
             setAddress(`Coordinates: ${lat.toFixed(6)}, ${lon.toFixed(6)}`);
           }
-        } catch (geocodeErr) {
-          console.error('Geocoding failed:', geocodeErr);
+        } else {
           setAddress(`Coordinates: ${lat.toFixed(6)}, ${lon.toFixed(6)}`);
-        } finally {
-          setIsGeocoding(false);
         }
-      },
-      (err) => {
+      } catch (geocodeErr) {
+        console.error('Geocoding failed:', geocodeErr);
+        setAddress(`Coordinates: ${lat.toFixed(6)}, ${lon.toFixed(6)}`);
+      } finally {
+        setIsGeocoding(false);
+      }
+    };
+
+    const handleGeoError = (err: GeolocationPositionError) => {
+      if (geoOptions.enableHighAccuracy) {
+        console.warn('High-accuracy GPS request failed/timed out. Retrying with coarse/cached location...', err);
+        geoOptions.enableHighAccuracy = false;
+        geoOptions.timeout = 15000;
+        geoOptions.maximumAge = 60000; // Allow 1-minute cached location
+        navigator.geolocation.getCurrentPosition(handleGeoSuccess, (fallbackErr) => {
+          console.error('Fallback location also failed:', fallbackErr);
+          setIsLocationLoading(false);
+          let errorMsg = 'Could not retrieve coordinates.';
+          if (fallbackErr.code === fallbackErr.PERMISSION_DENIED) {
+            errorMsg = 'GPS location access denied. Please enable location permissions.';
+          } else if (fallbackErr.code === fallbackErr.POSITION_UNAVAILABLE) {
+            errorMsg = 'Location information is unavailable. Verify GPS is enabled.';
+          } else if (fallbackErr.code === fallbackErr.TIMEOUT) {
+            errorMsg = 'Location request timed out. Try moving near a window or outdoors.';
+          }
+          setLocationError(errorMsg);
+        }, geoOptions);
+      } else {
         console.error('Location error:', err);
         setIsLocationLoading(false);
         let errorMsg = 'Could not retrieve coordinates.';
@@ -360,12 +384,13 @@ export default function Attendance() {
         } else if (err.code === err.POSITION_UNAVAILABLE) {
           errorMsg = 'Location information is unavailable. Verify GPS is enabled.';
         } else if (err.code === err.TIMEOUT) {
-          errorMsg = 'Location request timed out.';
+          errorMsg = 'Location request timed out. Try moving near a window or outdoors.';
         }
         setLocationError(errorMsg);
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
+      }
+    };
+
+    navigator.geolocation.getCurrentPosition(handleGeoSuccess, handleGeoError, geoOptions);
   };
 
   // Reset captured state
@@ -508,7 +533,14 @@ export default function Attendance() {
     }
 
     setIsFallbackMode(false);
-    const unsub = onSnapshot(collection(db, 'attendance'), (snapshot) => {
+    
+    // Non-admin users should only query their own attendance logs to satisfy Firestore security rules
+    const attendanceRef = collection(db, 'attendance');
+    const q = (!isUserAdmin && activeEmail)
+      ? query(attendanceRef, where('userEmail', '==', activeEmail))
+      : query(attendanceRef);
+
+    const unsub = onSnapshot(q, (snapshot) => {
       const list = snapshot.docs.map(doc => {
         const data = doc.data();
         let tsString = new Date().toISOString();
@@ -535,7 +567,7 @@ export default function Attendance() {
       setIsLogsLoading(false);
     });
 
-  }, []);
+  }, [isUserAdmin, activeEmail]);
 
   // Automatically restore watcher session and interval timer if a check-in session is active
   useEffect(() => {
@@ -597,7 +629,7 @@ export default function Attendance() {
         (err) => {
           console.error("Periodic background location check failed:", err);
         },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+        { enableHighAccuracy: false, timeout: 20000, maximumAge: 60000 }
       );
     };
 
