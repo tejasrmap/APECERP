@@ -50,6 +50,7 @@ export default function Dashboard() {
 
   const [isAdmin, setIsAdmin] = useState(getInitialAdminState);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [rolesList, setRolesList] = useState<any[]>([]);
 
   // Notifications State
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -216,6 +217,55 @@ export default function Dashboard() {
     return () => unsubNotifications();
   }, []);
 
+  // Fetch roles collection
+  useEffect(() => {
+    if (!db) return;
+    const unsubRoles = onSnapshot(collection(db, 'roles'), (snapshot) => {
+      setRolesList(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+    }, (err) => {
+      console.error('Error fetching roles in Dashboard:', err);
+    });
+    return () => unsubRoles();
+  }, []);
+
+  // Compute permissions in real-time
+  const userPermissions = React.useMemo(() => {
+    const defaultPerms: Record<string, boolean> = {
+      viewDashboard: false,
+      viewLiveTracking: false,
+      viewLocationHistory: false,
+      viewTeamControl: false,
+      viewReports: false,
+      viewSettings: false,
+      manageSchedules: false,
+      manageProjects: false,
+      exportData: false
+    };
+
+    const email = auth?.currentUser?.email?.toLowerCase() || '';
+    const isHardcodedAdmin = email === 'admin@apecpowersolutions.com' || email === 'managingdirector@apecpowersolutions.com';
+    const isRoleAdmin = userProfile?.accessRole === 'Admin' || userProfile?.roleType === 'Admin';
+
+    if (isHardcodedAdmin || isRoleAdmin || isAdmin) {
+      return Object.keys(defaultPerms).reduce((acc, key) => {
+        acc[key] = true;
+        return acc;
+      }, {} as Record<string, boolean>);
+    }
+
+    if (userProfile?.accessRole) {
+      const matchedRole = rolesList.find(r => r.name.toLowerCase() === userProfile.accessRole.toLowerCase() || r.id === userProfile.accessRole);
+      if (matchedRole && matchedRole.permissions) {
+        return {
+          ...defaultPerms,
+          ...matchedRole.permissions
+        };
+      }
+    }
+
+    return defaultPerms;
+  }, [userProfile, rolesList, isAdmin]);
+
   useEffect(() => {
     if (!auth) {
       // Fallback local auth is admin
@@ -364,14 +414,19 @@ export default function Dashboard() {
     if (isDbActionLoading) return;
     if (auth && auth.currentUser && userProfile === null) return;
 
-    if (!isAdmin && (location.pathname === '/dashboard' || location.pathname === '/dashboard/')) {
+    const hasDashboardAccess = isAdmin || userPermissions?.viewDashboard;
+    if (!hasDashboardAccess && (location.pathname === '/dashboard' || location.pathname === '/dashboard/')) {
       navigate('/dashboard/my-profile', { replace: true });
     }
-  }, [isAdmin, location.pathname, userProfile, isDbActionLoading, navigate]);
+  }, [isAdmin, userPermissions, location.pathname, userProfile, isDbActionLoading, navigate]);
+
+  const hasPermission = (permName: string) => {
+    return isAdmin || userPermissions[permName] === true;
+  };
 
   const navItems = [
     { name: 'Attendance', icon: Clock },
-    ...(isAdmin ? [{ name: 'Dashboard', icon: LayoutDashboard }] : []),
+    ...(hasPermission('viewDashboard') ? [{ name: 'Dashboard', icon: LayoutDashboard }] : []),
     { name: 'My Profile', icon: User },
     { name: 'Daily Reports', icon: ClipboardList },
     { name: 'Projects', icon: Activity },
@@ -379,13 +434,11 @@ export default function Dashboard() {
     { name: 'Scheduling', icon: Calendar },
     { name: 'Leaves', icon: CalendarRange },
     { name: 'Workforce', icon: Users },
-    ...(isAdmin ? [
-      { name: 'Live Tracking', icon: Map },
-      { name: 'Location History', icon: History },
-      { name: 'Team Control', icon: Shield },
-      { name: 'Reports', icon: FileText },
-      { name: 'Settings', icon: Settings }
-    ] : [])
+    ...(hasPermission('viewLiveTracking') ? [{ name: 'Live Tracking', icon: Map }] : []),
+    ...(hasPermission('viewLocationHistory') ? [{ name: 'Location History', icon: History }] : []),
+    ...(hasPermission('viewTeamControl') ? [{ name: 'Team Control', icon: Shield }] : []),
+    ...(hasPermission('viewReports') ? [{ name: 'Reports', icon: FileText }] : []),
+    ...(hasPermission('viewSettings') ? [{ name: 'Settings', icon: Settings }] : [])
   ];
 
   // Helper to resolve active tab based on router pathname
@@ -661,7 +714,7 @@ export default function Dashboard() {
               </div>
             )}
             
-            <Outlet context={{ firestoreError, setFirestoreError, isDbActionLoading, setIsDbActionLoading, isAdmin, userProfile }} />
+            <Outlet context={{ firestoreError, setFirestoreError, isDbActionLoading, setIsDbActionLoading, isAdmin, userProfile, userPermissions, rolesList }} />
           </div>
         </div>
       </main>

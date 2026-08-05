@@ -6,9 +6,9 @@ import { db, storage as firebaseStorage } from '../firebase';
 import { supabase } from '../supabase';
 
 export default function Settings() {
-  const { isAdmin } = useOutletContext<any>();
+  const { isAdmin, userPermissions } = useOutletContext<any>();
 
-  if (!isAdmin) {
+  if (!isAdmin && !userPermissions?.viewSettings) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center h-[calc(100vh-250px)]">
         <div className="w-16 h-16 rounded-full bg-rose-955/20 border border-rose-500/20 flex items-center justify-center text-rose-500 mb-6 shadow-[0_0_20px_rgba(244,63,94,0.15)] animate-pulse">
@@ -16,7 +16,7 @@ export default function Settings() {
         </div>
         <h3 className="text-xl font-bold text-slate-100">Restricted Operations Terminal</h3>
         <p className="text-xs text-slate-400 mt-2 max-w-sm leading-relaxed">
-          Access denied. The System Settings terminal requires administrative credentials. Contact the managing director to configure access roles.
+          Access denied. The System Settings terminal requires administrative credentials or custom roles setup.
         </p>
       </div>
     );

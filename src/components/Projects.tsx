@@ -49,7 +49,8 @@ const getDefaultCoordinates = (siteName: string) => {
 };
 
 export default function Projects() {
-  const { setFirestoreError, isDbActionLoading, setIsDbActionLoading, isAdmin } = useOutletContext<any>();
+  const { setFirestoreError, isDbActionLoading, setIsDbActionLoading, isAdmin, userPermissions } = useOutletContext<any>();
+  const isProjectManager = isAdmin || userPermissions?.manageProjects;
 
   const [projectsList, setProjectsList] = useState<any[]>([]);
   const [teamList, setTeamList] = useState<any[]>([]);
@@ -283,7 +284,7 @@ export default function Projects() {
 
   const handleAddProject = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newProjectName || !db || !isAdmin) return;
+    if (!newProjectName || !db || !isProjectManager) return;
     setIsDbActionLoading(true);
     try {
       let latVal = parseFloat(newProjectLat);
@@ -335,7 +336,7 @@ export default function Projects() {
   };
 
   const handleDeleteDocument = async (colName: string, id: string, docNameForLog?: string) => {
-    if (!db || !isAdmin) return;
+    if (!db || !isProjectManager) return;
     setIsDbActionLoading(true);
     try {
       await deleteDoc(doc(db, colName, id));
@@ -375,7 +376,7 @@ export default function Projects() {
           <h3 className="text-xl font-bold text-slate-100">Project Directory</h3>
           <p className="text-xs text-slate-400 mt-1">APEC active and pipeline installations</p>
         </div>
-        {isAdmin && (
+        {isProjectManager && (
           <button 
             onClick={() => {
               if (isAddingProject) {
@@ -610,7 +611,7 @@ export default function Projects() {
                         <th className="p-4 hidden sm:table-cell">Site Location</th>
                          <th className="p-4 hidden md:table-cell">Project Manager</th>
                         <th className="p-4">Status</th>
-                        {isAdmin && <th className="p-4 text-center">Actions</th>}
+                        {isProjectManager && <th className="p-4 text-center">Actions</th>}
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-800/50 text-sm text-slate-300">
@@ -661,7 +662,7 @@ export default function Projects() {
                                 {p.status}
                               </span>
                             </td>
-                            {isAdmin && (
+                            {isProjectManager && (
                               <td className="p-4 text-center">
                                 <div className="flex items-center justify-center gap-1.5">
                                   <button 
@@ -697,7 +698,7 @@ export default function Projects() {
                           {/* Expanded Gantt milestones panel */}
                           {expandedProjectId === p.id && (
                             <tr className="bg-slate-950/20">
-                              <td colSpan={isAdmin ? 5 : 4} className="p-4 border-t border-slate-800/40">
+                              <td colSpan={isProjectManager ? 5 : 4} className="p-4 border-t border-slate-800/40">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-2">
                                   <div>
                                     <h5 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">Project Gantt Milestones</h5>

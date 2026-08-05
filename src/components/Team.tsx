@@ -193,9 +193,11 @@ export default function Team() {
                   <span className={`px-1.5 py-0.5 rounded text-[8px] font-extrabold uppercase tracking-widest ${
                     isMemberAdmin
                       ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
-                      : 'bg-slate-800 text-slate-400 border border-slate-700'
+                      : m.accessRole && m.accessRole !== 'User'
+                        ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
+                        : 'bg-slate-800 text-slate-400 border border-slate-700'
                   } border`}>
-                    {isMemberAdmin ? 'Admin' : 'User'}
+                    {isMemberAdmin ? 'Admin' : m.accessRole && m.accessRole !== 'User' ? m.accessRole : 'User'}
                   </span>
                 </div>
 

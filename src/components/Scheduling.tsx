@@ -66,13 +66,14 @@ const getShiftTimelinePosition = (timeStr: string) => {
 };
 
 export default function Scheduling() {
-  const { setFirestoreError, isDbActionLoading, setIsDbActionLoading, isAdmin, userProfile } = useOutletContext<any>();
+  const { setFirestoreError, isDbActionLoading, setIsDbActionLoading, isAdmin, userProfile, userPermissions } = useOutletContext<any>();
+  const isScheduler = isAdmin || userPermissions?.manageSchedules;
 
   const [teamList, setTeamList] = useState<any[]>([]);
   
   // Memoize visible team members based on admin status (admins see all workload, technicians see only their own)
   const visibleTeamList = React.useMemo(() => {
-    if (isAdmin) {
+    if (isScheduler) {
       return teamList;
     }
     if (userProfile) {
@@ -83,7 +84,7 @@ export default function Scheduling() {
       return teamList.filter(t => t.email?.toLowerCase() === authEmail.toLowerCase());
     }
     return [];
-  }, [teamList, isAdmin, userProfile]);
+  }, [teamList, isScheduler, userProfile]);
 
   const [projectsList, setProjectsList] = useState<any[]>([]);
   const [schedules, setSchedules] = useState<Shift[]>([]);
@@ -267,7 +268,7 @@ export default function Scheduling() {
     // Admins can verify any shift; non-admins (technicians) only auto-verify their own shifts
     const scheduledShifts = schedules.filter(s => {
       if (s.status !== 'Scheduled') return false;
-      if (isAdmin) return true;
+      if (isScheduler) return true;
       const myIds = visibleTeamList.map(t => t.id);
       return myIds.includes(s.technicianId);
     });
@@ -306,7 +307,7 @@ export default function Scheduling() {
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, [schedules, attendanceLogs, teamList, loading, isAdmin, visibleTeamList]);
+  }, [schedules, attendanceLogs, teamList, loading, isScheduler, visibleTeamList]);
 
   // Keep selected shift details in sync with live schedules list
   useEffect(() => {
@@ -579,13 +580,13 @@ export default function Scheduling() {
   // Date/Week Navigation Helpers
   const handlePrevDay = () => {
     const d = new Date(selectedDateStr);
-    d.setDate(d.getDate() - (isAdmin ? 1 : 7));
+    d.setDate(d.getDate() - (isScheduler ? 1 : 7));
     setSelectedDateStr(getLocalDateString(d));
   };
 
   const handleNextDay = () => {
     const d = new Date(selectedDateStr);
-    d.setDate(d.getDate() + (isAdmin ? 1 : 7));
+    d.setDate(d.getDate() + (isScheduler ? 1 : 7));
     setSelectedDateStr(getLocalDateString(d));
   };
 
@@ -711,16 +712,16 @@ export default function Scheduling() {
         <div>
           <h3 className="text-xl font-bold text-slate-100 flex items-center gap-2">
             <CalendarIcon className="w-5 h-5 text-cyan-400" />
-            {isAdmin ? "Daily Hours & Dispatch Planner" : "My Work Schedule"}
+            {isScheduler ? "Daily Hours & Dispatch Planner" : "My Work Schedule"}
           </h3>
           <p className="text-xs text-slate-400 mt-1">
-            {isAdmin 
+            {isScheduler 
               ? "Plan engineer hours, balance weekly workloads, and sync verified attendance logs" 
               : "View your weekly shift timetable, shift details, and track attendance status"}
           </p>
         </div>
         
-        {isAdmin && (
+        {isScheduler && (
           <button 
             onClick={() => {
               setSelectedTechId('');
@@ -764,7 +765,7 @@ export default function Scheduling() {
             </button>
             
             <span className="text-slate-100 text-sm font-semibold ml-2 font-mono">
-              {isAdmin ? (
+              {isScheduler ? (
                 new Date(selectedDateStr).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })
               ) : (
                 `Week of ${weekDays[0].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${weekDays[6].toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
@@ -775,7 +776,7 @@ export default function Scheduling() {
           {/* Quick Date Selector & Daily Hours Stats */}
           <div className="flex flex-wrap items-center gap-4">
             {/* View Mode Toggle Switch */}
-            {isAdmin && (
+            {isScheduler && (
               <div className="flex bg-slate-950 p-1 rounded-xl border border-slate-900">
                 <button
                   type="button"
@@ -803,7 +804,7 @@ export default function Scheduling() {
             )}
 
             {/* Timeline Zoom Slider */}
-            {isAdmin && viewMode === 'timeline' && (
+            {isScheduler && viewMode === 'timeline' && (
               <div className="flex items-center gap-2 bg-slate-950/60 border border-slate-900 rounded-xl px-3 py-1.5">
                 <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Timeline Zoom:</span>
                 <input 
@@ -832,11 +833,11 @@ export default function Scheduling() {
             <div className="flex items-center gap-3 bg-slate-950/60 border border-slate-900 rounded-xl px-4 py-2">
               <div className="text-right">
                 <span className="text-[9px] text-slate-500 font-bold block uppercase tracking-wider">
-                  {isAdmin ? "Today's Schedule load" : "Weekly Workload"}
+                  {isScheduler ? "Today's Schedule load" : "Weekly Workload"}
                 </span>
                 <span className="text-xs font-mono font-bold text-cyan-400">
                   {(() => {
-                    if (isAdmin) {
+                    if (isScheduler) {
                       const totalHours = selectedDateShifts.reduce((sum, s) => sum + calculateShiftHours(s.time), 0);
                       return `${totalHours} hrs (${selectedDateShifts.length} shifts)`;
                     } else {
@@ -858,7 +859,7 @@ export default function Scheduling() {
         </div>
 
         {/* Daily Timeline Scheduler */}
-        {isAdmin ? (
+        {isScheduler ? (
           viewMode === 'timeline' ? (
             <div className="space-y-4">
               {/* Scrollable Container with sticky columns */}
@@ -1602,7 +1603,7 @@ export default function Scheduling() {
                     </div>
 
                     {/* Match sync warning */}
-                    {isAdmin && isSyncNeeded && (
+                    {isScheduler && isSyncNeeded && (
                       <div className="pt-2">
                         <button
                           disabled={syncingShiftId === shift.id}
@@ -1624,7 +1625,7 @@ export default function Scheduling() {
                   </div>
 
                   {/* Edit Controls for Admins */}
-                  {isAdmin && (
+                  {isScheduler && (
                     <div className="pt-2 border-t border-slate-900 space-y-4">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                         <div className="space-y-1">

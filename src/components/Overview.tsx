@@ -20,7 +20,7 @@ import { useOutletContext } from 'react-router-dom';
 import { db } from '../firebase';
 
 export default function Overview() {
-  const { setFirestoreError, firestoreError, isAdmin } = useOutletContext<any>();
+  const { setFirestoreError, firestoreError, isAdmin, userPermissions } = useOutletContext<any>();
 
   const [projectsList, setProjectsList] = useState<any[]>([]);
   const [alertsList, setAlertsList] = useState<any[]>([]);
@@ -37,7 +37,7 @@ export default function Overview() {
 
   // Reports Exporter logic
   const handleExport = (format: 'pdf' | 'csv') => {
-    if (!isAdmin) return;
+    if (!isAdmin && !userPermissions?.exportData) return;
     if (format === 'csv') {
       let csvContent = "data:text/csv;charset=utf-8,";
       csvContent += "Type,Name/Title,Detail,Status\n";
@@ -392,7 +392,7 @@ export default function Overview() {
           <p className="text-sm text-slate-400 mt-1 print:text-slate-600">Real-time operational overview and enterprise analytics • Made by <span className="font-bold text-cyan-400 print:text-slate-900">GT INNOX LLP</span></p>
         </div>
         
-        {isAdmin && (
+        {(isAdmin || userPermissions?.exportData) && (
           <div className="flex items-center gap-3 self-stretch sm:self-auto print:hidden relative z-10">
             <button 
               onClick={() => handleExport('csv')}

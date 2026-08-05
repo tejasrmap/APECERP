@@ -30,10 +30,10 @@ interface Shift {
 }
 
 export default function Reports() {
-  const { isAdmin } = useOutletContext<any>();
+  const { isAdmin, userPermissions } = useOutletContext<any>();
 
   // If not admin, silently redirect to /dashboard to hide page existence
-  if (!isAdmin) {
+  if (!isAdmin && !userPermissions?.viewReports) {
     return <Navigate to="/dashboard" replace />;
   }
 
