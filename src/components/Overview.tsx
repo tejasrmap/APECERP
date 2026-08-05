@@ -337,7 +337,7 @@ export default function Overview() {
 
     const counts = uniqueEmployeesPerDay.map(set => set.size);
     const maxCount = Math.max(...counts, 1);
-    const heights = counts.map(count => Math.round((count / maxCount) * 100));
+    const heights = counts.map(count => Math.round((count / maxCount) * 80));
     
     return { counts, heights, labels };
   }, [attendanceList]);
@@ -482,6 +482,13 @@ export default function Overview() {
                   const count = onlineDailyData.counts[i];
                   return (
                     <div key={i} className="flex-1 flex flex-col justify-end group h-full relative z-10">
+                      {/* Permanent online count label */}
+                      <span 
+                        className="absolute left-1/2 -translate-x-1/2 mb-1.5 text-[11px] font-bold text-cyan-400 bg-slate-950/70 px-1.5 py-0.5 rounded border border-cyan-500/10 shadow-[0_2px_8px_rgba(0,0,0,0.3)] transition-all pointer-events-none"
+                        style={{ bottom: `${Math.max(h, 4)}%` }}
+                      >
+                        {count}
+                      </span>
                       {/* Premium Tooltip */}
                       <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 px-3 py-2 bg-slate-900/95 backdrop-blur-md border border-cyan-500/30 text-white text-[11px] rounded-xl opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap z-20 shadow-[0_4px_20px_rgba(0,0,0,0.5)] flex items-center gap-2 transform group-hover:-translate-y-1">
                         <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
