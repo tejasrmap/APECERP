@@ -209,13 +209,23 @@ body {
 }
 
 /* Custom map styles for OpenStreetMap themes */
+.leaflet-container {
+  background: var(--bg-app) !important;
+  outline: none;
+}
+
 .map-clean-light {
-  filter: grayscale(100%) brightness(108%) contrast(95%);
+  filter: grayscale(100%) brightness(104%) contrast(92%);
+  opacity: 0.78;
+  transition: opacity 0.3s ease;
 }
 
 .map-clean-dark {
-  filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+  filter: invert(100%) hue-rotate(190deg) brightness(85%) contrast(85%) saturate(85%);
+  opacity: 0.50;
+  transition: opacity 0.3s ease;
 }
+
 
 
 
