@@ -523,7 +523,7 @@ export default function Dashboard() {
       <aside
         className={`fixed lg:relative z-50 w-72 h-full glass-sidebar flex flex-col transition-transform duration-300 ease-out shadow-2xl lg:shadow-none lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
-        <div className="p-6 flex items-center justify-between border-b border-slate-800/80">
+        <div className="p-6 flex items-center border-b border-slate-800/80">
           <div className="flex items-center gap-3">
              <div className="w-10 h-10 rounded-full bg-slate-900/60 flex items-center justify-center overflow-hidden border border-slate-700/80 shadow-md shrink-0">
                <img src="/logo.jpeg" alt="APEC Logo" className="w-full h-full object-contain p-0.5" onError={(e) => {
@@ -535,9 +535,6 @@ export default function Dashboard() {
                  <p className="text-[9px] text-cyan-405 font-bold uppercase tracking-widest text-cyan-400">ERP System</p>
              </div>
           </div>
-          <button className="lg:hidden p-2.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 rounded-xl transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer active:scale-95 duration-200" onClick={() => setIsSidebarOpen(false)}>
-            <X className="w-5.5 h-5.5" />
-          </button>
         </div>
 
         <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
