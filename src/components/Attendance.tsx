@@ -647,111 +647,118 @@ export default function Attendance() {
       // Prevent duplicate trackers
       await stopBackgroundTracking();
 
-      // Request notification permission on Android 13+ so the foreground service notification can display
-      if ('Notification' in window && (Notification as any).permission !== 'granted') {
+      const platform = Capacitor.getPlatform();
+
+      if (platform === 'android') {
+        // Start native FusedLocation background service (optimized for Android)
+        const apiKey = app?.options?.apiKey || import.meta.env.VITE_FIREBASE_API_KEY;
+        const projectId = app?.options?.projectId || import.meta.env.VITE_FIREBASE_PROJECT_ID;
+        const currentUser = auth?.currentUser;
+        const refreshToken = currentUser ? ((currentUser as any).refreshToken || (currentUser as any).stsTokenManager?.refreshToken) : null;
+
         try {
-          await (Notification as any).requestPermission();
-        } catch (notifErr) {
-          console.error("Failed to request notification permission:", notifErr);
+          const NativeTracking = registerPlugin<any>('NativeTracking');
+          await NativeTracking.startTracking({
+            employeeId: empId,
+            userName: empName,
+            userEmail: empEmail,
+            apiKey: apiKey,
+            refreshToken: refreshToken,
+            projectId: projectId
+          });
+          console.log("Started native FusedLocation background updates.");
+        } catch (nativeErr) {
+          console.error("Failed to start native FusedLocation updates:", nativeErr);
+          alert("Notice: Could not start background location tracking. Please ensure that Location permissions are set to 'Allow all the time' in your phone's settings.");
         }
-      }
-
-      const watcherId = await BackgroundGeolocation.addWatcher(
-        {
-          backgroundTitle: "APEC Location Tracking Active",
-          backgroundMessage: "Your location is recorded for active shift verification.",
-          requestPermissions: true,
-          stale: false,
-          distanceFilter: 0 // update irrespective of distance change
-        },
-        async (location, error) => {
-          if (error) {
-            console.error('Background geolocation error:', error);
-            return;
+      } else {
+        // Request notification permission on iOS/other native platforms
+        if ('Notification' in window && (Notification as any).permission !== 'granted') {
+          try {
+            await (Notification as any).requestPermission();
+          } catch (notifErr) {
+            console.error("Failed to request notification permission:", notifErr);
           }
-          if (location && db) {
-            const lat = location.latitude;
-            const lon = location.longitude;
-            const acc = location.accuracy;
+        }
 
-            // Bypassing geocoding for background tracking to save data!
-            const addressStr = "Background Telemetry";
+        // Start community background geolocation plugin on iOS/other native
+        const watcherId = await BackgroundGeolocation.addWatcher(
+          {
+            backgroundTitle: "APEC Location Tracking Active",
+            backgroundMessage: "Your location is recorded for active shift verification.",
+            requestPermissions: true,
+            stale: false,
+            distanceFilter: 0 // update irrespective of distance change
+          },
+          async (location, error) => {
+            if (error) {
+              console.error('Background geolocation error:', error);
+              return;
+            }
+            if (location && db) {
+              const lat = location.latitude;
+              const lon = location.longitude;
+              const acc = location.accuracy;
 
-            try {
-              // Add a background location update to the telemetry collection
-              await addDoc(collection(db, 'telemetry'), {
-                employeeId: empId,
-                userName: empName,
-                userEmail: empEmail,
-                type: 'telemetry',
-                photoUrl: null,
-                location: {
-                  latitude: lat,
-                  longitude: lon,
-                  accuracy: acc || 0,
-                  address: addressStr
-                },
-                timestamp: Timestamp.fromDate(new Date())
-              });
-              console.log("Logged background geolocation coordinate update.");
-            } catch (fsErr) {
-              console.error("Failed to save background coordinates:", fsErr);
+              // Bypassing geocoding for background tracking to save data!
+              const addressStr = "Background Telemetry";
+
+              try {
+                // Add a background location update to the telemetry collection
+                await addDoc(collection(db, 'telemetry'), {
+                  employeeId: empId,
+                  userName: empName,
+                  userEmail: empEmail,
+                  type: 'telemetry',
+                  photoUrl: null,
+                  location: {
+                    latitude: lat,
+                    longitude: lon,
+                    accuracy: acc || 0,
+                    address: addressStr
+                  },
+                  timestamp: Timestamp.fromDate(new Date())
+                });
+                console.log("Logged background geolocation coordinate update.");
+              } catch (fsErr) {
+                console.error("Failed to save background coordinates:", fsErr);
+              }
             }
           }
-        }
-      );
+        );
 
-      bgWatcherIdRef.current = watcherId;
-      localStorage.setItem('apec_bg_watcher_id', watcherId);
-      console.log("Started background tracking. Watcher ID:", watcherId);
-
-      // Start native FusedLocation updates that run even when closed/killed
-      const apiKey = app?.options?.apiKey || import.meta.env.VITE_FIREBASE_API_KEY;
-      const projectId = app?.options?.projectId || import.meta.env.VITE_FIREBASE_PROJECT_ID;
-      const currentUser = auth?.currentUser;
-      const refreshToken = currentUser ? ((currentUser as any).refreshToken || (currentUser as any).stsTokenManager?.refreshToken) : null;
-
-      try {
-        const NativeTracking = registerPlugin<any>('NativeTracking');
-        await NativeTracking.startTracking({
-          employeeId: empId,
-          userName: empName,
-          userEmail: empEmail,
-          apiKey: apiKey,
-          refreshToken: refreshToken,
-          projectId: projectId
-        });
-        console.log("Started native FusedLocation background updates.");
-      } catch (nativeErr) {
-        console.error("Failed to start native FusedLocation updates:", nativeErr);
+        bgWatcherIdRef.current = watcherId;
+        localStorage.setItem('apec_bg_watcher_id', watcherId);
+        console.log("Started background tracking. Watcher ID:", watcherId);
       }
     } catch (err) {
       console.error("Failed to launch background location watcher:", err);
-      alert("Notice: Could not start background location tracking. Please ensure that Location permissions are set to 'Allow all the time' in your phone's settings.");
     }
   };
 
   // Stop background location tracking watcher
   const stopBackgroundTracking = async () => {
-    const watcherId = bgWatcherIdRef.current || localStorage.getItem('apec_bg_watcher_id');
-    if (watcherId) {
-      try {
-        await BackgroundGeolocation.removeWatcher({ id: watcherId });
-        bgWatcherIdRef.current = null;
-        localStorage.removeItem('apec_bg_watcher_id');
-        console.log("Stopped background tracking. Watcher ID cleared.");
-      } catch (err) {
-        console.error("Failed to remove background watcher:", err);
-      }
-    }
+    const platform = Capacitor.getPlatform();
 
-    if (Capacitor.isNativePlatform()) {
+    if (platform === 'android') {
       try {
         const NativeTracking = registerPlugin<any>('NativeTracking');
         await NativeTracking.stopTracking();
         console.log("Stopped native FusedLocation background updates.");
       } catch (nativeErr) {
         console.error("Failed to stop native FusedLocation updates:", nativeErr);
+      }
+    } else {
+      const watcherId = bgWatcherIdRef.current || localStorage.getItem('apec_bg_watcher_id');
+      if (watcherId) {
+        try {
+          await BackgroundGeolocation.removeWatcher({ id: watcherId });
+          bgWatcherIdRef.current = null;
+          localStorage.removeItem('apec_bg_watcher_id');
+          console.log("Stopped background tracking. Watcher ID cleared.");
+        } catch (err) {
+          console.error("Failed to remove background watcher:", err);
+        }
       }
     }
   };
