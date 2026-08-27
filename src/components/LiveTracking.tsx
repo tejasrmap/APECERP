@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   MapPin, 
@@ -361,10 +361,11 @@ export default function LiveTracking() {
         zoomControl: false // custom zoom control position
       }).setView([15.3647, 75.1240], 6);
 
-      // Apply CartoDB Positron tile layer (Premium clean light aesthetic)
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        maxZoom: 20,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+      // Apply OpenStreetMap tile layer (with clean light aesthetic filter)
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        className: 'map-clean-light'
       }).addTo(map);
 
       L.control.zoom({
@@ -871,7 +872,7 @@ export default function LiveTracking() {
           <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping shrink-0" />
           <div className="font-sans">
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block leading-none">Map Diagnostics</span>
-            <span className="text-[11px] font-extrabold text-slate-100 mt-1 block">CartoDB Light Tile Engine Active</span>
+            <span className="text-[11px] font-extrabold text-slate-100 mt-1 block">OpenStreetMap Engine Active</span>
           </div>
         </div>
 

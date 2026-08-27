@@ -171,9 +171,11 @@ export default function Projects() {
         attributionControl: true
       }).setView([16.5062, 80.6480], 7);
 
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        maxZoom: 20,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+      // Apply OpenStreetMap tile layer (with clean dark aesthetic filter)
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        className: 'map-clean-dark'
       }).addTo(map);
 
       const lg = L.layerGroup().addTo(map);

@@ -85,10 +85,11 @@ export default function LocationHistory() {
         zoomControl: false // custom position
       }).setView([15.3647, 75.1240], 6);
 
-      // Apply CartoDB Positron tile layer (Premium clean light aesthetic)
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        maxZoom: 20,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+      // Apply OpenStreetMap tile layer (with clean light aesthetic filter)
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        className: 'map-clean-light'
       }).addTo(map);
 
       L.control.zoom({

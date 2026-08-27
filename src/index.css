@@ -208,3 +208,14 @@ body {
   }
 }
 
+/* Custom map styles for OpenStreetMap themes */
+.map-clean-light {
+  filter: grayscale(100%) brightness(108%) contrast(95%);
+}
+
+.map-clean-dark {
+  filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+}
+
+
+
