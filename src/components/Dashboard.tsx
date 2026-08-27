@@ -36,6 +36,11 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Automatically close sidebar when navigation path changes
+  useEffect(() => {
+    setIsSidebarOpen(false);
+  }, [location.pathname]);
   
   const [isDbActionLoading, setIsDbActionLoading] = useState(false);
   const [firestoreError, setFirestoreError] = useState<string | null>(null);
@@ -508,8 +513,9 @@ export default function Dashboard() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-slate-950/40 z-40 lg:hidden backdrop-blur-sm"
+          className="fixed inset-0 bg-slate-950/40 z-40 lg:hidden backdrop-blur-sm cursor-pointer"
           onClick={() => setIsSidebarOpen(false)}
+          onTouchStart={() => setIsSidebarOpen(false)}
         />
       )}
 

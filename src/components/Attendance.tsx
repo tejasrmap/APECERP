@@ -134,6 +134,9 @@ export default function Attendance() {
   // Fallback indicator
   const [isFallbackMode, setIsFallbackMode] = useState(false);
 
+  // Android background location optimization guide modal state
+  const [showAndroidOptimizationsModal, setShowAndroidOptimizationsModal] = useState(false);
+
   // Geofencing related states and memo hooks
   const [projectsList, setProjectsList] = useState<any[]>([]);
   const [schedules, setSchedules] = useState<any[]>([]);
@@ -1225,7 +1228,17 @@ export default function Attendance() {
                 <span className="flex items-center gap-1">
                   <MapPin className="w-3.5 h-3.5 text-cyan-500" /> Location Registry
                 </span>
-                <span>GPS Core Status</span>
+                {Capacitor.isNativePlatform() ? (
+                  <button
+                    type="button"
+                    onClick={() => setShowAndroidOptimizationsModal(true)}
+                    className="text-[9px] text-cyan-400 hover:text-cyan-300 font-extrabold flex items-center gap-1 cursor-pointer border border-cyan-500/20 px-1.5 py-0.5 rounded bg-cyan-500/5 hover:bg-cyan-500/10 transition-colors uppercase tracking-wider leading-none"
+                  >
+                    ⚙️ Setup Guide
+                  </button>
+                ) : (
+                  <span>GPS Core Status</span>
+                )}
               </div>
 
               <div className="p-3 bg-slate-950/60 border border-slate-900 rounded-xl space-y-2 text-xs font-mono">
@@ -1678,6 +1691,106 @@ export default function Attendance() {
         />
       )}
 
+      {/* Android Background Tracking Optimizations Modal */}
+      <AnimatePresence>
+        {showAndroidOptimizationsModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-lg glass-card border border-white/10 rounded-2xl p-6 shadow-2xl flex flex-col max-h-[85vh] overflow-y-auto space-y-5"
+            >
+              <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 className="text-base font-bold text-slate-100 flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-cyan-400" />
+                  Background Location Setup Guide
+                </h3>
+                <button
+                  onClick={() => setShowAndroidOptimizationsModal(false)}
+                  className="text-xs text-slate-450 hover:text-slate-200 px-2 py-1 rounded-lg hover:bg-slate-800 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+
+              <p className="text-xs text-slate-300 leading-relaxed">
+                To track location accurately during your work shift (especially on <strong>Samsung</strong> and other Android devices when the screen is locked), please complete the following steps:
+              </p>
+
+              <div className="space-y-4">
+                {/* Step 1 */}
+                <div className="p-3 bg-slate-900/50 border border-slate-850 rounded-xl space-y-1.5 text-left">
+                  <div className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-[10px] font-bold text-cyan-400">1</span>
+                    <h4 className="text-xs font-bold text-slate-200">Set Location Permission to "Allow all the time"</h4>
+                  </div>
+                  <p className="text-[11px] text-slate-400 pl-7 leading-relaxed">
+                    Long press the APEC ERP app icon &rarr; tap <strong>App Info (ⓘ)</strong> &rarr; <strong>Permissions</strong> &rarr; <strong>Location</strong> &rarr; select <strong>"Allow all the time"</strong>.
+                  </p>
+                </div>
+
+                {/* Step 2 */}
+                <div className="p-3 bg-slate-900/50 border border-slate-850 rounded-xl space-y-2.5 text-left">
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-full bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-[10px] font-bold text-cyan-400">2</span>
+                      <h4 className="text-xs font-bold text-slate-200">Disable Battery Optimization</h4>
+                    </div>
+                    <p className="text-[11px] text-slate-400 pl-7 leading-relaxed">
+                      Android kills location services after 2 minutes to save battery. Press the button below to prompt Android to ignore optimizations for this app.
+                    </p>
+                  </div>
+                  <div className="pl-7">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          const BatteryOpt = registerPlugin<any>('BatteryOpt');
+                          await BatteryOpt.requestIgnore();
+                          alert("Battery optimization dialog requested. Please choose 'Allow' if prompted.");
+                        } catch (err) {
+                          alert("Settings could not be opened automatically. Please go to Settings > Apps > APEC ERP > Battery > Optimize Battery Usage &rarr; Turn OFF.");
+                        }
+                      }}
+                      className="px-3 py-1.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-lg text-[10.5px] uppercase tracking-wider transition-colors active:scale-[0.98] cursor-pointer"
+                    >
+                      Bypass Battery Optimization
+                    </button>
+                  </div>
+                </div>
+
+                {/* Step 3 */}
+                <div className="p-3 bg-slate-900/50 border border-slate-850 rounded-xl space-y-1.5 text-left">
+                  <div className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-[10px] font-bold text-cyan-400">3</span>
+                    <h4 className="text-xs font-bold text-slate-200">Prevent App Sleep (Samsung Devices)</h4>
+                  </div>
+                  <p className="text-[11px] text-slate-400 pl-7 leading-relaxed">
+                    Open phone <strong>Settings</strong> &rarr; <strong>Device Care</strong> (or <strong>Device Maintenance</strong>) &rarr; <strong>Battery</strong> &rarr; <strong>Background usage limits</strong> &rarr; Ensure this app is **NOT** under the "Sleeping apps" or "Deep sleeping apps" lists. Add it to <strong>"Never sleeping apps"</strong> if possible.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-400 text-left">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <p className="text-[10px] leading-relaxed">
+                  <strong>Notice:</strong> Without these settings configured, your background location session will be forcefully suspended by the operating system, and you will need to re-punch to restart tracking.
+                </p>
+              </div>
+
+              <div className="pt-2 flex justify-end">
+                <button
+                  onClick={() => setShowAndroidOptimizationsModal(false)}
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-750 text-slate-100 font-bold rounded-xl text-xs uppercase tracking-wider transition-colors cursor-pointer"
+                >
+                  I Understand
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
