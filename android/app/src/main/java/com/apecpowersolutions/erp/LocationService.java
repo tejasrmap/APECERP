@@ -11,6 +11,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ServiceInfo;
 import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Build;
 import android.os.HandlerThread;
 import android.os.IBinder;
@@ -48,6 +50,8 @@ public class LocationService extends Service {
     private LocationCallback locationCallback;
     private HandlerThread serviceHandlerThread;
     private android.os.PowerManager.WakeLock wakeLock;
+    private LocationManager androidLocationManager;
+    private LocationListener androidLocationListener;
     private final android.os.Handler mainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
 
     // Schedule a periodic UI updater (notification + toast) every minute
@@ -69,6 +73,24 @@ public class LocationService extends Service {
     public void onCreate() {
         super.onCreate();
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
+        // Initialize standard Android LocationManager and LocationListener
+        androidLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        androidLocationListener = new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+                if (location != null) {
+                    Log.d(TAG, "LocationManager callback: " + location.getLatitude() + ", " + location.getLongitude() + " (provider=" + location.getProvider() + ")");
+                    sendLocationToFirestore(location, false);
+                }
+            }
+            @Override
+            public void onStatusChanged(String provider, int status, android.os.Bundle extras) {}
+            @Override
+            public void onProviderEnabled(String provider) {}
+            @Override
+            public void onProviderDisabled(String provider) {}
+        };
 
         // Start a dedicated background thread for location callbacks
         serviceHandlerThread = new HandlerThread("LocationServiceThread");
@@ -250,7 +272,39 @@ public class LocationService extends Service {
             fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, serviceHandlerThread.getLooper());
             Log.d(TAG, "FusedLocation periodic updates started (every 60s).");
         } catch (SecurityException e) {
-            Log.e(TAG, "Location permission missing", e);
+            Log.e(TAG, "Location permission missing for FusedLocation", e);
+        }
+
+        // Start standard Android LocationManager updates as a robust parallel fallback (bypasses Google Play Services sleep/throttling)
+        if (androidLocationManager != null) {
+            try {
+                if (androidLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                    androidLocationManager.requestLocationUpdates(
+                        LocationManager.GPS_PROVIDER,
+                        60_000L,
+                        0f,
+                        androidLocationListener,
+                        serviceHandlerThread.getLooper()
+                    );
+                    Log.d(TAG, "LocationManager GPS periodic updates started.");
+                }
+            } catch (SecurityException | IllegalArgumentException e) {
+                Log.e(TAG, "Failed to start LocationManager GPS updates", e);
+            }
+            try {
+                if (androidLocationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
+                    androidLocationManager.requestLocationUpdates(
+                        LocationManager.NETWORK_PROVIDER,
+                        60_000L,
+                        0f,
+                        androidLocationListener,
+                        serviceHandlerThread.getLooper()
+                    );
+                    Log.d(TAG, "LocationManager Network periodic updates started.");
+                }
+            } catch (SecurityException | IllegalArgumentException e) {
+                Log.e(TAG, "Failed to start LocationManager Network updates", e);
+            }
         }
     }
 
@@ -283,6 +337,10 @@ public class LocationService extends Service {
         super.onDestroy();
         if (fusedLocationClient != null && locationCallback != null) {
             fusedLocationClient.removeLocationUpdates(locationCallback);
+        }
+        if (androidLocationManager != null && androidLocationListener != null) {
+            androidLocationManager.removeUpdates(androidLocationListener);
+            Log.d(TAG, "LocationManager updates stopped.");
         }
         if (serviceHandlerThread != null) {
             serviceHandlerThread.quitSafely();
@@ -444,6 +502,9 @@ public class LocationService extends Service {
                                 android.widget.Toast.makeText(getApplicationContext(), "APEC GPS Sent: " + formattedTime, android.widget.Toast.LENGTH_SHORT).show();
                             }
                         });
+
+                        // Sync any queued offline locations
+                        sendOfflineQueue(projectId, apiKey, refreshToken, empId, empName, empEmail);
                     } else {
                         String error = "";
                         try {
@@ -451,6 +512,10 @@ public class LocationService extends Service {
                             if (es != null) error = readStream(es);
                         } catch (Exception ignored) {}
                         Log.e(TAG, "Telemetry write failed: HTTP " + respCode + " - " + error);
+
+                        // Queue this location offline
+                        queueOfflineLocation(latitude, longitude, accuracy);
+
                         SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm:ss a", Locale.getDefault());
                         final String formattedTime = timeFormat.format(new Date());
                         updateNotification("Last update failed: " + formattedTime + " (HTTP " + respCode + ")");
@@ -464,6 +529,10 @@ public class LocationService extends Service {
                     }
                 } catch (final Exception e) {
                     Log.e(TAG, "Telemetry network error", e);
+
+                    // Queue this location offline
+                    queueOfflineLocation(latitude, longitude, accuracy);
+
                     SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm:ss a", Locale.getDefault());
                     final String formattedTime = timeFormat.format(new Date());
                     updateNotification("Offline. Last update attempt: " + formattedTime);
@@ -476,6 +545,118 @@ public class LocationService extends Service {
                 }
             }
         }).start();
+    }
+
+    private void queueOfflineLocation(double latitude, double longitude, float accuracy) {
+        try {
+            SharedPreferences prefs = getSharedPreferences("APEC_NATIVE_TRACKING", Context.MODE_PRIVATE);
+            String queueStr = prefs.getString("offline_location_queue", "[]");
+            org.json.JSONArray queue = new org.json.JSONArray(queueStr);
+
+            org.json.JSONObject loc = new org.json.JSONObject();
+            loc.put("latitude", latitude);
+            loc.put("longitude", longitude);
+            loc.put("accuracy", accuracy);
+            loc.put("timestamp", System.currentTimeMillis());
+
+            queue.put(loc);
+
+            // Limit queue size to 100 locations to prevent memory/storage overflow (approx 1.5 hours of tracking)
+            if (queue.length() > 100) {
+                queue.remove(0);
+            }
+
+            prefs.edit().putString("offline_location_queue", queue.toString()).apply();
+            Log.d(TAG, "Location queued offline. Total queued: " + queue.length());
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to queue offline location", e);
+        }
+    }
+
+    private void sendOfflineQueue(final String projectId, final String apiKey, final String refreshToken, final String empId, final String empName, final String empEmail) {
+        SharedPreferences prefs = getSharedPreferences("APEC_NATIVE_TRACKING", Context.MODE_PRIVATE);
+        String queueStr = prefs.getString("offline_location_queue", "[]");
+        try {
+            org.json.JSONArray queue = new org.json.JSONArray(queueStr);
+            if (queue.length() == 0) return;
+
+            Log.d(TAG, "Sending " + queue.length() + " offline queued locations...");
+            String idToken = null;
+            if (apiKey != null && refreshToken != null) {
+                idToken = refreshIdToken(apiKey, refreshToken);
+            }
+
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
+            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+            int sentCount = 0;
+            for (int i = 0; i < queue.length(); i++) {
+                org.json.JSONObject locObj = queue.getJSONObject(i);
+                double latitude = locObj.getDouble("latitude");
+                double longitude = locObj.getDouble("longitude");
+                double accuracy = locObj.getDouble("accuracy");
+                long timestampMs = locObj.getLong("timestamp");
+
+                URL url = new URL("https://firestore.googleapis.com/v1/projects/" + projectId + "/databases/(default)/documents/telemetry");
+                HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("POST");
+                conn.setRequestProperty("Content-Type", "application/json");
+                if (idToken != null) {
+                    conn.setRequestProperty("Authorization", "Bearer " + idToken);
+                }
+                conn.setDoOutput(true);
+                conn.setConnectTimeout(8000);
+                conn.setReadTimeout(8000);
+
+                org.json.JSONObject fields = new org.json.JSONObject();
+                fields.put("employeeId", new org.json.JSONObject().put("stringValue", empId));
+                fields.put("userName", new org.json.JSONObject().put("stringValue", empName != null ? empName : ""));
+                fields.put("userEmail", new org.json.JSONObject().put("stringValue", empEmail != null ? empEmail : ""));
+                fields.put("type", new org.json.JSONObject().put("stringValue", "telemetry"));
+                fields.put("photoUrl", new org.json.JSONObject().put("nullValue", org.json.JSONObject.NULL));
+
+                org.json.JSONObject locFields = new org.json.JSONObject();
+                locFields.put("latitude", new org.json.JSONObject().put("doubleValue", latitude));
+                locFields.put("longitude", new org.json.JSONObject().put("doubleValue", longitude));
+                locFields.put("accuracy", new org.json.JSONObject().put("doubleValue", accuracy));
+                locFields.put("address", new org.json.JSONObject().put("stringValue", "Offline Telemetry (Sync)"));
+
+                org.json.JSONObject locationMap = new org.json.JSONObject();
+                locationMap.put("mapValue", new org.json.JSONObject().put("fields", locFields));
+                fields.put("location", locationMap);
+
+                fields.put("timestamp", new org.json.JSONObject().put("timestampValue", sdf.format(new Date(timestampMs))));
+
+                org.json.JSONObject requestBody = new org.json.JSONObject();
+                requestBody.put("fields", fields);
+                String jsonBody = requestBody.toString();
+
+                byte[] postData = jsonBody.getBytes(StandardCharsets.UTF_8);
+                try (OutputStream os = conn.getOutputStream()) {
+                    os.write(postData);
+                }
+
+                int respCode = conn.getResponseCode();
+                if (respCode == 200 || respCode == 201) {
+                    sentCount++;
+                } else {
+                    Log.e(TAG, "Failed to send queued location " + i + ": HTTP " + respCode);
+                    break; // Stop processing the rest of the queue if this one failed (network might be down again)
+                }
+            }
+
+            // Remove sent items from queue
+            if (sentCount > 0) {
+                org.json.JSONArray newQueue = new org.json.JSONArray();
+                for (int i = sentCount; i < queue.length(); i++) {
+                    newQueue.put(queue.get(i));
+                }
+                prefs.edit().putString("offline_location_queue", newQueue.toString()).apply();
+                Log.d(TAG, "Sent " + sentCount + " offline queued locations. Remaining in queue: " + newQueue.length());
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error sending offline queue", e);
+        }
     }
 
     private String refreshIdToken(String apiKey, String refreshToken) {
