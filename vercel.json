@@ -1,6 +1,14 @@
 {
   "rewrites": [
     {
+      "source": "/privacy-policy.html",
+      "destination": "/privacy-policy.html"
+    },
+    {
+      "source": "/privacy.html",
+      "destination": "/privacy.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

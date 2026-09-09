@@ -43,6 +43,9 @@ export default function App() {
       <Route path="/privacy-policy" element={
         <Suspense fallback={<PageLoader />}><PrivacyPolicy /></Suspense>
       } />
+      <Route path="/privacy-policy.html" element={
+        <Suspense fallback={<PageLoader />}><PrivacyPolicy /></Suspense>
+      } />
       <Route path="/privacy" element={
         <Suspense fallback={<PageLoader />}><PrivacyPolicy /></Suspense>
       } />

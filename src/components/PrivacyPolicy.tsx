@@ -61,7 +61,11 @@ export default function PrivacyPolicy() {
             APEC ERP is the enterprise management and field operations mobile platform designed for <strong className="text-slate-200">APEC Power Solutions</strong>, engineered and maintained by <strong className="text-cyan-400">GT INNOX LLP</strong>.
           </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-slate-400 pt-4 border-t border-slate-800">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs text-slate-400 pt-4 border-t border-slate-800">
+            <div>
+              <span className="text-slate-500 block font-medium">Domain:</span>
+              <span className="text-cyan-300 font-mono text-[11px]">erp.apecpowersolutions.com</span>
+            </div>
             <div>
               <span className="text-slate-500 block font-medium">Package Identifier:</span>
               <code className="text-cyan-300 font-mono text-[11px]">com.apecpowersolutions.erp</code>
