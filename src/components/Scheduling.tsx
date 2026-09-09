@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Calendar as CalendarIcon, 
@@ -18,7 +18,7 @@ import {
   Sliders,
   Check
 } from 'lucide-react';
-import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, Timestamp } from 'firebase/firestore';
+import { collection, onSnapshot, addDoc, doc, updateDoc, deleteDoc, Timestamp, query, where, limit } from 'firebase/firestore';
 import { useOutletContext } from 'react-router-dom';
 import { auth, db } from '../firebase';
 
@@ -114,6 +114,7 @@ export default function Scheduling() {
   const [attendanceLogs, setAttendanceLogs] = useState<any[]>([]);
   const [syncingShiftId, setSyncingShiftId] = useState<string | null>(null);
   const [activeStatusDropdown, setActiveStatusDropdown] = useState<string | null>(null);
+  const verifyingShiftsRef = useRef<Set<string>>(new Set());
 
   // Zoom and Details Modal States
   const [zoomLevel, setZoomLevel] = useState(1400);
@@ -223,7 +224,13 @@ export default function Scheduling() {
       setSchedules(snap.docs.map(d => ({ id: d.id, ...d.data() }) as Shift));
     });
 
-    const unsubAttendance = onSnapshot(collection(db, 'attendance'), (snap) => {
+    // 30-day window query for attendance to avoid fetching all historical documents
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const qAttendance = query(
+      collection(db, 'attendance'),
+      where('timestamp', '>=', Timestamp.fromDate(thirtyDaysAgo))
+    );
+    const unsubAttendance = onSnapshot(qAttendance, (snap) => {
       const list = snap.docs.map(d => {
         const data = d.data();
         let tsString = new Date().toISOString();
@@ -240,9 +247,20 @@ export default function Scheduling() {
       setAttendanceLogs(list);
       setLoading(false);
     }, (err) => {
-      console.error(err);
-      setFirestoreError(err.code);
-      setLoading(false);
+      console.warn('Attendance query fallback in Scheduling:', err);
+      const qFallback = query(collection(db, 'attendance'), limit(200));
+      onSnapshot(qFallback, (fbSnap) => {
+        const list = fbSnap.docs.map(d => ({
+          id: d.id,
+          ...d.data(),
+          timestamp: d.data().timestamp?.toDate ? d.data().timestamp.toDate().toISOString() : new Date().toISOString()
+        }));
+        setAttendanceLogs(list);
+        setLoading(false);
+      }, () => {
+        setFirestoreError(err.code);
+        setLoading(false);
+      });
     });
 
     const unsubLeaves = onSnapshot(collection(db, 'leaves'), (snap) => {
@@ -277,9 +295,11 @@ export default function Scheduling() {
 
     const performAutoVerify = async () => {
       for (const shift of scheduledShifts) {
+        if (verifyingShiftsRef.current.has(shift.id)) continue;
         const autoMatch = getAutoStatus(shift);
         // If calculated status changed from 'Scheduled' to 'On Time', 'Delayed', or 'Absent'
         if (autoMatch.status !== 'Scheduled') {
+          verifyingShiftsRef.current.add(shift.id);
           try {
             await updateDoc(doc(db, 'schedules', shift.id), { status: autoMatch.status });
             
@@ -295,6 +315,7 @@ export default function Scheduling() {
               console.warn("Failed to log auto-verify activity:", actErr);
             }
           } catch (err) {
+            verifyingShiftsRef.current.delete(shift.id);
             console.error(`Failed to auto-verify shift ${shift.id}:`, err);
           }
         }

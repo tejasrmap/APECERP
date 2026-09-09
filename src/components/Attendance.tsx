@@ -84,63 +84,13 @@ const getLocalDateString = () => {
   return `${y}-${m}-${d}`;
 };
 
-export default function Attendance() {
-  const { setFirestoreError, isDbActionLoading, setIsDbActionLoading, isAdmin, userProfile } = useOutletContext<any>();
-
-  const activeEmail = userProfile?.email || auth?.currentUser?.email || 'admin@apecpowersolutions.com';
-  const isUserAdmin = isAdmin ||
-    activeEmail.toLowerCase() === 'admin@apecpowersolutions.com' ||
-    activeEmail.toLowerCase() === 'managingdirector@apecpowersolutions.com';
-
-  // Camera & Capture states
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const bgWatcherIdRef = useRef<string | null>(null);
-  const bgTimerRef = useRef<any>(null);
-
-  const [isCameraActive, setIsCameraActive] = useState(false);
-  const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
-  const [cameraError, setCameraError] = useState<string | null>(null);
-
-  // Geolocation states
-  const [coords, setCoords] = useState<{ latitude: number; longitude: number; accuracy: number } | null>(null);
-  const [address, setAddress] = useState<string>('');
-  const [isLocationLoading, setIsLocationLoading] = useState(false);
-  const [locationError, setLocationError] = useState<string | null>(null);
-  const [isGeocoding, setIsGeocoding] = useState(false);
+const WorkSessionWidget = React.memo(function WorkSessionWidget({ logs, selectedUser }: { logs: any[]; selectedUser: any }) {
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
-
-  // Punch actions
-  const [punchSuccess, setPunchSuccess] = useState<{ type: string; time: Date; duration?: string } | null>(null);
-  const [teamList, setTeamList] = useState<any[]>([]);
-  const [selectedUser, setSelectedUser] = useState<any>(null);
-  const [isSimulatedTechDropdownOpen, setIsSimulatedTechDropdownOpen] = useState(false);
-
-  // History & Filters
-  const [logs, setLogs] = useState<any[]>([]);
-  const [isLogsLoading, setIsLogsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [typeFilter, setTypeFilter] = useState<'all' | 'punch_in' | 'punch_out'>('all');
-  const [dateFilter, setDateFilter] = useState('');
-
-  // Photo viewer modal state
-  const [viewerPhoto, setViewerPhoto] = useState<{ url: string; name: string } | null>(null);
-
-  // Fallback indicator
-  const [isFallbackMode, setIsFallbackMode] = useState(false);
-
-  // Android background location optimization guide modal state
-  const [showAndroidOptimizationsModal, setShowAndroidOptimizationsModal] = useState(false);
-
-  // Geofencing related states and memo hooks
-  const [projectsList, setProjectsList] = useState<any[]>([]);
-  const [schedules, setSchedules] = useState<any[]>([]);
-  const [leavesList, setLeavesList] = useState<any[]>([]);
 
   const workSessionData = React.useMemo(() => {
     const defaultData = {
@@ -191,6 +141,125 @@ export default function Attendance() {
       progressPercent
     };
   }, [logs, selectedUser, currentTime]);
+
+  return (
+    <div className="mt-4 p-4 rounded-xl border border-slate-800/60 bg-slate-950/20 shadow-inner relative overflow-hidden">
+      <div className="flex justify-between items-center mb-3 border-b border-slate-800/80 pb-3">
+        <h3 className="text-sm font-bold text-slate-100 flex items-center gap-1.5">
+          <Clock className="w-4 h-4 text-cyan-400" />
+          Employee Work Session
+        </h3>
+        {workSessionData.isWorking ? (
+          <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-bold text-emerald-400 flex items-center gap-1.5 shadow-[0_0_8px_rgba(16,185,129,0.15)]">
+            <Clock className="w-3 h-3" />
+            Working
+          </span>
+        ) : (
+          <span className="px-2.5 py-1 rounded-full bg-slate-500/10 border border-slate-500/20 text-[10px] font-bold text-slate-400 flex items-center gap-1.5">
+            Offline
+          </span>
+        )}
+      </div>
+      
+      <div className="text-center py-2 mb-2">
+        <div className="text-3xl font-black text-slate-100 tracking-wide font-mono drop-shadow-md">
+          {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+        </div>
+        <div className="text-xs text-slate-400 mt-1.5 font-medium">
+          {currentTime.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+        </div>
+      </div>
+
+      <div className="mb-5 px-1">
+        <div className="flex justify-between text-[10px] text-slate-400 font-bold mb-1.5">
+          <span>Work Progress</span>
+          <span className="text-cyan-400">{workSessionData.progressPercent}%</span>
+        </div>
+        <div className="w-full h-2 bg-slate-900 rounded-full overflow-hidden border border-slate-800 shadow-inner">
+          <div 
+            className="h-full bg-gradient-to-r from-emerald-500 to-cyan-400 rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(16,185,129,0.3)] relative"
+            style={{ width: `${workSessionData.progressPercent}%` }}
+          >
+            <div className="absolute inset-0 bg-white/20 w-full h-full animate-[pulse_2s_infinite]" />
+          </div>
+        </div>
+        <div className="flex justify-between text-[9px] text-slate-500 mt-1.5 font-medium">
+          <span>0 hrs</span>
+          <span>9 hrs Goal</span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-slate-900/80 border border-slate-800/80 rounded-xl p-3.5 text-center flex flex-col items-center justify-center shadow-sm">
+          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Work Duration</span>
+          <span className="text-xl font-bold text-slate-100 mt-1 tracking-wider font-mono">
+            {workSessionData.isWorking ? workSessionData.durationStr : "00:00:00"}
+          </span>
+        </div>
+        <div className="bg-orange-950/10 border border-orange-900/20 rounded-xl p-3.5 text-center flex flex-col items-center justify-center shadow-sm">
+          <span className="text-[10px] text-orange-400/80 font-bold uppercase tracking-wider">End Work Duration</span>
+          <span className="text-xl font-bold text-orange-400/90 mt-1 tracking-wider font-mono opacity-80">
+            {!workSessionData.isWorking && workSessionData.progressPercent > 0 ? workSessionData.durationStr : "00:00:00"}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+});
+
+export default function Attendance() {
+  const { setFirestoreError, isDbActionLoading, setIsDbActionLoading, isAdmin, userProfile } = useOutletContext<any>();
+
+  const activeEmail = userProfile?.email || auth?.currentUser?.email || 'admin@apecpowersolutions.com';
+  const isUserAdmin = isAdmin ||
+    activeEmail.toLowerCase() === 'admin@apecpowersolutions.com' ||
+    activeEmail.toLowerCase() === 'managingdirector@apecpowersolutions.com';
+
+  // Camera & Capture states
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const bgWatcherIdRef = useRef<string | null>(null);
+  const bgTimerRef = useRef<any>(null);
+
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+
+  // Geolocation states
+  const [coords, setCoords] = useState<{ latitude: number; longitude: number; accuracy: number } | null>(null);
+  const [address, setAddress] = useState<string>('');
+  const [isLocationLoading, setIsLocationLoading] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [isGeocoding, setIsGeocoding] = useState(false);
+
+  // Punch actions
+  const [punchSuccess, setPunchSuccess] = useState<{ type: string; time: Date; duration?: string } | null>(null);
+  const [teamList, setTeamList] = useState<any[]>([]);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [isSimulatedTechDropdownOpen, setIsSimulatedTechDropdownOpen] = useState(false);
+
+  // History & Filters
+  const [logs, setLogs] = useState<any[]>([]);
+  const [isLogsLoading, setIsLogsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'punch_in' | 'punch_out'>('all');
+  const [dateFilter, setDateFilter] = useState('');
+
+  // Photo viewer modal state
+  const [viewerPhoto, setViewerPhoto] = useState<{ url: string; name: string } | null>(null);
+
+  // Fallback indicator
+  const [isFallbackMode, setIsFallbackMode] = useState(false);
+
+  // Android background location optimization guide modal state
+  const [showAndroidOptimizationsModal, setShowAndroidOptimizationsModal] = useState(false);
+
+  // Geofencing related states and memo hooks
+  const [projectsList, setProjectsList] = useState<any[]>([]);
+  const [schedules, setSchedules] = useState<any[]>([]);
+  const [leavesList, setLeavesList] = useState<any[]>([]);
+
+
 
   const activeShift = React.useMemo(() => {
     if (!selectedUser) return null;
@@ -570,6 +639,7 @@ export default function Attendance() {
       setIsLogsLoading(false);
     });
 
+    return () => unsub();
   }, [isUserAdmin, activeEmail]);
 
   // Automatically restore watcher session and interval timer if a check-in session is active
@@ -1371,67 +1441,7 @@ export default function Attendance() {
             </div>
 
             {/* EMPLOYEE WORK SESSION */}
-            <div className="mt-4 p-4 rounded-xl border border-slate-800/60 bg-slate-950/20 shadow-inner relative overflow-hidden">
-               <div className="flex justify-between items-center mb-3 border-b border-slate-800/80 pb-3">
-                 <h3 className="text-sm font-bold text-slate-100 flex items-center gap-1.5">
-                   <Clock className="w-4 h-4 text-cyan-400" />
-                   Employee Work Session
-                 </h3>
-                 {workSessionData.isWorking ? (
-                   <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-bold text-emerald-400 flex items-center gap-1.5 shadow-[0_0_8px_rgba(16,185,129,0.15)]">
-                     <Clock className="w-3 h-3" />
-                     Working
-                   </span>
-                 ) : (
-                   <span className="px-2.5 py-1 rounded-full bg-slate-500/10 border border-slate-500/20 text-[10px] font-bold text-slate-400 flex items-center gap-1.5">
-                     Offline
-                   </span>
-                 )}
-               </div>
-               
-               <div className="text-center py-2 mb-2">
-                 <div className="text-3xl font-black text-slate-100 tracking-wide font-mono drop-shadow-md">
-                   {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                 </div>
-                 <div className="text-xs text-slate-400 mt-1.5 font-medium">
-                   {currentTime.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-                 </div>
-               </div>
-
-               <div className="mb-5 px-1">
-                 <div className="flex justify-between text-[10px] text-slate-400 font-bold mb-1.5">
-                   <span>Work Progress</span>
-                   <span className="text-cyan-400">{workSessionData.progressPercent}%</span>
-                 </div>
-                 <div className="w-full h-2 bg-slate-900 rounded-full overflow-hidden border border-slate-800 shadow-inner">
-                   <div 
-                     className="h-full bg-gradient-to-r from-emerald-500 to-cyan-400 rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(16,185,129,0.3)] relative"
-                     style={{ width: `${workSessionData.progressPercent}%` }}
-                   >
-                     <div className="absolute inset-0 bg-white/20 w-full h-full animate-[pulse_2s_infinite]" />
-                   </div>
-                 </div>
-                 <div className="flex justify-between text-[9px] text-slate-500 mt-1.5 font-medium">
-                   <span>0 hrs</span>
-                   <span>9 hrs Goal</span>
-                 </div>
-               </div>
-
-               <div className="grid grid-cols-2 gap-3">
-                 <div className="bg-slate-900/80 border border-slate-800/80 rounded-xl p-3.5 text-center flex flex-col items-center justify-center shadow-sm">
-                   <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Work Duration</span>
-                   <span className="text-xl font-bold text-slate-100 mt-1 tracking-wider font-mono">
-                     {workSessionData.isWorking ? workSessionData.durationStr : "00:00:00"}
-                   </span>
-                 </div>
-                 <div className="bg-orange-950/10 border border-orange-900/20 rounded-xl p-3.5 text-center flex flex-col items-center justify-center shadow-sm">
-                   <span className="text-[10px] text-orange-400/80 font-bold uppercase tracking-wider">End Work Duration</span>
-                   <span className="text-xl font-bold text-orange-400/90 mt-1 tracking-wider font-mono opacity-80">
-                     {!workSessionData.isWorking && workSessionData.progressPercent > 0 ? workSessionData.durationStr : "00:00:00"}
-                   </span>
-                 </div>
-               </div>
-            </div>
+            <WorkSessionWidget logs={logs} selectedUser={selectedUser} />
 
           </div>
         </div>

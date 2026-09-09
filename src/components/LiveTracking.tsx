@@ -107,6 +107,7 @@ export default function LiveTracking() {
   const markersRef = useRef<{ [key: string]: L.Marker }>({});
   const polylinesRef = useRef<{ [key: string]: L.Polyline }>({});
   const projectMarkersRef = useRef<L.Marker[]>([]);
+  const inFlightGeocodesRef = useRef<Set<string>>(new Set());
 
   // 1. Fetch metadata (team, projects, schedules)
   useEffect(() => {
@@ -292,46 +293,42 @@ export default function LiveTracking() {
 
   // Client-side reverse geocoding for background telemetry updates to show real location details on dashboard
   useEffect(() => {
-    const fetchGeocode = async (emp: ActiveEmployee) => {
-      const lat = emp.latitude;
-      const lon = emp.longitude;
-      const key = `${lat.toFixed(6)},${lon.toFixed(6)}`;
-
-      if (
-        (emp.address === 'Background Telemetry' || !emp.address || emp.address.startsWith('Background')) &&
-        !geocodedAddresses[key]
-      ) {
-        try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`, {
-            headers: {
-              'User-Agent': 'APECERP-LiveTracking/1.0'
-            }
-          });
-          if (res.ok) {
-            const data = await res.json();
-            if (data && data.display_name) {
-              setGeocodedAddresses(prev => ({ ...prev, [key]: data.display_name }));
-            }
+    const fetchGeocode = async (lat: number, lon: number, key: string) => {
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`, {
+          headers: {
+            'User-Agent': 'APECERP-LiveTracking/1.0'
           }
-        } catch (err) {
-          console.error("Client-side reverse geocoding failed:", err);
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.display_name) {
+            setGeocodedAddresses(prev => ({ ...prev, [key]: data.display_name }));
+          }
         }
+      } catch (err) {
+        console.error("Client-side reverse geocoding failed:", err);
       }
     };
 
     // Sequential trigger to respect Nominatim request rate limits (1 req/sec)
     let delay = 0;
+    const timers: ReturnType<typeof setTimeout>[] = [];
     activeEmployees.forEach((emp) => {
       const key = `${emp.latitude.toFixed(6)},${emp.longitude.toFixed(6)}`;
-      if (
-        (emp.address === 'Background Telemetry' || !emp.address || emp.address.startsWith('Background')) &&
-        !geocodedAddresses[key]
-      ) {
-        setTimeout(() => fetchGeocode(emp), delay);
+      const needsGeocode = (emp.address === 'Background Telemetry' || !emp.address || emp.address.startsWith('Background'));
+      if (needsGeocode && !geocodedAddresses[key] && !inFlightGeocodesRef.current.has(key)) {
+        inFlightGeocodesRef.current.add(key);
+        const t = setTimeout(() => fetchGeocode(emp.latitude, emp.longitude, key), delay);
+        timers.push(t);
         delay += 1100; // 1.1s delay between fetches
       }
     });
-  }, [activeEmployees, geocodedAddresses]);
+
+    return () => {
+      timers.forEach(t => clearTimeout(t));
+    };
+  }, [activeEmployees]);
 
   // Memoized filtered employees list
   const filteredEmployees = useMemo(() => {

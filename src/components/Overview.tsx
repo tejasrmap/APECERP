@@ -15,7 +15,7 @@ import {
   CalendarRange,
   Coins
 } from 'lucide-react';
-import { collection, onSnapshot, query, Timestamp, orderBy, limit } from 'firebase/firestore';
+import { collection, onSnapshot, query, Timestamp, orderBy, limit, where } from 'firebase/firestore';
 import { useOutletContext } from 'react-router-dom';
 import { db } from '../firebase';
 
@@ -137,7 +137,7 @@ export default function Overview() {
     }, (err) => handleSnapshotError(err, 'projects')));
 
     // 2. Alerts listener
-    unsubscribes.push(onSnapshot(collection(db, 'alerts'), (snapshot) => {
+    unsubscribes.push(onSnapshot(query(collection(db, 'alerts'), limit(25)), (snapshot) => {
       const alts = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       setAlertsList(alts);
       setPendingAlertsCount(alts.filter((a: any) => a.status === 'pending').length);
@@ -145,7 +145,7 @@ export default function Overview() {
     }, (err) => handleSnapshotError(err, 'alerts')));
 
     // 3. Tasks listener
-    unsubscribes.push(onSnapshot(collection(db, 'tasks'), (snapshot) => {
+    unsubscribes.push(onSnapshot(query(collection(db, 'tasks'), limit(35)), (snapshot) => {
       const tks = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       setTasksList(tks);
       setCompletedTasksCount(tks.filter((t: any) => t.status === 'completed').length);
@@ -186,21 +186,27 @@ export default function Overview() {
     }, (err) => handleSnapshotError(err, 'activities')));
 
     // 5. Schedules listener
-    unsubscribes.push(onSnapshot(collection(db, 'schedules'), (snapshot) => {
+    unsubscribes.push(onSnapshot(query(collection(db, 'schedules'), limit(60)), (snapshot) => {
       const schs = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       setSchedulesList(schs);
       setLoadedCollections(prev => ({ ...prev, schedules: true }));
     }, (err) => handleSnapshotError(err, 'schedules')));
 
     // 6. Leads listener
-    unsubscribes.push(onSnapshot(collection(db, 'leads'), (snapshot) => {
+    unsubscribes.push(onSnapshot(query(collection(db, 'leads'), limit(50)), (snapshot) => {
       const leads = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       setLeadsList(leads);
       setLoadedCollections(prev => ({ ...prev, leads: true }));
     }, (err) => handleSnapshotError(err, 'leads')));
 
-    // 7. Attendance listener
-    unsubscribes.push(onSnapshot(collection(db, 'attendance'), (snapshot) => {
+    // 7. Attendance listener (bounded to today's records)
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    const qAttendance = query(
+      collection(db, 'attendance'),
+      where('timestamp', '>=', Timestamp.fromDate(startOfToday))
+    );
+    unsubscribes.push(onSnapshot(qAttendance, (snapshot) => {
       const logs = snapshot.docs.map(d => {
         const data = d.data();
         let tsString = new Date().toISOString();
@@ -221,7 +227,29 @@ export default function Overview() {
       });
       setAttendanceList(logs);
       setLoadedCollections(prev => ({ ...prev, attendance: true }));
-    }, (err) => handleSnapshotError(err, 'attendance')));
+    }, (err) => {
+      console.warn('Today attendance query fallback:', err);
+      // Fallback with limit if inequality query fails
+      const qFallback = query(collection(db, 'attendance'), limit(100));
+      unsubscribes.push(onSnapshot(qFallback, (fbSnap) => {
+        const logs = fbSnap.docs.map(d => {
+          const data = d.data();
+          let tsString = new Date().toISOString();
+          if (data.timestamp) {
+            if (typeof data.timestamp.toDate === 'function') {
+              tsString = data.timestamp.toDate().toISOString();
+            } else if (data.timestamp.seconds) {
+              tsString = new Date(data.timestamp.seconds * 1000).toISOString();
+            } else {
+              tsString = new Date(data.timestamp).toISOString();
+            }
+          }
+          return { id: d.id, ...data, timestamp: tsString };
+        });
+        setAttendanceList(logs);
+        setLoadedCollections(prev => ({ ...prev, attendance: true }));
+      }, (fbErr) => handleSnapshotError(fbErr, 'attendance')));
+    }));
 
     // 8. Leaves listener
     unsubscribes.push(onSnapshot(collection(db, 'leaves'), (snapshot) => {

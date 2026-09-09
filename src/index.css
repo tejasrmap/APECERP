@@ -61,21 +61,21 @@ body {
 
 @utility glass-card {
   background-color: var(--glass-card-bg);
-  /* Reduced blur from 16px → 10px: imperceptible visually, significant GPU win */
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid var(--glass-border);
   box-shadow: var(--glass-shadow);
-  /* Isolate paint to avoid triggering full-page repaints */
+  /* Isolate paint and composite on GPU layer */
   contain: layout style;
+  transform: translateZ(0);
 }
 
 @utility glass-sidebar {
   background-color: var(--glass-sidebar-bg);
-  /* Reduced blur from 20px → 12px */
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-right: 1px solid var(--glass-border);
+  transform: translateZ(0);
 }
 
 @utility glowing-active {

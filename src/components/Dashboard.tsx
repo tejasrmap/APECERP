@@ -28,7 +28,7 @@ import {
 } from 'lucide-react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { auth, db } from '../firebase';
-import { collection, query, where, onSnapshot, getDocs } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, getDocs, limit } from 'firebase/firestore';
 import { Capacitor } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
 
@@ -209,7 +209,8 @@ export default function Dashboard() {
       ]);
       return;
     }
-    const unsubNotifications = onSnapshot(collection(db, 'notifications'), (snapshot) => {
+    const qNotifs = query(collection(db, 'notifications'), limit(15));
+    const unsubNotifications = onSnapshot(qNotifs, (snapshot) => {
       const list = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       list.sort((a: any, b: any) => {
         const tA = a.timestamp?.seconds || (a.timestamp instanceof Date ? a.timestamp.getTime() : 0) || 0;
@@ -488,23 +489,37 @@ export default function Dashboard() {
   return (
     <div className="h-[100dvh] w-full flex font-sans text-slate-200 overflow-hidden relative selection:bg-cyan-500/15 selection:text-cyan-400">
       
-      {/* Background Ambience */}
-      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        {/* Vibrant Gradient Blobs */}
-        <div className="absolute top-[-25%] left-[-15%] w-[60%] h-[60%] bg-gradient-to-br from-cyan-500/15 via-cyan-500/5 to-transparent rounded-full blur-[100px] will-change-transform" />
-        <div className="absolute bottom-[-25%] right-[-15%] w-[70%] h-[70%] bg-gradient-to-br from-rose-500/10 via-rose-500/2 to-transparent rounded-full blur-[120px] will-change-transform" />
+      {/* Background Ambience - Hardware Accelerated & Zero-Blur Cost */}
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none" style={{ contain: 'strict', transform: 'translateZ(0)' }}>
+        {/* Top-left Cyan Ambience */}
+        <div 
+          className="absolute top-[-20%] left-[-10%] w-[55vw] h-[55vh] rounded-full pointer-events-none"
+          style={{
+            background: 'radial-gradient(circle, rgba(6, 182, 212, 0.12) 0%, rgba(6, 182, 212, 0.03) 45%, transparent 70%)',
+            transform: 'translateZ(0)',
+          }}
+        />
+        {/* Bottom-right Rose Ambience */}
+        <div 
+          className="absolute bottom-[-20%] right-[-10%] w-[65vw] h-[65vh] rounded-full pointer-events-none"
+          style={{
+            background: 'radial-gradient(circle, rgba(244, 63, 94, 0.08) 0%, rgba(244, 63, 94, 0.02) 50%, transparent 70%)',
+            transform: 'translateZ(0)',
+          }}
+        />
         
         {/* Tech Dotted Grid */}
         <div 
-          className="absolute inset-0 opacity-25" 
+          className="absolute inset-0 opacity-20 pointer-events-none" 
           style={{ 
-            backgroundImage: 'radial-gradient(rgba(6, 182, 212, 0.15) 1px, transparent 1px)', 
-            backgroundSize: '24px 24px' 
+            backgroundImage: 'radial-gradient(rgba(6, 182, 212, 0.12) 1px, transparent 1px)', 
+            backgroundSize: '24px 24px',
+            transform: 'translateZ(0)'
           }} 
         />
         
         {/* Vignette fade to center */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_30%,var(--bg-app)_80%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_30%,var(--bg-app)_80%)] pointer-events-none" style={{ transform: 'translateZ(0)' }} />
       </div>
 
       {/* Mobile Sidebar Overlay */}
