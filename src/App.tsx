@@ -26,6 +26,7 @@ const LocationHistory = lazy(() => import('./components/LocationHistory'));
 const MyProfile    = lazy(() => import('./components/MyProfile'));
 const DailyReports = lazy(() => import('./components/DailyReports'));
 const Leads        = lazy(() => import('./components/Leads'));
+const PrivacyPolicy = lazy(() => import('./components/PrivacyPolicy'));
 
 const PageLoader = () => (
   <div className="absolute inset-0 flex items-center justify-center bg-[#070a13]/50 z-30">
@@ -39,6 +40,12 @@ export default function App() {
       <Watermark />
       <Routes>
       <Route path="/" element={<Login />} />
+      <Route path="/privacy-policy" element={
+        <Suspense fallback={<PageLoader />}><PrivacyPolicy /></Suspense>
+      } />
+      <Route path="/privacy" element={
+        <Suspense fallback={<PageLoader />}><PrivacyPolicy /></Suspense>
+      } />
       <Route path="/profile/:id" element={
         <Suspense fallback={<PageLoader />}><ProfileView /></Suspense>
       } />
