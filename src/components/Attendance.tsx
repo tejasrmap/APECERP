@@ -254,6 +254,9 @@ export default function Attendance() {
   // Android background location optimization guide modal state
   const [showAndroidOptimizationsModal, setShowAndroidOptimizationsModal] = useState(false);
 
+  // Google Play prominent location disclosure modal state
+  const [showProminentDisclosure, setShowProminentDisclosure] = useState(false);
+
   // Geofencing related states and memo hooks
   const [projectsList, setProjectsList] = useState<any[]>([]);
   const [schedules, setSchedules] = useState<any[]>([]);
@@ -848,6 +851,26 @@ export default function Attendance() {
       return;
     }
 
+    // Google Play Policy: Prominent disclosure must be displayed before background tracking starts
+    if (punchType === 'punch_in' && !localStorage.getItem('apec_location_consent_granted')) {
+      setShowProminentDisclosure(true);
+      return;
+    }
+
+    await executePunch(punchType);
+  };
+
+  const handleConsentAccepted = async () => {
+    localStorage.setItem('apec_location_consent_granted', 'true');
+    setShowProminentDisclosure(false);
+    await executePunch('punch_in');
+  };
+
+  const handleConsentDeclined = () => {
+    setShowProminentDisclosure(false);
+  };
+
+  const executePunch = async (punchType: 'punch_in' | 'punch_out') => {
     setIsDbActionLoading(true);
     try {
       // 1. Upload photo to storage
@@ -1305,17 +1328,27 @@ export default function Attendance() {
                 <span className="flex items-center gap-1">
                   <MapPin className="w-3.5 h-3.5 text-cyan-500" /> Location Registry
                 </span>
-                {Capacitor.isNativePlatform() ? (
+                <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => setShowAndroidOptimizationsModal(true)}
-                    className="text-[9px] text-cyan-400 hover:text-cyan-300 font-extrabold flex items-center gap-1 cursor-pointer border border-cyan-500/20 px-1.5 py-0.5 rounded bg-cyan-500/5 hover:bg-cyan-500/10 transition-colors uppercase tracking-wider leading-none"
+                    onClick={() => setShowProminentDisclosure(true)}
+                    className="text-[9px] text-slate-400 hover:text-cyan-400 font-bold flex items-center gap-1 cursor-pointer border border-slate-800 hover:border-cyan-500/30 px-1.5 py-0.5 rounded bg-slate-900/60 transition-colors uppercase tracking-wider leading-none"
+                    title="View Google Play Location Disclosure"
                   >
-                    ⚙️ Setup Guide
+                    📋 Location Notice
                   </button>
-                ) : (
-                  <span>GPS Core Status</span>
-                )}
+                  {Capacitor.isNativePlatform() ? (
+                    <button
+                      type="button"
+                      onClick={() => setShowAndroidOptimizationsModal(true)}
+                      className="text-[9px] text-cyan-400 hover:text-cyan-300 font-extrabold flex items-center gap-1 cursor-pointer border border-cyan-500/20 px-1.5 py-0.5 rounded bg-cyan-500/5 hover:bg-cyan-500/10 transition-colors uppercase tracking-wider leading-none"
+                    >
+                      ⚙️ Setup Guide
+                    </button>
+                  ) : (
+                    <span>GPS Core Status</span>
+                  )}
+                </div>
               </div>
 
               <div className="p-3 bg-slate-950/60 border border-slate-900 rounded-xl space-y-2 text-xs font-mono">
@@ -1802,6 +1835,88 @@ export default function Attendance() {
                   className="px-4 py-2 bg-slate-800 hover:bg-slate-750 text-slate-100 font-bold rounded-xl text-xs uppercase tracking-wider transition-colors cursor-pointer"
                 >
                   I Understand
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Google Play Prominent Location Disclosure Modal */}
+      <AnimatePresence>
+        {showProminentDisclosure && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-lg glass-card border border-cyan-500/30 rounded-2xl p-6 shadow-2xl flex flex-col max-h-[90vh] overflow-y-auto space-y-4 text-left"
+            >
+              <div className="flex items-start justify-between border-b border-slate-800 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400 shrink-0">
+                    <MapPin className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-slate-100">Location Data Disclosure</h3>
+                    <p className="text-[11px] text-cyan-400 font-mono font-medium">Google Play Background Location Policy</p>
+                  </div>
+                </div>
+                <span className="text-[9px] uppercase tracking-wider bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2 py-0.5 rounded font-bold">
+                  Shift Duty
+                </span>
+              </div>
+
+              <div className="p-3.5 bg-cyan-950/20 border border-cyan-500/30 rounded-xl text-xs text-cyan-200 leading-relaxed font-medium">
+                <strong>APEC ERP</strong> collects location data to enable <strong>shift attendance verification</strong>, <strong>substation transit tracking</strong>, and <strong>field technician safety</strong> even when the app is closed or not in active use on your screen.
+              </div>
+
+              <div className="space-y-3 text-xs text-slate-300">
+                <div className="flex gap-2.5 items-start">
+                  <span className="text-cyan-400 font-bold text-sm leading-none mt-0.5">•</span>
+                  <div>
+                    <strong className="text-slate-100 block">Why Background Tracking is Required:</strong>
+                    <span className="text-slate-400 text-[11.5px] leading-relaxed">
+                      Power infrastructure engineers travel between remote electrical substations and solar sites. Background tracking ensures your route and on-site attendance are logged automatically without draining battery by keeping the screen turned on.
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex gap-2.5 items-start">
+                  <span className="text-emerald-400 font-bold text-sm leading-none mt-0.5">•</span>
+                  <div>
+                    <strong className="text-slate-100 block">Active Shift Limitation:</strong>
+                    <span className="text-slate-400 text-[11.5px] leading-relaxed">
+                      Location tracking is operative <strong>strictly while you are punched in on duty</strong>. The moment you tap <em>Punch Out</em>, all background location tracking immediately terminates.
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex gap-2.5 items-start">
+                  <span className="text-purple-400 font-bold text-sm leading-none mt-0.5">•</span>
+                  <div>
+                    <strong className="text-slate-100 block">Data Privacy & Security:</strong>
+                    <span className="text-slate-400 text-[11.5px] leading-relaxed">
+                      Your location telemetry is encrypted in transit and stored in your organization&apos;s private database. It is strictly never sold, leased, or shared with third-party advertisers.
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-800/80 flex flex-col sm:flex-row gap-2.5 justify-end">
+                <button
+                  type="button"
+                  onClick={handleConsentDeclined}
+                  className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-slate-200 font-bold rounded-xl text-xs uppercase tracking-wider transition-colors cursor-pointer text-center"
+                >
+                  Cancel / Not Now
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConsentAccepted}
+                  className="px-5 py-2.5 bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-slate-950 font-extrabold rounded-xl text-xs uppercase tracking-wider shadow-lg shadow-cyan-500/20 transition-all active:scale-[0.98] cursor-pointer text-center"
+                >
+                  Agree & Start Shift
                 </button>
               </div>
             </motion.div>

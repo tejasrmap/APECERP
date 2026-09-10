@@ -54,21 +54,6 @@ public class LocationService extends Service {
     private LocationListener androidLocationListener;
     private final android.os.Handler mainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
 
-    // Schedule a periodic UI updater (notification + toast) every minute
-    private final Runnable uiUpdater = new Runnable() {
-        @Override
-        public void run() {
-            // Update notification with current time (even if no data sent)
-            java.text.SimpleDateFormat timeFmt = new java.text.SimpleDateFormat("hh:mm:ss a", java.util.Locale.getDefault());
-            String now = timeFmt.format(new java.util.Date());
-            updateNotification("Service alive – " + now);
-            // Show a short toast so the user knows the service is still running
-            android.widget.Toast.makeText(getApplicationContext(), "APEC Service alive: " + now, android.widget.Toast.LENGTH_SHORT).show();
-            // Re‑post for the next minute
-            mainHandler.postDelayed(this, 60_000L);
-        }
-    };
-
     @Override
     public void onCreate() {
         super.onCreate();
@@ -133,11 +118,13 @@ public class LocationService extends Service {
         createNotificationChannel();
 
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("APEC Location Tracking Active")
-                .setContentText("Recording your shift location. Do not disable.")
+                .setContentTitle("APEC Shift Tracking Active")
+                .setContentText("Recording location for on-duty field operations.")
                 .setSmallIcon(R.mipmap.ic_launcher)
-                .setOngoing(true)       // Cannot be dismissed by user
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setOngoing(true)       // Cannot be dismissed by user during active shift
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .setCategory(NotificationCompat.CATEGORY_SERVICE)
+                .setOnlyAlertOnce(true)
                 .build();
 
         // Android 10 (Q)+ requires specifying foreground service type
@@ -161,17 +148,6 @@ public class LocationService extends Service {
 
         // Begin FusedLocation periodic updates
         startLocationUpdates();
-
-        // Start periodic UI updater
-        mainHandler.post(uiUpdater);
-
-        // Show Toast that service has initialized
-        mainHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                android.widget.Toast.makeText(getApplicationContext(), "APEC Service Active!", android.widget.Toast.LENGTH_SHORT).show();
-            }
-        });
 
         // START_STICKY: system will restart service with null intent if killed
         return START_STICKY;
@@ -349,8 +325,6 @@ public class LocationService extends Service {
             wakeLock.release();
             Log.d(TAG, "WakeLock released.");
         }
-        // Cancel the periodic UI updater when the service is destroyed
-        mainHandler.removeCallbacks(uiUpdater);
 
         // Cancel notification
         NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -381,11 +355,13 @@ public class LocationService extends Service {
         if (manager == null) return;
 
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("APEC Location Tracking Active")
+                .setContentTitle("APEC Shift Tracking Active")
                 .setContentText(text)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setOngoing(true)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .setCategory(NotificationCompat.CATEGORY_SERVICE)
+                .setOnlyAlertOnce(true)
                 .build();
 
         manager.notify(NOTIFICATION_ID, notification);
@@ -395,11 +371,13 @@ public class LocationService extends Service {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel serviceChannel = new NotificationChannel(
                     CHANNEL_ID,
-                    "APEC Location Service",
+                    "APEC Shift Location Service",
                     NotificationManager.IMPORTANCE_LOW
             );
-            serviceChannel.setDescription("Keeps location tracking active during shift");
+            serviceChannel.setDescription("Keeps location tracking active during shift duty");
             serviceChannel.setShowBadge(false);
+            serviceChannel.enableVibration(false);
+            serviceChannel.setSound(null, null);
             NotificationManager manager = getSystemService(NotificationManager.class);
             if (manager != null) {
                 manager.createNotificationChannel(serviceChannel);
@@ -496,12 +474,6 @@ public class LocationService extends Service {
                         SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm:ss a", Locale.getDefault());
                         final String formattedTime = timeFormat.format(new Date());
                         updateNotification("Last update sent: " + formattedTime);
-                        new android.os.Handler(android.os.Looper.getMainLooper()).post(new Runnable() {
-                            @Override
-                            public void run() {
-                                android.widget.Toast.makeText(getApplicationContext(), "APEC GPS Sent: " + formattedTime, android.widget.Toast.LENGTH_SHORT).show();
-                            }
-                        });
 
                         // Sync any queued offline locations
                         sendOfflineQueue(projectId, apiKey, refreshToken, empId, empName, empEmail);
@@ -518,14 +490,7 @@ public class LocationService extends Service {
 
                         SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm:ss a", Locale.getDefault());
                         final String formattedTime = timeFormat.format(new Date());
-                        updateNotification("Last update failed: " + formattedTime + " (HTTP " + respCode + ")");
-                        final String finalError = error;
-                        new android.os.Handler(android.os.Looper.getMainLooper()).post(new Runnable() {
-                            @Override
-                            public void run() {
-                                android.widget.Toast.makeText(getApplicationContext(), "APEC Write Error: HTTP " + respCode + " - " + finalError, android.widget.Toast.LENGTH_LONG).show();
-                            }
-                        });
+                        updateNotification("Reconnecting... (Last recorded: " + formattedTime + ")");
                     }
                 } catch (final Exception e) {
                     Log.e(TAG, "Telemetry network error", e);
@@ -535,13 +500,7 @@ public class LocationService extends Service {
 
                     SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm:ss a", Locale.getDefault());
                     final String formattedTime = timeFormat.format(new Date());
-                    updateNotification("Offline. Last update attempt: " + formattedTime);
-                    new android.os.Handler(android.os.Looper.getMainLooper()).post(new Runnable() {
-                        @Override
-                        public void run() {
-                            android.widget.Toast.makeText(getApplicationContext(), "APEC Offline: " + e.getMessage(), android.widget.Toast.LENGTH_SHORT).show();
-                        }
-                    });
+                    updateNotification("Offline mode. Queued at: " + formattedTime);
                 }
             }
         }).start();
