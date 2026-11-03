@@ -2092,18 +2092,18 @@ export default function TeamControl() {
                                 />
                               </button>
                               {m.terminated || m.isTerminated ? (
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-500/15 text-rose-400 border border-rose-500/30">
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400 whitespace-nowrap">
                                   Terminated
                                 </span>
                               ) : (m.accessRevoked || m.isAccessRevoked || m.status === 'Inactive') ? (
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-500/15 text-rose-400 border border-rose-500/30">
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400 whitespace-nowrap">
                                   Access Revoked
                                 </span>
                               ) : (
-                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                                  m.status === 'Active' ? 'bg-green-955/40 text-green-400 border border-green-500/25' :
-                                  m.status === 'Site Visit' ? 'bg-cyan-955/40 text-cyan-400 border border-cyan-500/25' :
-                                  'bg-amber-955/40 text-amber-400 border border-amber-500/25'
+                                <span className={`text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${
+                                  m.status === 'Active' ? 'text-green-400' :
+                                  m.status === 'Site Visit' ? 'text-cyan-400' :
+                                  'text-amber-400'
                                 }`}>
                                   {m.status || 'Active'}
                                 </span>
@@ -2862,16 +2862,16 @@ export default function TeamControl() {
                       <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Status</span>
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                         selectedProfile.terminated || selectedProfile.isTerminated
-                          ? 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
-                          : selectedProfile.status === 'Active'
-                            ? 'bg-green-500/10 text-green-450 border border-green-500/20'
-                            : selectedProfile.status === 'Site Visit'
-                              ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
-                              : selectedProfile.status === 'Inactive'
-                                ? 'bg-rose-500/10 text-rose-455 border border-rose-500/20'
+                          ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                          : (selectedProfile.accessRevoked || selectedProfile.isAccessRevoked || selectedProfile.status === 'Inactive')
+                            ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                            : selectedProfile.status === 'Active'
+                              ? 'bg-green-500/10 text-green-450 border border-green-500/20'
+                              : selectedProfile.status === 'Site Visit'
+                                ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
                                 : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                      } border`}>
-                        {selectedProfile.terminated || selectedProfile.isTerminated ? 'Terminated' : (selectedProfile.status || 'Active')}
+                      }`}>
+                        {selectedProfile.terminated || selectedProfile.isTerminated ? 'Terminated' : (selectedProfile.accessRevoked || selectedProfile.isAccessRevoked) ? 'Revoked' : (selectedProfile.status || 'Active')}
                       </span>
                     </div>
                     <div className="space-y-1">

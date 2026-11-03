@@ -220,19 +220,18 @@ export default function Team() {
                 <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between">
                   <span className="text-[10px] text-slate-500 font-semibold uppercase">Status</span>
                   {m.terminated || m.isTerminated ? (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-500/15 text-rose-400 border border-rose-500/30">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400 whitespace-nowrap">
                       Terminated
                     </span>
-                  ) : (m.accessRevoked || m.isAccessRevoked) ? (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-500/15 text-rose-400 border border-rose-500/30">
+                  ) : (m.accessRevoked || m.isAccessRevoked || m.status === 'Inactive') ? (
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400 whitespace-nowrap">
                       Revoked
                     </span>
                   ) : (
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                      m.status === 'Active' ? 'bg-green-955/40 text-green-400 border border-green-500/25' :
-                      m.status === 'Site Visit' ? 'bg-cyan-955/40 text-cyan-400 border border-cyan-500/25' :
-                      m.status === 'Inactive' ? 'bg-rose-955/40 text-rose-400 border border-rose-500/25' :
-                      'bg-amber-955/40 text-amber-400 border border-amber-500/25'
+                    <span className={`text-[10px] font-bold uppercase tracking-wider whitespace-nowrap ${
+                      m.status === 'Active' ? 'text-green-400' :
+                      m.status === 'Site Visit' ? 'text-cyan-400' :
+                      'text-amber-400'
                     }`}>
                       {m.status || 'Active'}
                     </span>
