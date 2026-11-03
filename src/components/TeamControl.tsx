@@ -6,6 +6,7 @@ import {
   Loader2, 
   UserPlus, 
   ShieldAlert, 
+  AlertTriangle,
   Shield, 
   ArrowRight,
   TrendingUp,
@@ -60,6 +61,9 @@ export default function TeamControl() {
   const [newAvatar, setNewAvatar] = useState('cyan');
   const [newPhotoFile, setNewPhotoFile] = useState<File | null>(null);
   const [newPhotoPreview, setNewPhotoPreview] = useState<string>('');
+  const [newTerminated, setNewTerminated] = useState(false);
+  const [newTerminationDate, setNewTerminationDate] = useState('');
+  const [newAccessRevoked, setNewAccessRevoked] = useState(false);
   
   // Emergency & Medical States
   const [newEmergencyName, setNewEmergencyName] = useState('');
@@ -103,6 +107,9 @@ export default function TeamControl() {
   const [editAvatar, setEditAvatar] = useState('cyan');
   const [editPhotoFile, setEditPhotoFile] = useState<File | null>(null);
   const [editPhotoPreview, setEditPhotoPreview] = useState<string>('');
+  const [editTerminated, setEditTerminated] = useState(false);
+  const [editTerminationDate, setEditTerminationDate] = useState('');
+  const [editAccessRevoked, setEditAccessRevoked] = useState(false);
 
   const [editFatherName, setEditFatherName] = useState('');
   const [editMaritalStatus, setEditMaritalStatus] = useState('');
@@ -205,7 +212,12 @@ export default function TeamControl() {
         esiNumber: editEsiNumber.trim() || 'N/A',
         pfNumber: editPfNumber.trim() || 'N/A',
         aadharNumber: editAadharNumber.trim() || 'N/A',
-        status: editStatus,
+        status: (editAccessRevoked || editTerminated) ? 'Inactive' : editStatus,
+        terminated: editTerminated,
+        isTerminated: editTerminated,
+        terminationDate: editTerminated ? editTerminationDate : '',
+        accessRevoked: editAccessRevoked,
+        isAccessRevoked: editAccessRevoked,
         joinedDate: editJoinedDate,
         skills: formattedSkills,
         avatar: editAvatar,
@@ -309,7 +321,12 @@ export default function TeamControl() {
         email: newEmail.trim(),
         role: newRole || 'Staff Member',
         accessRole: newAccessRole,
-        status: newStatus,
+        status: (newAccessRevoked || newTerminated) ? 'Inactive' : newStatus,
+        terminated: newTerminated,
+        isTerminated: newTerminated,
+        terminationDate: newTerminated ? newTerminationDate : '',
+        accessRevoked: newAccessRevoked,
+        isAccessRevoked: newAccessRevoked,
         phone: newPhone || 'N/A',
         employeeId: empId,
         branch: newBranch,
@@ -363,6 +380,9 @@ export default function TeamControl() {
       setNewAvatar('cyan');
       setNewPhotoFile(null);
       setNewPhotoPreview('');
+      setNewTerminated(false);
+      setNewTerminationDate('');
+      setNewAccessRevoked(false);
       setNewEmergencyName('');
       setNewEmergencyPhone('');
       setNewBloodGroup('');
@@ -437,6 +457,43 @@ export default function TeamControl() {
       });
     } catch (err) {
       console.error('Error updating user status:', err);
+    } finally {
+      setIsDbActionLoading(false);
+    }
+  };
+
+  const handleToggleRevokeAccess = async (id: string, currentRevoked: boolean, userName: string) => {
+    if (!db) return;
+    setIsDbActionLoading(true);
+    const nextRevoked = !currentRevoked;
+    try {
+      await updateDoc(doc(db, 'team', id), {
+        accessRevoked: nextRevoked,
+        isAccessRevoked: nextRevoked,
+        status: nextRevoked ? 'Inactive' : 'Active'
+      });
+
+      setSelectedProfile((prev: any) => {
+        if (prev && prev.id === id) {
+          return {
+            ...prev,
+            accessRevoked: nextRevoked,
+            isAccessRevoked: nextRevoked,
+            status: nextRevoked ? 'Inactive' : 'Active'
+          };
+        }
+        return prev;
+      });
+
+      await addDoc(collection(db, 'activities'), {
+        title: nextRevoked ? 'Portal Access Revoked' : 'Portal Access Restored',
+        desc: `Access for "${userName}" was ${nextRevoked ? 'revoked' : 'restored'} by admin`,
+        type: 'settings',
+        timestamp: Timestamp.now()
+      });
+    } catch (err) {
+      console.error('Error toggling revoke access:', err);
+      alert('Failed to update access status. Please try again.');
     } finally {
       setIsDbActionLoading(false);
     }
@@ -879,6 +936,112 @@ export default function TeamControl() {
                           <span className="text-[8px] text-slate-400 leading-none truncate w-full text-center">{theme.label}</span>
                         </button>
                       ))}
+                    </div>
+                  </div>
+
+                  {/* Terminated Toggle & Date of Termination */}
+                  <div className={`col-span-full p-4 rounded-xl border transition-all ${
+                    newTerminated 
+                      ? 'bg-rose-950/20 border-rose-500/40 shadow-[0_0_15px_rgba(244,63,94,0.1)]' 
+                      : 'bg-slate-950/40 border-slate-800/80'
+                  }`}>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-slate-100 uppercase tracking-wider">Terminated</span>
+                          {newTerminated && (
+                            <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-widest bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                              Terminated
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-slate-400 mt-0.5">
+                          Toggle if employee is terminated. QR profile scan will only display employee name, employee ID, and termination notice.
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={newTerminated}
+                        onClick={() => {
+                          const next = !newTerminated;
+                          setNewTerminated(next);
+                          if (next && !newTerminationDate) {
+                            setNewTerminationDate(new Date().toISOString().slice(0, 10));
+                          }
+                        }}
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-rose-500/30 ${
+                          newTerminated ? 'bg-rose-600' : 'bg-slate-800'
+                        }`}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                            newTerminated ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    {newTerminated && (
+                      <div className="mt-3 pt-3 border-t border-rose-500/20 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-semibold text-rose-300 uppercase tracking-wider block ml-1">
+                            Date of Termination <span className="text-rose-400">*</span>
+                          </label>
+                          <input 
+                            type="date"
+                            value={newTerminationDate}
+                            onChange={(e) => setNewTerminationDate(e.target.value)}
+                            required={newTerminated}
+                            className="w-full bg-slate-950/80 border border-rose-500/40 focus:border-rose-500 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-rose-500/20 transition-all"
+                          />
+                        </div>
+                        <div className="flex items-end">
+                          <p className="text-[10px] text-rose-300/80 italic font-mono pb-2">
+                            QR scan notice: "Employee terminated from APEC Power Solutions Pvt. Ltd. on {newTerminationDate || '...'}"
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Revoke Access Toggle */}
+                  <div className={`col-span-full p-4 rounded-xl border transition-all ${
+                    newAccessRevoked 
+                      ? 'bg-amber-955/20 border-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.1)]' 
+                      : 'bg-slate-950/40 border-slate-800/80'
+                  }`}>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-slate-100 uppercase tracking-wider">Revoke Access</span>
+                          {newAccessRevoked && (
+                            <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-widest bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                              Access Revoked
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-slate-400 mt-0.5">
+                          Toggle to immediately prevent this account from logging into the portal and mobile application.
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={newAccessRevoked}
+                        onClick={() => setNewAccessRevoked(!newAccessRevoked)}
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-amber-500/30 ${
+                          newAccessRevoked ? 'bg-amber-600' : 'bg-slate-800'
+                        }`}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                            newAccessRevoked ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
                     </div>
                   </div>
 
@@ -1440,6 +1603,112 @@ export default function TeamControl() {
                     </div>
                   </div>
 
+                  {/* Terminated Toggle & Date of Termination */}
+                  <div className={`col-span-full p-4 rounded-xl border transition-all ${
+                    editTerminated 
+                      ? 'bg-rose-955/20 border-rose-500/40 shadow-[0_0_15px_rgba(244,63,94,0.1)]' 
+                      : 'bg-slate-950/40 border-slate-800/80'
+                  }`}>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-slate-100 uppercase tracking-wider">Terminated</span>
+                          {editTerminated && (
+                            <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-widest bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                              Terminated
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-slate-400 mt-0.5">
+                          Toggle to mark employee as terminated. Public QR code scan will only display employee name, employee ID, and termination notice.
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={editTerminated}
+                        onClick={() => {
+                          const next = !editTerminated;
+                          setEditTerminated(next);
+                          if (next && !editTerminationDate) {
+                            setEditTerminationDate(new Date().toISOString().slice(0, 10));
+                          }
+                        }}
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-rose-500/30 ${
+                          editTerminated ? 'bg-rose-600' : 'bg-slate-800'
+                        }`}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                            editTerminated ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    {editTerminated && (
+                      <div className="mt-3 pt-3 border-t border-rose-500/20 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-semibold text-rose-300 uppercase tracking-wider block ml-1">
+                            Date of Termination <span className="text-rose-400">*</span>
+                          </label>
+                          <input 
+                            type="date"
+                            value={editTerminationDate}
+                            onChange={(e) => setEditTerminationDate(e.target.value)}
+                            required={editTerminated}
+                            className="w-full bg-slate-950/80 border border-rose-500/40 focus:border-rose-500 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-rose-500/20 transition-all"
+                          />
+                        </div>
+                        <div className="flex items-end">
+                          <p className="text-[10px] text-rose-300/80 italic font-mono pb-2">
+                            QR scan notice: "Employee terminated from APEC Power Solutions Pvt. Ltd. on {editTerminationDate || '...'}"
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Revoke Access Toggle */}
+                  <div className={`col-span-full p-4 rounded-xl border transition-all ${
+                    editAccessRevoked 
+                      ? 'bg-amber-955/20 border-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.1)]' 
+                      : 'bg-slate-950/40 border-slate-800/80'
+                  }`}>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-slate-100 uppercase tracking-wider">Revoke Access</span>
+                          {editAccessRevoked && (
+                            <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-widest bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                              Access Revoked
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-slate-400 mt-0.5">
+                          Toggle to immediately prevent this account from logging into the portal and mobile application.
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={editAccessRevoked}
+                        onClick={() => setEditAccessRevoked(!editAccessRevoked)}
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-amber-500/30 ${
+                          editAccessRevoked ? 'bg-amber-600' : 'bg-slate-800'
+                        }`}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                            editAccessRevoked ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  </div>
+
                 </div>
               </div>
 
@@ -1713,7 +1982,7 @@ export default function TeamControl() {
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 border border-transparent'
                 }`}
               >
-                Inactive ({teamList.filter(m => m.status === 'Inactive').length})
+                Inactive / Revoked ({teamList.filter(m => m.status === 'Inactive' || m.accessRevoked || m.isAccessRevoked || m.terminated || m.isTerminated).length})
               </button>
             </div>
 
@@ -1738,7 +2007,7 @@ export default function TeamControl() {
                       <th className="p-4">Role / Branch</th>
                       <th className="p-4">Phone</th>
                       <th className="p-4">Access Priority</th>
-                      <th className="p-4">Status</th>
+                      <th className="p-4">Access Status</th>
                       <th className="p-4 text-center">Actions</th>
                     </tr>
                   </thead>
@@ -1809,27 +2078,36 @@ export default function TeamControl() {
                             <div className="flex items-center gap-3">
                               <button
                                 type="button"
-                                onClick={() => handleToggleStatus(m.id, m.status || 'Active', m.name)}
+                                onClick={() => handleToggleRevokeAccess(m.id, Boolean(m.accessRevoked || m.isAccessRevoked || m.status === 'Inactive'), m.name)}
                                 disabled={isDbActionLoading || ['admin@apecpowersolutions.com', 'managingdirector@apecpowersolutions.com'].includes(m.email?.toLowerCase())}
                                 className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-cyan-500/20 disabled:opacity-30 disabled:cursor-not-allowed ${
-                                  m.status !== 'Inactive' ? 'bg-cyan-500/80 hover:bg-cyan-500' : 'bg-slate-700 hover:bg-slate-650'
+                                  !(m.accessRevoked || m.isAccessRevoked || m.status === 'Inactive') ? 'bg-emerald-500/80 hover:bg-emerald-500' : 'bg-slate-700 hover:bg-slate-650'
                                 }`}
-                                title={m.status === 'Inactive' ? 'Activate Account' : 'Deactivate Account'}
+                                title={(m.accessRevoked || m.isAccessRevoked || m.status === 'Inactive') ? 'Access Revoked - Click to Restore Access' : 'Access Active - Click to Revoke Access'}
                               >
                                 <span
                                   className={`pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-slate-950 shadow-md ring-0 transition duration-200 ease-in-out ${
-                                    m.status !== 'Inactive' ? 'translate-x-4' : 'translate-x-0'
+                                    !(m.accessRevoked || m.isAccessRevoked || m.status === 'Inactive') ? 'translate-x-4' : 'translate-x-0'
                                   }`}
                                 />
                               </button>
-                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                                m.status === 'Active' ? 'bg-green-955/40 text-green-400 border border-green-500/25' :
-                                m.status === 'Site Visit' ? 'bg-cyan-955/40 text-cyan-400 border border-cyan-500/25' :
-                                m.status === 'Inactive' ? 'bg-rose-955/40 text-rose-400 border border-rose-500/25' :
-                                'bg-amber-955/40 text-amber-400 border border-amber-500/25'
-                              }`}>
-                                {m.status || 'Active'}
-                              </span>
+                              {m.terminated || m.isTerminated ? (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-500/15 text-rose-400 border border-rose-500/30">
+                                  Terminated
+                                </span>
+                              ) : (m.accessRevoked || m.isAccessRevoked || m.status === 'Inactive') ? (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-500/15 text-rose-400 border border-rose-500/30">
+                                  Access Revoked
+                                </span>
+                              ) : (
+                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                                  m.status === 'Active' ? 'bg-green-955/40 text-green-400 border border-green-500/25' :
+                                  m.status === 'Site Visit' ? 'bg-cyan-955/40 text-cyan-400 border border-cyan-500/25' :
+                                  'bg-amber-955/40 text-amber-400 border border-amber-500/25'
+                                }`}>
+                                  {m.status || 'Active'}
+                                </span>
+                              )}
                             </div>
                           </td>
                           <td className="p-4 text-center">
@@ -1909,6 +2187,9 @@ export default function TeamControl() {
                       setEditPfNumber(selectedProfile.pfNumber || '');
                       setEditAadharNumber(selectedProfile.aadharNumber || '');
                       setEditStatus(selectedProfile.status || 'Active');
+                      setEditTerminated(Boolean(selectedProfile.terminated || selectedProfile.isTerminated || selectedProfile.status === 'Terminated'));
+                      setEditTerminationDate(selectedProfile.terminationDate || '');
+                      setEditAccessRevoked(Boolean(selectedProfile.accessRevoked || selectedProfile.isAccessRevoked || selectedProfile.status === 'Inactive'));
                       setEditJoinedDate(selectedProfile.joinedDate || '');
                       setEditSkills(selectedProfile.skills ? selectedProfile.skills.join(', ') : '');
                       setEditEmergencyName(selectedProfile.emergencyName || '');
@@ -2038,12 +2319,15 @@ export default function TeamControl() {
                   <div>
                     <span className="text-slate-500 block uppercase text-[7px] tracking-wider text-right">STATUS</span>
                     <span className={`font-bold uppercase block text-right ${
+                      (isEditingProfile ? editTerminated : (selectedProfile.terminated || selectedProfile.isTerminated)) ? 'text-rose-400' :
                       (isEditingProfile ? editStatus : selectedProfile.status) === 'Active' ? 'text-green-400' :
                       (isEditingProfile ? editStatus : selectedProfile.status) === 'Site Visit' ? 'text-cyan-400' :
                       (isEditingProfile ? editStatus : selectedProfile.status) === 'Inactive' ? 'text-rose-400' :
                       'text-amber-400'
                     }`}>
-                      {isEditingProfile ? editStatus : (selectedProfile.status || 'Active')}
+                      {(isEditingProfile ? editTerminated : (selectedProfile.terminated || selectedProfile.isTerminated))
+                        ? 'TERMINATED'
+                        : (isEditingProfile ? editStatus : (selectedProfile.status || 'Active'))}
                     </span>
                   </div>
                 </div>
@@ -2330,6 +2614,112 @@ export default function TeamControl() {
                           className="w-full bg-slate-950/60 border border-slate-800 focus:border-cyan-500/50 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-cyan-500/10 transition-all"
                         />
                       </div>
+
+                      {/* Terminated Toggle & Date of Termination */}
+                      <div className={`col-span-2 p-4 rounded-xl border transition-all ${
+                        editTerminated 
+                          ? 'bg-rose-955/20 border-rose-500/40 shadow-[0_0_15px_rgba(244,63,94,0.1)]' 
+                          : 'bg-slate-950/40 border-slate-800/80'
+                      }`}>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold text-slate-100 uppercase tracking-wider">Terminated</span>
+                              {editTerminated && (
+                                <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-widest bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                                  Terminated
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-slate-400 mt-0.5">
+                              Toggle if employee is terminated. QR profile scan will only display employee name, employee ID, and termination notice.
+                            </p>
+                          </div>
+
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-checked={editTerminated}
+                            onClick={() => {
+                              const next = !editTerminated;
+                              setEditTerminated(next);
+                              if (next && !editTerminationDate) {
+                                setEditTerminationDate(new Date().toISOString().slice(0, 10));
+                              }
+                            }}
+                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-rose-500/30 ${
+                              editTerminated ? 'bg-rose-600' : 'bg-slate-800'
+                            }`}
+                          >
+                            <span
+                              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                                editTerminated ? 'translate-x-5' : 'translate-x-0'
+                              }`}
+                            />
+                          </button>
+                        </div>
+
+                        {editTerminated && (
+                          <div className="mt-3 pt-3 border-t border-rose-500/20 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="space-y-1">
+                              <label className="text-[10px] font-semibold text-rose-300 uppercase tracking-wider block ml-1">
+                                Date of Termination <span className="text-rose-400">*</span>
+                              </label>
+                              <input 
+                                type="date"
+                                value={editTerminationDate}
+                                onChange={(e) => setEditTerminationDate(e.target.value)}
+                                required={editTerminated}
+                                className="w-full bg-slate-950/80 border border-rose-500/40 focus:border-rose-500 text-slate-100 rounded-xl py-2 px-3 text-xs focus:outline-none focus:ring-1 focus:ring-rose-500/20 transition-all"
+                              />
+                            </div>
+                            <div className="flex items-end">
+                              <p className="text-[10px] text-rose-300/80 italic font-mono pb-2">
+                                QR scan notice: "Employee terminated from APEC Power Solutions Pvt. Ltd. on {editTerminationDate || '...'}"
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Revoke Access Toggle */}
+                      <div className={`col-span-2 p-4 rounded-xl border transition-all ${
+                        editAccessRevoked 
+                          ? 'bg-amber-955/20 border-amber-500/40 shadow-[0_0_15px_rgba(245,158,11,0.1)]' 
+                          : 'bg-slate-950/40 border-slate-800/80'
+                      }`}>
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold text-slate-100 uppercase tracking-wider">Revoke Access</span>
+                              {editAccessRevoked && (
+                                <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-widest bg-amber-500/20 text-amber-400 border border-amber-500/30">
+                                  Access Revoked
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-slate-400 mt-0.5">
+                              Toggle to immediately prevent this account from logging into the portal and mobile application.
+                            </p>
+                          </div>
+
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-checked={editAccessRevoked}
+                            onClick={() => setEditAccessRevoked(!editAccessRevoked)}
+                            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-amber-500/30 ${
+                              editAccessRevoked ? 'bg-amber-600' : 'bg-slate-800'
+                            }`}
+                          >
+                            <span
+                              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                                editAccessRevoked ? 'translate-x-5' : 'translate-x-0'
+                              }`}
+                            />
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -2416,6 +2806,50 @@ export default function TeamControl() {
                 </form>
               ) : (
                 <>
+                  {(selectedProfile.terminated || selectedProfile.isTerminated) && (
+                    <div className="p-3.5 rounded-xl bg-rose-955/20 border border-rose-500/40 text-xs flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0" />
+                        <div>
+                          <span className="font-bold text-rose-300 block">Employee Record Terminated</span>
+                          <span className="text-slate-400 text-[10px]">
+                            Date of Termination: <strong className="text-rose-200">{selectedProfile.terminationDate || 'Not recorded'}</strong>
+                          </span>
+                        </div>
+                      </div>
+                      <span className="text-[9px] font-bold text-rose-400 uppercase tracking-widest px-2 py-0.5 rounded bg-rose-500/10 border border-rose-500/20">
+                        Terminated
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Revoke / Restore Access Action Control */}
+                  <div className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/80 flex items-center justify-between gap-3">
+                    <div className="space-y-0.5">
+                      <span className="text-xs font-bold text-slate-100 flex items-center gap-1.5">
+                        <Shield className="w-3.5 h-3.5 text-cyan-400" />
+                        Portal Login Access
+                      </span>
+                      <p className="text-[10px] text-slate-400">
+                        {(selectedProfile.accessRevoked || selectedProfile.isAccessRevoked || selectedProfile.status === 'Inactive')
+                          ? 'Access is currently revoked. User cannot log in.'
+                          : 'Access is active. User is authorized to log in.'}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleRevokeAccess(selectedProfile.id, Boolean(selectedProfile.accessRevoked || selectedProfile.isAccessRevoked || selectedProfile.status === 'Inactive'), selectedProfile.name)}
+                      disabled={isDbActionLoading || ['admin@apecpowersolutions.com', 'managingdirector@apecpowersolutions.com'].includes(selectedProfile.email?.toLowerCase())}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-40 shrink-0 ${
+                        (selectedProfile.accessRevoked || selectedProfile.isAccessRevoked || selectedProfile.status === 'Inactive')
+                          ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/25'
+                          : 'bg-rose-500/15 text-rose-400 border border-rose-500/30 hover:bg-rose-500/25'
+                      }`}
+                    >
+                      {(selectedProfile.accessRevoked || selectedProfile.isAccessRevoked || selectedProfile.status === 'Inactive') ? 'Restore Access' : 'Revoke Access'}
+                    </button>
+                  </div>
+
                   <div className="grid grid-cols-2 gap-4 text-xs bg-slate-950/45 p-4 rounded-xl border border-slate-900/60 font-mono">
                     <div className="space-y-1">
                       <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Branch</span>
@@ -2427,12 +2861,17 @@ export default function TeamControl() {
                     <div className="space-y-1">
                       <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Status</span>
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                        selectedProfile.status === 'Active' ? 'bg-green-500/10 text-green-450 border border-green-500/20' :
-                        selectedProfile.status === 'Site Visit' ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' :
-                        selectedProfile.status === 'Inactive' ? 'bg-rose-500/10 text-rose-455 border border-rose-500/20' :
-                        'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                        selectedProfile.terminated || selectedProfile.isTerminated
+                          ? 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
+                          : selectedProfile.status === 'Active'
+                            ? 'bg-green-500/10 text-green-450 border border-green-500/20'
+                            : selectedProfile.status === 'Site Visit'
+                              ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
+                              : selectedProfile.status === 'Inactive'
+                                ? 'bg-rose-500/10 text-rose-455 border border-rose-500/20'
+                                : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                       } border`}>
-                        {selectedProfile.status || 'Active'}
+                        {selectedProfile.terminated || selectedProfile.isTerminated ? 'Terminated' : (selectedProfile.status || 'Active')}
                       </span>
                     </div>
                     <div className="space-y-1">

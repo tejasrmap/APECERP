@@ -12,6 +12,7 @@ import {
   AlertTriangle,
   Activity,
   Shield,
+  ShieldAlert,
   ArrowLeft,
   MapPin,
   HeartPulse,
@@ -69,6 +70,23 @@ export default function ProfileView() {
         });
         setLoading(false);
       }, 1000);
+      return;
+    }
+
+    if (cleanedId === 'demo-terminated') {
+      setTimeout(() => {
+        setProfile({
+          id: 'demo-terminated',
+          name: 'Rahul Sharma',
+          role: 'Lead Grid Engineer',
+          employeeId: 'APEC-2026-009',
+          status: 'Inactive',
+          terminated: true,
+          isTerminated: true,
+          terminationDate: '2026-10-15',
+        });
+        setLoading(false);
+      }, 500);
       return;
     }
 
@@ -148,6 +166,24 @@ export default function ProfileView() {
     'admin@apecpowersolutions.com',
     'managingdirector@apecpowersolutions.com'
   ].includes(profile?.email?.toLowerCase());
+
+  const isTerminated = Boolean(
+    profile?.terminated || 
+    profile?.isTerminated || 
+    profile?.status === 'Terminated'
+  );
+
+  const formatTerminationDate = (dateVal?: any) => {
+    if (!dateVal) return '';
+    if (typeof dateVal === 'object' && dateVal?.toDate) {
+      return dateVal.toDate().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
+    const parsed = new Date(dateVal);
+    if (!isNaN(parsed.getTime())) {
+      return parsed.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
+    return String(dateVal);
+  };
 
   const avatarGradients: Record<string, string> = {
     cyan: 'from-cyan-500 to-cyan-700',
@@ -230,8 +266,8 @@ export default function ProfileView() {
         </div>
       )}
 
-      {/* ─── PROFILE ─── */}
-      {!loading && profile && (
+      {/* ─── ACTIVE PROFILE VIEW ─── */}
+      {!loading && profile && !isTerminated && (
         <div className="relative z-10 max-w-5xl mx-auto px-4 py-12">
           
           {/* Mobile Segmented Navigation */}
@@ -563,6 +599,85 @@ export default function ProfileView() {
             />
           )}
 
+        </div>
+      )}
+
+      {/* ─── TERMINATED PROFILE VIEW (QR SCAN) ─── */}
+      {!loading && profile && isTerminated && (
+        <div className="relative z-10 max-w-2xl mx-auto px-4 py-12">
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35 }}
+            className="bg-[#1E293B] rounded-2xl border border-rose-900/40 overflow-hidden shadow-2xl"
+          >
+            {/* Header banner */}
+            <div className="h-28 bg-[#070C16] relative flex items-center justify-between px-6 border-b border-rose-950/40">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center p-0.5 overflow-hidden border border-slate-800 shrink-0">
+                  <img src="/logo.png" alt="APEC Logo" className="w-full h-full object-contain" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold tracking-wider text-white uppercase leading-none">APEC Power</span>
+                  <span className="text-[#DC2626] text-[8px] font-bold tracking-widest uppercase mt-0.5">Solutions</span>
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/30">
+                <AlertTriangle className="w-3.5 h-3.5 text-rose-500 animate-pulse" />
+                <span className="text-[9px] font-bold text-rose-400 uppercase tracking-wider font-sans">Terminated</span>
+              </div>
+            </div>
+
+            {/* Content area: just employee name, employee id, and termination notice */}
+            <div className="p-8 sm:p-10 flex flex-col items-center text-center space-y-6">
+              <div className="w-20 h-20 rounded-2xl bg-rose-950/30 border border-rose-500/30 flex items-center justify-center text-rose-500 shadow-[0_0_25px_rgba(244,63,94,0.15)]">
+                <ShieldAlert className="w-10 h-10" />
+              </div>
+
+              <div className="space-y-2">
+                <span className="text-[10px] text-slate-500 uppercase tracking-widest font-mono font-bold block">
+                  Employee Record
+                </span>
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-100 tracking-tight">
+                  {profile.name}
+                </h1>
+                <div className="mt-2 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-slate-950/90 border border-slate-800 font-mono text-xs">
+                  <span className="text-slate-500 text-[10px] uppercase tracking-wider font-sans font-bold">Employee ID:</span>
+                  <span className="font-bold text-slate-200 select-all tracking-wider">{profile.employeeId || profile.id || 'N/A'}</span>
+                </div>
+              </div>
+
+              {/* Required termination notice banner */}
+              <div className="w-full p-5 rounded-2xl bg-rose-950/25 border border-rose-500/30 text-center">
+                <p className="text-sm sm:text-base font-bold text-rose-300 leading-relaxed">
+                  Employee terminated from APEC Power Solutions Pvt. Ltd.{profile.terminationDate ? ` on ${formatTerminationDate(profile.terminationDate)}` : ''}
+                </p>
+              </div>
+
+              <p className="text-xs text-slate-500 max-w-md leading-relaxed">
+                This credential has been deactivated and is no longer authorized for any company operations, representation, or facility access.
+              </p>
+
+              <Link
+                to="/"
+                className="mt-2 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 hover:border-slate-700 text-xs font-semibold transition-all flex items-center gap-1.5"
+              >
+                <ArrowLeft className="w-4 h-4" /> Return to Portal
+              </Link>
+            </div>
+          </motion.div>
+
+          {/* Footer */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2 pt-8 text-center">
+            <div className="flex items-center gap-1.5 text-slate-500">
+              <User className="w-3.5 h-3.5" />
+              <span className="text-[10px] font-medium uppercase tracking-wider">APEC Power Solutions Pvt. Ltd. · Employee Registry</span>
+            </div>
+            <span className="hidden sm:inline text-slate-700">•</span>
+            <span className="text-[10px] text-slate-400 font-semibold tracking-wider uppercase">
+              Made by <span className="text-cyan-400 font-bold">GT INNOX LLP</span>
+            </span>
+          </div>
         </div>
       )}
     </div>

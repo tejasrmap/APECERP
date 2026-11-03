@@ -93,7 +93,8 @@ export default function Login() {
 
             if (matchedDoc) {
               const docData = matchedDoc.data();
-              if (docData.status === 'Inactive') {
+              const isRevoked = Boolean(docData.accessRevoked || docData.isAccessRevoked || docData.terminated || docData.isTerminated);
+              if (docData.status === 'Inactive' || isRevoked) {
                 isAllowed = false;
               } else {
                 isAllowed = true;
@@ -114,7 +115,8 @@ export default function Login() {
             const snap = await getDocs(q);
             if (!snap.empty) {
               const docData = snap.docs[0].data();
-              if (docData.status === 'Inactive') {
+              const isRevoked = Boolean(docData.accessRevoked || docData.isAccessRevoked || docData.terminated || docData.isTerminated);
+              if (docData.status === 'Inactive' || isRevoked) {
                 isAllowed = false;
               } else {
                 isAllowed = true;
@@ -189,9 +191,13 @@ export default function Login() {
             const snap = await getDocs(q);
             if (!snap.empty) {
               const docData = snap.docs[0].data();
-              if (docData.status === 'Inactive') {
+              const isRevoked = Boolean(docData.accessRevoked || docData.isAccessRevoked);
+              if (isRevoked) {
                 isAllowed = false;
-                setErrorMsg('Access denied. Your account is currently inactive. Please contact the administrator.');
+                setErrorMsg('Access denied. Your portal access has been revoked by the administrator.');
+              } else if (docData.status === 'Inactive' || docData.terminated || docData.isTerminated) {
+                isAllowed = false;
+                setErrorMsg('Access denied. Your account is currently inactive or terminated. Please contact the administrator.');
               } else {
                 isAllowed = true;
                 if (docData.accessRole === 'Admin' || docData.roleType === 'Admin') {
@@ -326,8 +332,11 @@ export default function Login() {
       }
 
       const employeeData = matchedDoc.data();
-      if (employeeData.status === 'Inactive') {
-        throw new Error('Access denied. Your account is currently inactive. Please contact the administrator.');
+      if (employeeData.accessRevoked || employeeData.isAccessRevoked) {
+        throw new Error('Access denied. Your portal access has been revoked by the administrator.');
+      }
+      if (employeeData.status === 'Inactive' || employeeData.terminated || employeeData.isTerminated) {
+        throw new Error('Access denied. Your account is currently inactive or terminated. Please contact the administrator.');
       }
       const storedPassword = (employeeData.password || '').trim();
 
@@ -413,6 +422,7 @@ export default function Login() {
         let isAllowed = false;
         let isAdminUser = false;
         let isInactive = false;
+        let isRevoked = false;
 
         if (user && user.email) {
           const emailLower = user.email.toLowerCase();
@@ -428,7 +438,9 @@ export default function Login() {
             const snap = await getDocs(q);
             if (!snap.empty) {
               const docData = snap.docs[0].data();
-              if (docData.status === 'Inactive') {
+              if (docData.accessRevoked || docData.isAccessRevoked) {
+                isRevoked = true;
+              } else if (docData.status === 'Inactive' || docData.terminated || docData.isTerminated) {
                 isInactive = true;
               } else {
                 isAllowed = true;
@@ -466,8 +478,10 @@ export default function Login() {
           }, 2000);
         } else {
           await auth.signOut();
-          if (isInactive) {
-            throw new Error('Access denied. Your account is currently inactive. Please contact the administrator.');
+          if (isRevoked) {
+            throw new Error('Access denied. Your portal access has been revoked by the administrator.');
+          } else if (isInactive) {
+            throw new Error('Access denied. Your account is currently inactive or terminated. Please contact the administrator.');
           } else {
             throw new Error('Access denied. Your Google account is not registered as a team member.');
           }

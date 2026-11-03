@@ -10,6 +10,7 @@ import {
   Calendar,
   Award,
   Shield,
+  AlertTriangle,
   X,
   Activity
 } from 'lucide-react';
@@ -218,14 +219,24 @@ export default function Team() {
 
                 <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between">
                   <span className="text-[10px] text-slate-500 font-semibold uppercase">Status</span>
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                    m.status === 'Active' ? 'bg-green-955/40 text-green-400 border border-green-500/25' :
-                    m.status === 'Site Visit' ? 'bg-cyan-955/40 text-cyan-400 border border-cyan-500/25' :
-                    m.status === 'Inactive' ? 'bg-rose-955/40 text-rose-400 border border-rose-500/25' :
-                    'bg-amber-955/40 text-amber-400 border border-amber-500/25'
-                  }`}>
-                    {m.status}
-                  </span>
+                  {m.terminated || m.isTerminated ? (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-500/15 text-rose-400 border border-rose-500/30">
+                      Terminated
+                    </span>
+                  ) : (m.accessRevoked || m.isAccessRevoked) ? (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-500/15 text-rose-400 border border-rose-500/30">
+                      Revoked
+                    </span>
+                  ) : (
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                      m.status === 'Active' ? 'bg-green-955/40 text-green-400 border border-green-500/25' :
+                      m.status === 'Site Visit' ? 'bg-cyan-955/40 text-cyan-400 border border-cyan-500/25' :
+                      m.status === 'Inactive' ? 'bg-rose-955/40 text-rose-400 border border-rose-500/25' :
+                      'bg-amber-955/40 text-amber-400 border border-amber-500/25'
+                    }`}>
+                      {m.status || 'Active'}
+                    </span>
+                  )}
                 </div>
 
                 {/* Skills Preview */}
@@ -363,6 +374,24 @@ export default function Team() {
 
 
 
+              {/* Termination Notice if applicable */}
+              {(selectedProfile.terminated || selectedProfile.isTerminated) && (
+                <div className="p-3.5 rounded-xl bg-rose-955/20 border border-rose-500/40 text-xs flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <AlertTriangle className="w-4 h-4 text-rose-500 shrink-0" />
+                    <div>
+                      <span className="font-bold text-rose-300 block">Employee Record Terminated</span>
+                      <span className="text-slate-400 text-[10px]">
+                        Date of Termination: <strong className="text-rose-200">{selectedProfile.terminationDate || 'Not recorded'}</strong>
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-[9px] font-bold text-rose-400 uppercase tracking-widest px-2 py-0.5 rounded bg-rose-500/10 border border-rose-500/20">
+                    Terminated
+                  </span>
+                </div>
+              )}
+
               {/* General details */}
               <div className="grid grid-cols-2 gap-4 text-xs bg-slate-950/40 p-4 rounded-xl border border-slate-900/60 font-mono">
                 <div className="space-y-1">
@@ -375,12 +404,23 @@ export default function Team() {
                 <div className="space-y-1">
                   <span className="text-slate-500 block uppercase tracking-wider text-[9px]">Status</span>
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                    selectedProfile.status === 'Active' ? 'bg-green-500/10 text-green-455 border border-green-500/20' :
-                    selectedProfile.status === 'Site Visit' ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' :
-                    selectedProfile.status === 'Inactive' ? 'bg-rose-500/10 text-rose-455 border border-rose-500/20' :
-                    'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                    selectedProfile.terminated || selectedProfile.isTerminated
+                      ? 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
+                      : (selectedProfile.accessRevoked || selectedProfile.isAccessRevoked)
+                        ? 'bg-rose-500/15 text-rose-400 border border-rose-500/30'
+                        : selectedProfile.status === 'Active'
+                          ? 'bg-green-500/10 text-green-455 border border-green-500/20'
+                          : selectedProfile.status === 'Site Visit'
+                            ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20'
+                            : selectedProfile.status === 'Inactive'
+                              ? 'bg-rose-500/10 text-rose-455 border border-rose-500/20'
+                              : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                   } border`}>
-                    {selectedProfile.status || 'Active'}
+                    {selectedProfile.terminated || selectedProfile.isTerminated
+                      ? 'Terminated'
+                      : (selectedProfile.accessRevoked || selectedProfile.isAccessRevoked)
+                        ? 'Access Revoked'
+                        : (selectedProfile.status || 'Active')}
                   </span>
                 </div>
                 <div className="space-y-1">

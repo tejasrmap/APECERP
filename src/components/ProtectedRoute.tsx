@@ -66,7 +66,8 @@ export default function ProtectedRoute() {
 
                 if (matchedDoc) {
                   const docData = matchedDoc.data();
-                  if (docData.status !== 'Inactive') {
+                  const isRevoked = Boolean(docData.accessRevoked || docData.isAccessRevoked || docData.terminated || docData.isTerminated);
+                  if (docData.status !== 'Inactive' && !isRevoked) {
                     matched = true;
                     // Asynchronously update lastActive timestamp
                     updateDoc(doc(db, 'team', matchedDoc.id), {
@@ -79,7 +80,8 @@ export default function ProtectedRoute() {
                 const snap = await getDocs(q);
                 if (!snap.empty) {
                   const docData = snap.docs[0].data();
-                  if (docData.status !== 'Inactive') {
+                  const isRevoked = Boolean(docData.accessRevoked || docData.isAccessRevoked || docData.terminated || docData.isTerminated);
+                  if (docData.status !== 'Inactive' && !isRevoked) {
                     matched = true;
                     // Asynchronously update lastActive timestamp
                     updateDoc(doc(db, 'team', snap.docs[0].id), {
