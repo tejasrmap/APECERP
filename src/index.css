@@ -230,8 +230,13 @@ body {
 
 
 
+/* Use a compact baseline so rem-based text, spacing, and controls scale together. */
+html {
+  font-size: 14px;
+}
+
 /* Keep Lucide icons compact and consistent across every ERP screen. */
 svg.lucide:not(.animate-spin) {
-  max-width: 18px;
-  max-height: 18px;
+  max-width: 16px;
+  max-height: 16px;
 }
