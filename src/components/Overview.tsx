@@ -454,8 +454,8 @@ export default function Overview() {
             <div className={`absolute -right-4 -top-4 w-24 h-24 ${stat.bg} rounded-full blur-[30px] opacity-20 group-hover:opacity-40 transition-opacity duration-300 pointer-events-none`} />
             
             <div className="flex justify-between items-start z-10 relative">
-              <div className={`w-11 h-11 rounded-2xl ${stat.bg} ${stat.border} border flex items-center justify-center shadow-sm print:bg-slate-100 print:border-slate-200`}>
-                <stat.icon className={`w-5 h-5 ${stat.color} print:text-slate-700`} />
+              <div className={`w-10 h-10 rounded-xl ${stat.bg} ${stat.border} border flex items-center justify-center shadow-sm print:bg-slate-100 print:border-slate-200`}>
+                <stat.icon className={`w-[18px] h-[18px] ${stat.color} print:text-slate-700`} />
               </div>
             </div>
             
