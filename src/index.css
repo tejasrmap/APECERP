@@ -232,11 +232,11 @@ body {
 
 /* Use a compact baseline so rem-based text, spacing, and controls scale together. */
 html {
-  font-size: 14px;
+  font-size: 12px !important;
 }
 
 /* Keep Lucide icons compact and consistent across every ERP screen. */
 svg.lucide:not(.animate-spin) {
-  max-width: 16px;
-  max-height: 16px;
+  max-width: 14px;
+  max-height: 14px;
 }
