@@ -229,3 +229,9 @@ body {
 
 
 
+
+/* Keep Lucide icons compact and consistent across every ERP screen. */
+svg.lucide:not(.animate-spin) {
+  max-width: 18px;
+  max-height: 18px;
+}
