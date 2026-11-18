@@ -536,11 +536,11 @@ export default function Dashboard() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed lg:relative z-50 w-72 h-full glass-sidebar flex flex-col transition-transform duration-300 ease-out shadow-2xl lg:shadow-none lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        className={`fixed lg:relative z-50 w-64 h-full glass-sidebar flex flex-col transition-transform duration-300 ease-out shadow-2xl lg:shadow-none lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}
       >
         <div className="p-6 flex items-center border-b border-slate-800/80">
           <div className="flex items-center gap-3">
-             <div className="w-10 h-10 rounded-full bg-slate-900/60 flex items-center justify-center overflow-hidden border border-slate-700/80 shadow-md shrink-0">
+             <div className="w-9 h-9 rounded-full bg-slate-900/60 flex items-center justify-center overflow-hidden border border-slate-700/80 shadow-md shrink-0">
                <img src="/logo.jpeg" alt="APEC Logo" className="w-full h-full object-contain p-0.5" onError={(e) => {
                   (e.currentTarget as HTMLImageElement).src = '/logo.png';
                }} />
@@ -552,7 +552,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+        <nav className="flex-1 px-3 py-5 space-y-1.5 overflow-y-auto">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.name;
@@ -564,13 +564,13 @@ export default function Dashboard() {
                   navigate(getPathForTab(item.name));
                   setIsSidebarOpen(false);
                 }}
-                className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-colors duration-150 ${
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors duration-150 ${
                   isActive 
                     ? 'bg-cyan-950/40 text-cyan-400 border border-cyan-500/30 font-medium shadow-md glowing-active' 
                     : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/40 border border-transparent'
                 }`}
               >
-                <Icon className={`w-5 h-5 ${isActive ? 'text-cyan-400' : 'text-slate-500'}`} />
+                <Icon className={`w-[18px] h-[18px] ${isActive ? 'text-cyan-400' : 'text-slate-500'}`} />
                 {item.name}
               </button>
             )
